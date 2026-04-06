@@ -44,6 +44,7 @@
 | ADR-004 | 서브에이전트 역할 분리 가이드라인 |
 | ADR-005 | 날짜 기준 원가 데이터 통일 |
 | ADR-006 | 디렉터 에이전트 설계 |
+| ADR-007 | 시스템 유지보수 에이전트 설계 |
 
 ---
 
@@ -270,10 +271,45 @@ raw/travelcost/
 담당자: 원가+마진 전체 공유
 ```
 
-### 핵심 규칙
-- 내부용 원가·마진 내역 고객 노출 금지
-- [확인필요] 항목 있는 상태로 금액 확정 안내 금지
-- 마진율 임의 적용 금지
+### 에이전트 저장 경로
+```
+raw/
+├── CLAUDE.md                              ← 디렉터 에이전트
+└── travelcost/
+    ├── hotel-rates/CLAUDE.md
+    ├── transport-rates/CLAUDE.md
+    ├── guide-fees/CLAUDE.md
+    ├── lift_skipass-rates/CLAUDE.md
+    ├── golf-rates/CLAUDE.md
+    ├── activity-rates/CLAUDE.md
+    ├── insurance-rates/CLAUDE.md
+    ├── airticket-rates/CLAUDE.md
+    └── entrance-fees/CLAUDE.md
+```
+
+---
+
+## ADR-007: 시스템 유지보수 에이전트 설계
+
+### 결정
+나라·원가항목 추가·삭제, 마진율 변경 시
+관련 파일 전체를 자동 연쇄 업데이트하는
+전담 유지보수 에이전트를 별도 파일로 구성한다.
+
+### 저장 경로
+tourshop-wiki/maintenance/CLAUDE.md
+
+### 처리 대상 작업
+- 나라 추가·삭제 → 전 서브에이전트 + markup-guide 동시 업데이트
+- 원가 항목 추가·삭제 → 신규 CLAUDE.md 생성 + 디렉터 목록 업데이트
+- 마진율 변경 → markup-guide 수정 + 변경 이력 기록
+- 에이전트 수정 → 해당 CLAUDE.md 수정 + log 기록
+- 모든 작업 후 ADR-001 자동 업데이트
+
+### 근거
+- 수동 관리 시 파일 간 불일치 발생 위험
+- 나라·항목 추가 시 누락 파일 없이 일관성 유지
+- 변경 이력 자동 기록으로 추적 가능
 
 ---
 
@@ -283,6 +319,20 @@ raw/travelcost/
 - [x] LLM Wiki 폴더 구조 설계 완료
 - [x] 서브에이전트 CLAUDE.md 9종 정의 완료
 - [x] 디렉터 에이전트 CLAUDE.md 정의 완료
+- [x] 유지보수 에이전트 CLAUDE.md 정의 완료
+- [x] markup-guide.md 템플릿 작성 완료
+- [ ] markup-guide.md 실제 마진율 입력
+- [ ] Cowork에서 에이전트 실행·테스트
+- [ ] 실제 원가 데이터 ingest 시작
+
+### 2단계
+- [ ] wiki DB 데이터 충분히 축적
+- [ ] GitHub 팀 공유
+
+### 3단계
+- [ ] wiki DB → API 서버 연결
+- [ ] 호텔 원가 변환 웹 도구 개발
+- [ ] B2C / B2B 앱·웹 서비스 연동
 - [ ] 실제 원가 데이터 ingest 시작
 
 ### 2단계
