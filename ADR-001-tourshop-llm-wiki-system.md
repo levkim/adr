@@ -45,6 +45,7 @@
 | ADR-005 | 날짜 기준 원가 데이터 통일 |
 | ADR-006 | 디렉터 에이전트 설계 |
 | ADR-007 | 시스템 유지보수 에이전트 설계 |
+| ADR-008 | wiki/ 폴더 구조 설계 |
 
 ---
 
@@ -313,6 +314,32 @@ tourshop-wiki/maintenance/CLAUDE.md
 
 ---
 
+## ADR-008: wiki/ 폴더 구조 설계
+
+### 결정
+주제별 + 업무별 조합 구조로 wiki/ 폴더를 설계한다.
+
+### 구조
+```
+wiki/
+├── index.md          ← 전체 목차 (LLM 자동 관리)
+├── log.md            ← 작업 이력 (append-only)
+├── destinations/     ← 여행지별 종합 정보
+├── products/         ← 상품별 분석
+├── travelcost/       ← 원가 분석 및 견적 기준
+├── customers/        ← 고객 인사이트
+├── operations/       ← 운영 정책
+└── market/           ← 시장 분석
+```
+
+### 근거
+- 주제별·업무별 조합으로 탐색 용이
+- index.md 로 LLM이 질문 시 빠르게 관련 페이지 탐색
+- log.md append-only 구조로 변경 이력 추적
+- raw/ ingest → wiki/ 자동 업데이트 흐름 유지
+
+---
+
 ## 8. 결과 및 향후 계획
 
 ### 1단계 (현재)
@@ -321,22 +348,12 @@ tourshop-wiki/maintenance/CLAUDE.md
 - [x] 디렉터 에이전트 CLAUDE.md 정의 완료
 - [x] 유지보수 에이전트 CLAUDE.md 정의 완료
 - [x] markup-guide.md 템플릿 작성 완료
+- [x] wiki/ 폴더 구조 설계 완료
 - [ ] markup-guide.md 실제 마진율 입력
 - [ ] Cowork에서 에이전트 실행·테스트
 - [ ] 실제 원가 데이터 ingest 시작
 
 ### 2단계
-- [ ] wiki DB 데이터 충분히 축적
-- [ ] GitHub 팀 공유
-
-### 3단계
-- [ ] wiki DB → API 서버 연결
-- [ ] 호텔 원가 변환 웹 도구 개발
-- [ ] B2C / B2B 앱·웹 서비스 연동
-- [ ] 실제 원가 데이터 ingest 시작
-
-### 2단계
-- [ ] 디렉터 에이전트 정의 (서브에이전트 총괄)
 - [ ] wiki DB 데이터 충분히 축적
 - [ ] GitHub 팀 공유
 
