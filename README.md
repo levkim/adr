@@ -151,18 +151,29 @@ tourshop-wiki/
 ├── 📁 wiki/                   ← LLM 자동 생성·관리
 │   ├── index.md               ← 전체 목차
 │   ├── log.md                 ← 작업 이력
-│   ├── destinations/
+│   ├── destinations/          ← 여행지별 통합 (원가·상품·VOC 포함)
+│   │   ├── japan/
+│   │   │   ├── overview.md
+│   │   │   ├── cost-summary.md
+│   │   │   ├── products.md
+│   │   │   ├── voc.md
+│   │   │   └── regions/
+│   │   └── ...
 │   ├── products/
-│   ├── travelcost/
-│   │   └── markup-guide.md   ← 마진율 가이드
+│   ├── costs/                 ← 원가·견적·마진 기준
+│   │   ├── markup-guide.md   ← 마진율 가이드
+│   │   ├── cost-by-destination.md
+│   │   ├── cost-by-season.md
+│   │   └── quotes/
 │   ├── customers/
 │   ├── operations/
-│   └── market/
+│   ├── market/
+│   └── guides/                ← 여행안내서 결과물
 │
 └── 📁 adr/                    ← 설계 문서
     ├── BIZ-001-tourshop-business-structure.md
     ├── SYS-001-tourshop-system-structure.md
-    └── wiki-structure.md
+    └── wiki-structure-v2.md
 ```
 
 ---
@@ -301,7 +312,7 @@ PDF / 엑셀 / 이미지 / URL / 텍스트
 |------|------|
 | [BIZ-001](adr/BIZ-001-tourshop-business-structure.md) | 비즈니스 구조도 |
 | [SYS-001](adr/SYS-001-tourshop-system-structure.md) | 시스템 구조도 |
-| [wiki-structure](adr/wiki-structure.md) | wiki 폴더 설계 |
+| [wiki-structure-v2](adr/wiki-structure-v2.md) | wiki 폴더 설계 v2 |
 
 ---
 
