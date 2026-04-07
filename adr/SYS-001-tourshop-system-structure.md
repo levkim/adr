@@ -95,21 +95,36 @@ tourshop-wiki/
 ├── wiki/
 │   ├── index.md               ← 전체 목차 (LLM 자동 관리)
 │   ├── log.md                 ← 작업 이력 (append-only)
-│   ├── destinations/
-│   ├── products/
-│   ├── travelcost/
+│   ├── destinations/          ← 여행지별 통합 (원가요약·상품·VOC 포함)
+│   │   ├── japan/
+│   │   │   ├── overview.md
+│   │   │   ├── cost-summary.md
+│   │   │   ├── products.md
+│   │   │   ├── voc.md
+│   │   │   └── regions/
+│   │   ├── canada/
+│   │   ├── kyrgyzstan/
+│   │   └── ...
+│   ├── products/              ← 상품 유형별 분석
+│   ├── costs/                 ← 원가·견적·마진 기준
+│   │   ├── markup-guide.md
 │   │   ├── cost-by-destination.md
 │   │   ├── cost-by-season.md
-│   │   ├── markup-guide.md
-│   │   └── quote-template.md
-│   ├── customers/
-│   ├── operations/
-│   └── market/
+│   │   └── quotes/
+│   │       └── quote-log.md
+│   ├── customers/             ← 고객 인사이트
+│   ├── operations/            ← 운영 정책
+│   ├── market/                ← 시장·경쟁 분석
+│   └── guides/                ← 여행안내서 결과물
+│       └── [예약번호]/
+│           ├── guide-v1.md
+│           ├── guide-v2.md
+│           └── guide-v3.md
 │
 └── adr/
     ├── BIZ-001-tourshop-business-structure.md
     ├── SYS-001-tourshop-system-structure.md
-    └── wiki-structure.md
+    └── wiki-structure-v2.md
 ```
 
 ---
@@ -253,13 +268,28 @@ GitHub 공유
 → 팀원 접근 가능
 ```
 
-### 3단계 — 클라우드 서비스
+### 3단계 — 독립 에이전트 앱 개발
 ```
-클라우드 서버 이전
-→ API 서버 연결
+Anthropic API 기반 독립 앱
+→ 폴더 감시 자동화
 → B2C·B2B 앱·웹 서비스 연동
-→ 호텔 원가 변환 웹 도구
+→ 완전 자동화
 ```
+
+> ⚠️ 2단계 생략 — 1단계 검증 완료 후 바로 3단계로 전환 예정
+
+---
+
+## 1단계 검증 항목 (실무 기반)
+
+1단계 Cowork 운영 중 아래 항목을 검증하여 3단계 앱 개발 스펙에 반영한다.
+
+| # | 항목 | 내용 | 상태 |
+|---|------|------|------|
+| 1 | 입력 형식 | PDF·TXT 두 가지 처리 검증 | 진행중 |
+| 2 | 통화·환산 | 일본식 1인당→룸당 환산 정확도 / 나라별 통화 코드 규정 준수 | hotel-rates CLAUDE.md 반영 완료 |
+| 3 | 주요 쿼리 패턴 | 니세코 5박 / 리프트 4일권 / 치토세공항→니세코 리무진버스 | 진행중 |
+| 4 | 품질 검증 | 숙박요금 MD 변환 정확도 체크리스트 | hotel-rates CLAUDE.md 반영 완료 |
 
 ---
 
@@ -268,3 +298,4 @@ GitHub 공유
 | 날짜 | 내용 | 작성자 |
 |------|------|------|
 | 2026-04-06 | 최초 작성 (에이전트 18개 정의 완료) | |
+| 2026-04-07 | wiki 구조 v2 반영 / 1단계 검증 항목 추가 / 3단계 직행 결정 | |
