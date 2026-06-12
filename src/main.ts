@@ -70,6 +70,7 @@ async function main(): Promise<void> {
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝' });
   const phyFolder = gui.addFolder('물리');
+  phyFolder.add(CONFIG.rider, 'mass', 45, 120).name('몸무게 (kg)');
   phyFolder.add(CONFIG.physics, 'snowFriction', 0, 0.2);
   phyFolder.add(CONFIG.physics, 'brakeFriction', 0.1, 1);
   phyFolder.add(CONFIG.physics, 'airDrag', 0, 0.02);

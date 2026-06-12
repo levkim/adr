@@ -1,6 +1,8 @@
 // 모든 튜닝 파라미터. lil-gui로 런타임 조정 가능해야 하므로 mutable 객체로 둔다.
 export const CONFIG = {
   rider: {
+    mass: 75, // kg, 라이더 몸무게 — 무거울수록 공기저항·(추후)파우더 저항의
+    // 감속 효과가 작아져 터미널 속도가 올라간다. 중력 가속 자체는 질량 무관
     radius: 0.4, // m
     height: 1.7, // m
     turnRate: 1.8, // rad/s, 최대 조향 속도 (주행 카빙 기준 — 과회전 방지)
@@ -13,7 +15,9 @@ export const CONFIG = {
     gravity: 9.81, // m/s²
     snowFriction: 0.045, // 운동 마찰계수 (다져진 눈)
     brakeFriction: 0.45, // 브레이크(S) 시 마찰계수 — 스피드 체크
-    airDrag: 0.0045, // 공기저항 계수 k (감속 = k·v²) → 35° 사면 터미널 ~34m/s
+    airDrag: 0.0045, // 공기저항 계수 k @ 기준체중 75kg (감속 = k·v²·75/체중)
+    // → 75kg 기준 35° 사면 터미널 ~34m/s, 무거우면 더 빠르다
+    massRef: 75, // kg, airDrag가 정의된 기준 체중
     edgeGrip: 5, // 1/s, 횡미끄럼이 보드 방향으로 수렴하는 속도 (카빙 그립)
     pushAccel: 2.5, // m/s², 평탄/저속에서 푸시(W) 가속
     pushMaxSpeed: 6, // m/s, 푸시로 낼 수 있는 최대 속도

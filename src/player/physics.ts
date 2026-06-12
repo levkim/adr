@@ -86,8 +86,9 @@ export class RiderPhysics {
         this.velocity.multiplyScalar(Math.max(0, v - frictionDecel) / v);
       }
 
-      // 공기저항 (k·v²)
-      const k = p.airDrag * (this.crouching ? p.crouchDragFactor : 1);
+      // 공기저항 (k·v², 체중 반비례 — 무거울수록 덜 감속)
+      const k =
+        p.airDrag * (p.massRef / CONFIG.rider.mass) * (this.crouching ? p.crouchDragFactor : 1);
       const v2 = this.velocity.length();
       if (v2 > 0) {
         this.velocity.multiplyScalar(Math.max(0, v2 - k * v2 * v2 * dt) / v2);
@@ -113,9 +114,10 @@ export class RiderPhysics {
         this.heading += d * Math.min(1, p.headingAlign * dt);
       }
     } else {
-      // 공중: 중력 + 공기저항 (크라우치=웅크리면 드래그 감소)
+      // 공중: 중력 + 공기저항 (체중 반비례, 크라우치 시 드래그 감소)
       this.velocity.y -= p.gravity * dt;
-      const k = p.airDrag * (this.crouching ? p.crouchDragFactor : 1);
+      const k =
+        p.airDrag * (p.massRef / CONFIG.rider.mass) * (this.crouching ? p.crouchDragFactor : 1);
       const av = this.velocity.length();
       if (av > 0) {
         this.velocity.multiplyScalar(Math.max(0, av - k * av * av * dt) / av);
