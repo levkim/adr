@@ -172,6 +172,28 @@ export const CONFIG = {
       breath: 0.4, // 1인칭 호흡
     },
   },
+  // ── 절차 배치 (나무/바위) ──
+  props: {
+    spacing: 11, // m, 배치 후보 격자 간격
+    hashCell: 24, // m, 충돌 공간 해시 셀 크기
+    treeMaxSlope: 35, // deg, 이 경사 이상엔 나무가 못 자란다
+    treeDensity: 0.5, // 수목한계선 충분히 아래에서의 배치 확률
+    treeDensityRamp: 180, // m, 수목한계선 아래로 이 표고차에 걸쳐 밀도 증가
+    treeCollisionRadius: 0.5, // m, 줄기 충돌 반경
+    treeCollisionHeight: 3.0, // m, 이 높이 위로는 통과(점프로 넘기)
+    maxTrees: 30000,
+    rockMinSlope: 34, // deg, 바위 노출 시작 경사
+    rockMaxSlope: 50, // deg
+    rockDensity: 0.045,
+    maxRocks: 4000,
+  },
+  // ── 낙상 ──
+  crash: {
+    duration: 2.2, // s, 낙상 후 일어나기까지
+    friction: 0.5, // 낙상 슬라이딩 마찰계수 (빠르게 멈춤)
+    invulnTime: 1.5, // s, 회복 직후 충돌 무시 (같은 장애물 연속 낙상 방지)
+    minSpeed: 1.5, // m/s, 이 속도 이하로 느려져야 일어난다
+  },
   surface: {
     snowMaxSlopeDeg: 38, // 이 경사까지는 완전 설면
     rockMinSlopeDeg: 52, // 이 경사부터는 완전 암벽

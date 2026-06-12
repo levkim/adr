@@ -5,6 +5,7 @@ import { Input } from './core/input';
 import { startLoop } from './core/loop';
 import { Terrain } from './world/terrain';
 import { LOCATIONS } from './world/locations';
+import { Props } from './world/props';
 import { RiderController } from './player/controller';
 import { CameraSystem, MODE_LABEL } from './camera/cameraSystem';
 import { Hud } from './ui/hud';
@@ -46,6 +47,11 @@ async function main(): Promise<void> {
   }
   const terrain = await Terrain.load(locId);
   scene.add(terrain.buildMesh());
+
+  // 나무/바위 절차 배치 (경사·고도 규칙, 시드 고정)
+  const props = Props.generate(terrain, LOCATIONS[locId].treeline);
+  scene.add(props.group);
+  console.log(`절차 배치: 나무 ${props.treeCount}그루, 바위 ${props.rockCount}개`);
   console.log(
     `지형 로드: ${terrain.meta.nameEn} ${terrain.meta.width}x${terrain.meta.height}px, ` +
       `${terrain.meta.minElevation.toFixed(0)}~${terrain.meta.maxElevation.toFixed(0)}m`,
@@ -250,9 +256,10 @@ async function main(): Promise<void> {
       cameraSystem.snapTo(rider, terrain);
     }
 
-    rider.update(dt, input, terrain);
+    rider.update(dt, input, terrain, props);
     cameraSystem.update(dt, input, rider, terrain);
     fx.update(dt, rider, cameraSystem);
+    if (rider.physics.crashedThisFrame) hud.showPopup('낙상!');
 
     // 1인칭에서는 라이더 본체 숨김 + 고글 오버레이
     const isFirst = cameraSystem.modeId === 'first';

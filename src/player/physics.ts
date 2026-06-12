@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { CONFIG } from '../config';
 import type { Input } from '../core/input';
 import type { Terrain } from '../world/terrain';
+import type { Props } from '../world/props';
 
 // heightmap 기반 경량 활강 물리.
 // 접지: 중력의 사면 접선 성분으로 가속, 속도는 표면 평면에 구속.
@@ -23,6 +24,12 @@ export class RiderPhysics {
   landedThisFrame = false;
   /** 마지막 착지의 지면 수직 충격 속도 (m/s) */
   lastImpact = 0;
+  /** 낙상 상태 */
+  crashed = false;
+  /** 이번 프레임에 낙상 발생 (연출 소비용) */
+  crashedThisFrame = false;
+  private crashTimer = 0;
+  private invulnTimer = 0;
 
   get speed(): number {
     return this.velocity.length();
@@ -38,6 +45,20 @@ export class RiderPhysics {
     this.leanFore = 0;
     this.landedThisFrame = false;
     this.lastImpact = 0;
+    this.crashed = false;
+    this.crashedThisFrame = false;
+    this.crashTimer = 0;
+    this.invulnTimer = 0;
+  }
+
+  /** 장애물 충돌 등으로 낙상 */
+  triggerCrash(): void {
+    if (this.crashed || this.invulnTimer > 0) return;
+    this.crashed = true;
+    this.crashedThisFrame = true;
+    this.crashTimer = CONFIG.crash.duration;
+    // 충돌 자체로 속도 큰 폭 손실
+    this.velocity.multiplyScalar(0.35);
   }
 
   /** 보드 진행 방향(사면 접선) 단위 벡터 */
@@ -50,14 +71,28 @@ export class RiderPhysics {
     return out;
   }
 
-  update(dt: number, input: Input, terrain: Terrain): void {
+  update(dt: number, input: Input, terrain: Terrain, props?: Props): void {
     const p = CONFIG.physics;
     const r = CONFIG.rider;
 
     this.landedThisFrame = false;
-    this.crouching = input.crouch;
+    this.crashedThisFrame = false;
+    this.invulnTimer = Math.max(0, this.invulnTimer - dt);
+
+    // 낙상 중: 입력 무시, 강한 마찰로 미끄러지다 일어난다
+    if (this.crashed) {
+      this.crashTimer -= dt;
+      if (this.crashTimer <= 0 && this.speed < CONFIG.crash.minSpeed) {
+        this.crashed = false;
+        this.invulnTimer = CONFIG.crash.invulnTime;
+        this.velocity.set(0, 0, 0);
+      }
+    }
+    const noInput = this.crashed;
+    this.crouching = !noInput && input.crouch;
     // 전후 체중이동 스무딩 (W=앞쏠림 +1, S=뒤쏠림 -1)
-    this.leanFore += (input.leanFore - this.leanFore) * (1 - Math.exp(-r.foreLeanResponse * dt));
+    const leanInput = noInput ? 0 : input.leanFore;
+    this.leanFore += (leanInput - this.leanFore) * (1 - Math.exp(-r.foreLeanResponse * dt));
 
     // ── 조향: 속도가 붙을수록 회전 반경 증가, 저속에서는 점차 약화 ──
     const speed = this.speed;
@@ -68,7 +103,7 @@ export class RiderPhysics {
     turnFactor *= lowSpeedRamp;
     if (this.crouching && this.grounded) turnFactor *= p.crouchTurnFactor;
     const headingBefore = this.heading;
-    this.heading -= input.steer * r.turnRate * turnFactor * dt;
+    this.heading -= (noInput ? 0 : input.steer) * r.turnRate * turnFactor * dt;
 
     if (this.grounded) {
       const n = this.groundNormal;
@@ -88,8 +123,8 @@ export class RiderPhysics {
       const gripDecay = Math.exp(-gripEff * dt);
       this.velocity.copy(_lateral.multiplyScalar(gripDecay)).addScaledVector(board, along);
 
-      // 베이스 활주 마찰 (수직항력 비례)
-      let mu = p.snowFriction;
+      // 베이스 활주 마찰 (수직항력 비례). 낙상 중에는 몸이 끌리며 강하게 감속
+      let mu = this.crashed ? CONFIG.crash.friction : p.snowFriction;
       if (this.crouching) mu *= p.crouchFrictionFactor;
       const frictionDecel = mu * p.gravity * n.y * dt;
       const v = this.velocity.length();
@@ -117,14 +152,14 @@ export class RiderPhysics {
       }
 
       // 점프: 사면 법선 방향 — 체공은 경사·속도에서 자연 발생
-      if (input.jumpPressed) {
+      if (input.jumpPressed && !noInput) {
         this.velocity.addScaledVector(n, p.jumpSpeed);
         this.grounded = false;
       }
 
       // 무조향 시 보드를 진행 방향으로 서서히 정렬
       const v3 = this.velocity.length();
-      if (input.steer === 0 && v3 > 1) {
+      if (!noInput && input.steer === 0 && v3 > 1) {
         const travelYaw = Math.atan2(this.velocity.x, this.velocity.z);
         let d = travelYaw - this.heading;
         d = Math.atan2(Math.sin(d), Math.cos(d)); // [-π, π]
@@ -152,6 +187,28 @@ export class RiderPhysics {
     const limitZ = terrain.depthMeters / 2 - margin;
     this.position.x = THREE.MathUtils.clamp(this.position.x, -limitX, limitX);
     this.position.z = THREE.MathUtils.clamp(this.position.z, -limitZ, limitZ);
+
+    // ── 장애물 충돌 (나무 줄기/바위) → 낙상 ──
+    if (props && !this.crashed && this.invulnTimer <= 0) {
+      const hit = props.query(
+        this.position.x,
+        this.position.z,
+        this.position.y,
+        CONFIG.rider.radius,
+      );
+      if (hit) {
+        this.triggerCrash();
+        // 장애물 밖으로 밀어내 끼임 방지
+        _pushOut.set(this.position.x - hit.x, 0, this.position.z - hit.z);
+        const d = _pushOut.length();
+        if (d > 1e-4) {
+          this.position.addScaledVector(
+            _pushOut.divideScalar(d),
+            hit.r + CONFIG.rider.radius - d + 0.05,
+          );
+        }
+      }
+    }
 
     // ── 지면 판정 (높이 샘플링 충돌) ──
     const groundY = terrain.getHeight(this.position.x, this.position.z);
@@ -207,3 +264,4 @@ const _board = new THREE.Vector3();
 const _lateral = new THREE.Vector3();
 const _prevNormal = new THREE.Vector3();
 const _normalDelta = new THREE.Vector3();
+const _pushOut = new THREE.Vector3();

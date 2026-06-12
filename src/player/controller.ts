@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { CONFIG } from '../config';
 import type { Input } from '../core/input';
 import type { Terrain } from '../world/terrain';
+import type { Props } from '../world/props';
 import { RiderPhysics } from './physics';
 
 // 캡슐 라이더: 물리 상태를 시각화하고 사면에 맞춰 기울인다.
@@ -14,6 +15,7 @@ export class RiderController {
   lastSteer = 0;
   /** rad, 현재 턴 린 각 (+ = 우측으로 기울임) */
   lean = 0;
+  private crashTip = 0; // 0~1, 낙상 쓰러짐 보간
   private readonly body: THREE.Mesh;
 
   constructor() {
@@ -46,9 +48,9 @@ export class RiderController {
     this.object.quaternion.setFromAxisAngle(_up, heading);
   }
 
-  update(dt: number, input: Input, terrain: Terrain): void {
-    this.lastSteer = input.steer;
-    this.physics.update(dt, input, terrain);
+  update(dt: number, input: Input, terrain: Terrain, props?: Props): void {
+    this.lastSteer = this.physics.crashed ? 0 : input.steer;
+    this.physics.update(dt, input, terrain, props);
     this.object.position.copy(this.physics.position);
 
     // 크라우치 자세 (캡슐 눌림)
@@ -84,6 +86,13 @@ export class RiderController {
     // 전후 체중이동: W=앞쏠림(노즈 쪽), S=뒤쏠림(테일 쪽)
     _pitch.setFromAxisAngle(_rightAxis, this.physics.leanFore * r.forePitchMax);
     _target.multiply(_pitch);
+    // 낙상: 옆으로 쓰러진 자세
+    const crashTarget = this.physics.crashed ? 1 : 0;
+    this.crashTip += (crashTarget - this.crashTip) * (1 - Math.exp(-8 * dt));
+    if (this.crashTip > 0.01) {
+      _crashQ.setFromAxisAngle(_fwdAxis, this.crashTip * 1.45);
+      _target.multiply(_crashQ);
+    }
     this.object.quaternion.slerp(_target, 1 - Math.exp(-10 * dt));
   }
 }
@@ -92,6 +101,7 @@ const _up = new THREE.Vector3(0, 1, 0);
 const _fwdAxis = new THREE.Vector3(0, 0, 1);
 const _rightAxis = new THREE.Vector3(1, 0, 0);
 const _pitch = new THREE.Quaternion();
+const _crashQ = new THREE.Quaternion();
 const _bodyUp = new THREE.Vector3();
 const _align = new THREE.Quaternion();
 const _yaw = new THREE.Quaternion();

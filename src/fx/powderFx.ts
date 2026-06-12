@@ -75,6 +75,16 @@ export class PowderFx {
         0.7,
       );
     }
+    // 낙상: 전신 파우더 폭발
+    if (phy.crashedThisFrame) {
+      this.landingPulse = 1;
+      phy.boardDir(_board);
+      _side.set(_board.z, 0, -_board.x);
+      _bodyOrigin.copy(phy.position);
+      _bodyOrigin.y += 0.6;
+      this.spray.emitBurst(_bodyOrigin, phy.velocity, _side, 0, 700, 1.6);
+      this.audio.impact(9);
+    }
     // 착지 버스트
     if (phy.landedThisFrame && phy.lastImpact > 1.5) {
       this.landingPulse = Math.min(1, this.landingPulse + phy.lastImpact * 0.12);

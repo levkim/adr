@@ -18,6 +18,8 @@ export interface LocationDef {
   finish: GeoPoint;
   /** 타일 줌 레벨 (12~14) */
   zoom: number;
+  /** 수목한계선 표고 (m) — 이 아래로 나무 절차 배치 */
+  treeline: number;
 }
 
 export const LOCATIONS: Record<string, LocationDef> = {
@@ -37,6 +39,7 @@ export const LOCATIONS: Record<string, LocationDef> = {
     // 북면 직하 토르탱 빙하 플랫 (FWT 피니시 일대, ~2705m)
     finish: { lat: 46.0778, lon: 7.2995 },
     zoom: 13,
+    treeline: 2200, // 발레 알프스 수목한계선 — 런 구간은 전부 알파인
   },
   'hakuba-happo': {
     id: 'hakuba-happo',
@@ -51,6 +54,7 @@ export const LOCATIONS: Record<string, LocationDef> = {
     start: { lat: 36.686, lon: 137.7598 },
     finish: { lat: 36.6969, lon: 137.7676 },
     zoom: 13,
+    treeline: 1850, // 핫포 능선 일대 — 런 하단부가 트리런이 된다
   },
   'valdez-thompson-pass': {
     id: 'valdez-thompson-pass',
@@ -63,5 +67,6 @@ export const LOCATIONS: Record<string, LocationDef> = {
     start: { lat: 61.162, lon: -145.826 },
     finish: { lat: 61.1444, lon: -145.8578 },
     zoom: 13,
+    treeline: 750, // 추가치 연안 수목한계선 — 런 최하단 협곡부만 수림
   },
 };

@@ -16,6 +16,37 @@ export class Hud {
     this.cameraEl.textContent = `📷 ${label} (C)`;
   }
 
+  /** 중앙 팝업 (낙상/트릭 등) */
+  showPopup(text: string, ms = 1600): void {
+    let el = document.getElementById('hud-popup');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'hud-popup';
+      el.style.cssText = [
+        'position:fixed',
+        'top:30%',
+        'left:50%',
+        'transform:translate(-50%,-50%)',
+        'font-size:42px',
+        'font-weight:800',
+        'color:#fff',
+        'text-shadow:0 2px 10px rgba(0,0,0,0.55)',
+        'pointer-events:none',
+        'z-index:7',
+        'transition:opacity 0.4s',
+      ].join(';');
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+    el.style.opacity = '1';
+    window.clearTimeout(this.popupTimer);
+    this.popupTimer = window.setTimeout(() => {
+      el.style.opacity = '0';
+    }, ms);
+  }
+
+  private popupTimer = 0;
+
   /**
    * @param speed m/s
    * @param altitude 실표고 m
