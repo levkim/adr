@@ -4,6 +4,7 @@ import { CONFIG } from './config';
 import { Input } from './core/input';
 import { startLoop } from './core/loop';
 import { Terrain } from './world/terrain';
+import { LOCATIONS } from './world/locations';
 import { RiderController } from './player/controller';
 import { FollowCamera } from './camera/followCamera';
 import { Hud } from './ui/hud';
@@ -33,8 +34,14 @@ async function main(): Promise<void> {
   scene.add(sun);
   scene.add(new THREE.HemisphereLight(0xbcd8f5, 0xe8eef5, 0.8));
 
-  // ── 실측 지형 (벡 데 로스) ──────────────────────────────
-  const terrain = await Terrain.load('bec-des-rosses');
+  // ── 실측 지형 ───────────────────────────────────────────
+  // 장소 선택: ?loc=bec-des-rosses | hakuba-happo | valdez-thompson-pass
+  // (시작 화면 UI는 9단계에서)
+  const locId = new URLSearchParams(window.location.search).get('loc') ?? 'bec-des-rosses';
+  if (!LOCATIONS[locId]) {
+    throw new Error(`알 수 없는 장소: ${locId} (가능: ${Object.keys(LOCATIONS).join(', ')})`);
+  }
+  const terrain = await Terrain.load(locId);
   scene.add(terrain.buildMesh());
   console.log(
     `지형 로드: ${terrain.meta.nameEn} ${terrain.meta.width}x${terrain.meta.height}px, ` +

@@ -1,0 +1,30 @@
+{
+  "id": "hakuba-happo",
+  "name": "하쿠바 핫포 북사면",
+  "nameEn": "Hakuba Happo North Face",
+  "width": 351,
+  "height": 350,
+  "zoom": 13,
+  "originPx": {
+    "x": 1850940,
+    "y": 818371
+  },
+  "bbox": {
+    "west": 137.735,
+    "south": 36.664,
+    "east": 137.795,
+    "north": 36.712
+  },
+  "start": {
+    "lat": 36.686,
+    "lon": 137.7598
+  },
+  "finish": {
+    "lat": 36.6969,
+    "lon": 137.7676
+  },
+  "metersPerPx": 15.32372839865334,
+  "minElevation": 1101,
+  "maxElevation": 2770,
+  "encoding": "float32-le-row-major-north-first"
+}

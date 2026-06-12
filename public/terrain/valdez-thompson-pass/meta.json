@@ -1,0 +1,30 @@
+{
+  "id": "valdez-thompson-pass",
+  "name": "발데즈 톰슨 패스",
+  "nameEn": "Valdez Thompson Pass",
+  "width": 531,
+  "height": 532,
+  "zoom": 13,
+  "originPx": {
+    "x": 198728,
+    "y": 595072
+  },
+  "bbox": {
+    "west": -145.886,
+    "south": 61.131,
+    "east": -145.795,
+    "north": 61.175
+  },
+  "start": {
+    "lat": 61.162,
+    "lon": -145.826
+  },
+  "finish": {
+    "lat": 61.1444,
+    "lon": -145.8578
+  },
+  "metersPerPx": 9.219688174843204,
+  "minElevation": 324.5859375,
+  "maxElevation": 2101.984375,
+  "encoding": "float32-le-row-major-north-first"
+}

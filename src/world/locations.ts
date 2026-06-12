@@ -37,4 +37,30 @@ export const LOCATIONS: Record<string, LocationDef> = {
     finish: { lat: 46.0778, lon: 7.2995 },
     zoom: 13,
   },
+  'hakuba-happo': {
+    id: 'hakuba-happo',
+    name: '하쿠바 핫포 북사면',
+    nameEn: 'Hakuba Happo North Face',
+    // 좌표 검증: DEM 국소 최고점 분석 (2026-06). 우시로타테야마 능선 체인 일치 —
+    // 고류다케(DEM 2793/실제 2814) ─ 가라마츠다케(DEM 2672/실제 2696 @ 36.6871,137.7545)
+    // ─ 가에라즈노켄(DEM 2596) ─ 텐구노아타마(DEM 2811/실제 2812). 오프셋 -20m 일관.
+    // 런: 핫포 능선 상단에서 북동향 사면 2646→1770m, 낙차 876m, 지속 24~40°
+    // (FWT 하쿠바 베뉴 제원과 부합: NE향, ~800m급 낙차).
+    bbox: { west: 137.735, south: 36.664, east: 137.795, north: 36.712 },
+    start: { lat: 36.686, lon: 137.7598 },
+    finish: { lat: 36.6969, lon: 137.7676 },
+    zoom: 13,
+  },
+  'valdez-thompson-pass': {
+    id: 'valdez-thompson-pass',
+    name: '발데즈 톰슨 패스',
+    nameEn: 'Valdez Thompson Pass',
+    // 좌표 검증: 톰슨 패스 안부 DEM 808m(실제 816m) @ (61.127,-145.73) 확인.
+    // 패스 북서쪽 추가치 산군에서 낙차 스캔으로 선정한 무명봉 런:
+    // 1963m → 로우 리버 협곡 431m, 수평 2.6km, 낙차 1532m 연속 사면(16~41°, 벤치 없음).
+    bbox: { west: -145.886, south: 61.131, east: -145.795, north: 61.175 },
+    start: { lat: 61.162, lon: -145.826 },
+    finish: { lat: 61.1444, lon: -145.8578 },
+    zoom: 13,
+  },
 };
