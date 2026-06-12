@@ -30,6 +30,16 @@ export class Input {
     return this.down('KeyW', 'ArrowUp');
   }
 
+  /** 크라우치(턱) — 주행 중 W 유지 또는 Shift */
+  get crouch(): boolean {
+    return this.down('KeyW', 'ArrowUp', 'ShiftLeft', 'ShiftRight');
+  }
+
+  /** 점프 (이번 프레임에 눌림) */
+  get jumpPressed(): boolean {
+    return this.justPressed('Space');
+  }
+
   /** 브레이크 (스피드 체크) */
   get brake(): boolean {
     return this.down('KeyS', 'ArrowDown');

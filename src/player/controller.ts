@@ -8,6 +8,8 @@ import { RiderPhysics } from './physics';
 export class RiderController {
   readonly object = new THREE.Group();
   readonly physics = new RiderPhysics();
+  private readonly body: THREE.Mesh;
+  private crouchAmount = 0; // 0=서있음, 1=완전 크라우치
 
   constructor() {
     const c = CONFIG.rider;
@@ -18,6 +20,7 @@ export class RiderController {
     );
     body.position.y = c.height / 2;
     body.castShadow = true;
+    this.body = body;
 
     // 진행 방향 표시용 노즈 마커
     const nose = new THREE.Mesh(
@@ -41,6 +44,16 @@ export class RiderController {
   update(dt: number, input: Input, terrain: Terrain): void {
     this.physics.update(dt, input, terrain);
     this.object.position.copy(this.physics.position);
+
+    // 크라우치 자세 (캡슐 눌림) — 푸시 중 저속에서는 생략
+    const wantCrouch =
+      this.physics.crouching && (this.physics.speed > CONFIG.physics.pushMaxSpeed || !this.physics.grounded);
+    const target = wantCrouch ? 1 : 0;
+    const ct = 1 - Math.exp(-CONFIG.rider.crouchVisualLerp * dt);
+    this.crouchAmount += (target - this.crouchAmount) * ct;
+    const squash = 1 - 0.35 * this.crouchAmount;
+    this.body.scale.set(1, squash, 1);
+    this.body.position.y = (CONFIG.rider.height / 2) * squash;
 
     // 사면 정렬(접지) 또는 수평(공중) + yaw, 부드럽게 보간
     const targetUp = this.physics.grounded ? this.physics.groundNormal : _up;

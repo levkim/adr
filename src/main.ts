@@ -72,13 +72,23 @@ async function main(): Promise<void> {
   phyFolder.add(CONFIG.physics, 'airDrag', 0, 0.02);
   phyFolder.add(CONFIG.physics, 'edgeGrip', 0.5, 15);
   phyFolder.add(CONFIG.physics, 'headingAlign', 0, 5);
+  phyFolder.add(CONFIG.physics, 'jumpSpeed', 1, 8);
+  phyFolder.add(CONFIG.physics, 'crouchDragFactor', 0.2, 1);
+  phyFolder.add(CONFIG.physics, 'launchFactor', 0.5, 3);
   const riderFolder = gui.addFolder('조향');
   riderFolder.add(CONFIG.rider, 'turnRate', 0.5, 5);
   riderFolder.add(CONFIG.rider, 'turnSpeedRef', 2, 30);
+  riderFolder.add(CONFIG.rider, 'minTurnSpeed', 0.5, 10);
+  riderFolder.add(CONFIG.physics, 'crouchTurnFactor', 0.2, 1);
   const camFolder = gui.addFolder('카메라');
   camFolder.add(CONFIG.camera, 'distance', 3, 20);
   camFolder.add(CONFIG.camera, 'height', 1, 10);
   camFolder.add(CONFIG.camera, 'followLerp', 1, 12);
+  camFolder.add(CONFIG.camera, 'distanceSpeedGain', 0, 0.3);
+  camFolder.add(CONFIG.camera, 'fovSpeedGain', 0, 1);
+  camFolder.add(CONFIG.camera, 'airPullback', 0, 8);
+  camFolder.add(CONFIG.camera, 'shakeImpactScale', 0, 0.3);
+  camFolder.add(CONFIG.camera, 'shakeMaxAmp', 0, 1);
   camFolder.close();
 
   // ── 리사이즈 ────────────────────────────────────────────

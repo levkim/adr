@@ -14,6 +14,11 @@ export class RiderPhysics {
   readonly groundNormal = new THREE.Vector3(0, 1, 0);
   heading = 0; // rad, +Z 기준 보드 yaw
   grounded = true;
+  crouching = false;
+  /** 이번 프레임에 착지했는지 (카메라 셰이크 등 소비용) */
+  landedThisFrame = false;
+  /** 마지막 착지의 지면 수직 충격 속도 (m/s) */
+  lastImpact = 0;
 
   get speed(): number {
     return this.velocity.length();
@@ -25,6 +30,9 @@ export class RiderPhysics {
     this.groundNormal.set(0, 1, 0);
     this.heading = heading;
     this.grounded = true;
+    this.crouching = false;
+    this.landedThisFrame = false;
+    this.lastImpact = 0;
   }
 
   /** 보드 진행 방향(사면 접선) 단위 벡터 */
@@ -41,9 +49,17 @@ export class RiderPhysics {
     const p = CONFIG.physics;
     const r = CONFIG.rider;
 
-    // ── 조향: 속도가 붙을수록 회전 반경 증가 ──
+    this.landedThisFrame = false;
+    this.crouching = input.crouch;
+
+    // ── 조향: 속도가 붙을수록 회전 반경 증가, 저속에서는 점차 약화 ──
     const speed = this.speed;
-    const turnFactor = 1 / (1 + Math.max(speed - r.turnSpeedRef, 0) / r.turnSpeedRef);
+    let turnFactor = 1 / (1 + Math.max(speed - r.turnSpeedRef, 0) / r.turnSpeedRef);
+    const lowSpeedRamp =
+      r.standstillTurnFactor +
+      (1 - r.standstillTurnFactor) * Math.min(1, speed / r.minTurnSpeed);
+    turnFactor *= lowSpeedRamp;
+    if (this.crouching && this.grounded) turnFactor *= p.crouchTurnFactor;
     this.heading -= input.steer * r.turnRate * turnFactor * dt;
 
     if (this.grounded) {
@@ -61,8 +77,9 @@ export class RiderPhysics {
       const gripDecay = Math.exp(-p.edgeGrip * dt);
       this.velocity.copy(_lateral.multiplyScalar(gripDecay)).addScaledVector(board, along);
 
-      // 마찰 (수직항력 비례) + 브레이크
-      const mu = input.brake ? p.brakeFriction : p.snowFriction;
+      // 마찰 (수직항력 비례) + 브레이크. 크라우치 시 마찰·드래그 감소 → 가속
+      let mu = input.brake ? p.brakeFriction : p.snowFriction;
+      if (this.crouching) mu *= p.crouchFrictionFactor;
       const frictionDecel = mu * p.gravity * n.y * dt;
       const v = this.velocity.length();
       if (v > 0) {
@@ -70,14 +87,21 @@ export class RiderPhysics {
       }
 
       // 공기저항 (k·v²)
+      const k = p.airDrag * (this.crouching ? p.crouchDragFactor : 1);
       const v2 = this.velocity.length();
       if (v2 > 0) {
-        this.velocity.multiplyScalar(Math.max(0, v2 - p.airDrag * v2 * v2 * dt) / v2);
+        this.velocity.multiplyScalar(Math.max(0, v2 - k * v2 * v2 * dt) / v2);
       }
 
       // 푸시 (저속에서만 유효 — 스케이팅)
       if (input.push && this.velocity.length() < p.pushMaxSpeed) {
         this.velocity.addScaledVector(board, p.pushAccel * dt);
+      }
+
+      // 점프: 사면 법선 방향 — 체공은 경사·속도에서 자연 발생
+      if (input.jumpPressed) {
+        this.velocity.addScaledVector(n, p.jumpSpeed);
+        this.grounded = false;
       }
 
       // 무조향 시 보드를 진행 방향으로 서서히 정렬
@@ -89,11 +113,12 @@ export class RiderPhysics {
         this.heading += d * Math.min(1, p.headingAlign * dt);
       }
     } else {
-      // 공중: 중력 + 공기저항
+      // 공중: 중력 + 공기저항 (크라우치=웅크리면 드래그 감소)
       this.velocity.y -= p.gravity * dt;
+      const k = p.airDrag * (this.crouching ? p.crouchDragFactor : 1);
       const av = this.velocity.length();
       if (av > 0) {
-        this.velocity.multiplyScalar(Math.max(0, av - p.airDrag * av * av * dt) / av);
+        this.velocity.multiplyScalar(Math.max(0, av - k * av * av * dt) / av);
       }
     }
 
@@ -137,19 +162,18 @@ export class RiderPhysics {
         }
       }
     } else if (this.position.y <= groundY) {
-      // 착지
+      // 착지: 지면 수직 충격을 기록하고 속도를 표면 평면에 구속
       this.position.y = groundY;
       this.grounded = true;
-      this.snapToSurface(terrain);
-    }
-  }
-
-  /** 접지 상태 갱신: 법선 샘플 + 속도를 표면 평면에 구속 */
-  private snapToSurface(terrain: Terrain): void {
-    terrain.getNormal(this.position.x, this.position.z, this.groundNormal);
-    const into = this.velocity.dot(this.groundNormal);
-    if (into < 0) {
-      this.velocity.addScaledVector(this.groundNormal, -into);
+      this.landedThisFrame = true;
+      terrain.getNormal(this.position.x, this.position.z, this.groundNormal);
+      const into = this.velocity.dot(this.groundNormal);
+      if (into < 0) {
+        this.lastImpact = -into;
+        this.velocity.addScaledVector(this.groundNormal, -into);
+      } else {
+        this.lastImpact = 0;
+      }
     }
   }
 }
