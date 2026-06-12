@@ -92,6 +92,72 @@ export const CONFIG = {
     fogNear: 3000,
     fogFar: 9000,
   },
+  fx: {
+    screenIntensity: 0.8, // 0~1, 모든 화면 효과 마스터 (가독성/멀미 배려)
+    // ── 월드 파우더 스프레이 (GPU 파티클 풀) ──
+    spray: {
+      poolSize: 4000,
+      baseRate: 110, // 입자/초, 직활강 기준속도에서
+      turnRateGain: 320, // 턴 강도(|steer|·속도) 비례 추가 방출
+      landingBurst: 70, // 착지 충격(m/s)당 버스트 입자 수
+      speedRef: 20, // m/s, 방출량 기준 속도
+      minSpeed: 2.5, // m/s, 이하에서는 방출 없음
+      size: 0.5, // m, 기본 입자 크기
+      sizeJitter: 0.6,
+      expand: 2.2, // 수명 동안 크기 팽창 배율
+      life: 0.85, // s
+      lifeJitter: 0.5,
+      upVel: 2.4, // m/s, 위로 차오르는 속도
+      sideVel: 3.0, // m/s, 턴 바깥쪽 분사
+      inheritVel: 0.4, // 라이더 속도 계승 비율
+      gravity: 5.0, // 파우더 입자 유효 중력 (공기저항 근사로 실중력보다 작게)
+      bodyEmitterRatio: 0.3, // 라이더 몸 주변 보조 이미터 비중
+      opacity: 0.75,
+    },
+    // ── 카메라 부착 근접 파티클 (전방 원뿔) ──
+    cameraSnow: {
+      poolSize: 800,
+      budgets: { first: 800, shoulder: 600, third: 280, drone: 60 }, // 모드별 예산
+      coneDepth: 9, // m
+      coneSpread: 0.6,
+      windFactor: 1.0, // 속도 → 입자 스트리밍 속도
+      size: 0.03, // m
+      ambientDensity: 0.18, // 정지 시 기본 밀도 (바람·강설 분위기)
+      opacity: 0.55,
+    },
+    // ── 고글 스플래터/김서림 (스크린 스페이스, 1인칭) ──
+    splatter: {
+      maxBlobs: 28,
+      spawnRate: 9, // 블롭/초, 스프레이 최대 강도에서
+      life: 2.6, // s, 녹아 사라지는 시간
+      lifeJitter: 1.4,
+      minR: 7, // px
+      maxR: 30,
+      slide: 30, // px/s², 녹으며 흘러내리는 가속
+      fogGain: 0.5, // 김서림 누적 속도
+      fogDecay: 0.45, // 1/s
+      fogMaxOpacity: 0.28,
+    },
+    // ── 화이트룸 (고속 주행 시 시야 눈 덮임) ──
+    whiteroom: {
+      speedMin: 13, // m/s, 시작
+      speedMax: 27, // m/s, 최대
+      maxOpacity: 0.5,
+      attack: 1.8, // 1/s
+      release: 2.4,
+      // 모드별 반영 배율 (1인칭·숄더가 핵심)
+      modeFactor: { first: 1.0, shoulder: 0.8, third: 0.25, drone: 0 },
+    },
+    // ── 절차 생성 사운드 (WebAudio, 에셋 없음) ──
+    audio: {
+      master: 0.65,
+      wind: 0.9, // 속도 연동 바람
+      slush: 0.8, // 파우더 슬러시
+      carve: 0.7, // 에지 카빙 히스
+      impact: 0.9, // 착지 임팩트
+      breath: 0.4, // 1인칭 호흡
+    },
+  },
   surface: {
     snowMaxSlopeDeg: 38, // 이 경사까지는 완전 설면
     rockMinSlopeDeg: 52, // 이 경사부터는 완전 암벽

@@ -9,6 +9,7 @@ import { RiderController } from './player/controller';
 import { CameraSystem, MODE_LABEL } from './camera/cameraSystem';
 import { Hud } from './ui/hud';
 import { GoggleOverlay } from './ui/goggleOverlay';
+import { PowderFx } from './fx/powderFx';
 
 async function main(): Promise<void> {
   // ── 렌더러 ──────────────────────────────────────────────
@@ -66,6 +67,7 @@ async function main(): Promise<void> {
 
   const hud = new Hud();
   const goggle = new GoggleOverlay();
+  const fx = new PowderFx(scene, cameraSystem.camera);
 
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝' });
@@ -99,6 +101,15 @@ async function main(): Promise<void> {
   fpFolder.add(CONFIG.camera.first, 'rollMax', 0, 0.3);
   fpFolder.add(CONFIG.camera.first, 'lookAhead', 0, 1);
   fpFolder.close();
+  const fxFolder = gui.addFolder('연출');
+  fxFolder.add(CONFIG.fx, 'screenIntensity', 0, 1).name('화면 효과 강도');
+  fxFolder.add(CONFIG.fx.spray, 'baseRate', 0, 400);
+  fxFolder.add(CONFIG.fx.spray, 'turnRateGain', 0, 800);
+  fxFolder.add(CONFIG.fx.spray, 'opacity', 0, 1);
+  fxFolder.add(CONFIG.fx.cameraSnow, 'ambientDensity', 0, 1).name('강설 분위기');
+  fxFolder.add(CONFIG.fx.whiteroom, 'maxOpacity', 0, 1).name('화이트룸 최대');
+  fxFolder.add(CONFIG.fx.audio, 'master', 0, 1).name('볼륨');
+  fxFolder.close();
 
   // ── 리사이즈 ────────────────────────────────────────────
   window.addEventListener('resize', () => {
@@ -120,6 +131,7 @@ async function main(): Promise<void> {
 
     rider.update(dt, input, terrain);
     cameraSystem.update(dt, input, rider, terrain);
+    fx.update(dt, rider, cameraSystem);
 
     // 1인칭에서는 라이더 본체 숨김 + 고글 오버레이
     const isFirst = cameraSystem.modeId === 'first';
