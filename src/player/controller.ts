@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config';
 import type { Input } from '../core/input';
+import type { Terrain } from '../world/terrain';
 
-// 평지 셋업 단계의 캡슐 라이더. heading 방향으로 가감속/조향만 한다.
-// 활강 물리(경사 슬라이딩)는 3단계에서 지형 높이 샘플링과 함께 들어온다.
+// 셋업 단계의 캡슐 라이더. heading 방향으로 가감속/조향하고 지형 높이에 스냅한다.
+// 활강 물리(중력/경사 슬라이딩)는 3단계에서 들어온다.
 export class RiderController {
   readonly object = new THREE.Group();
   heading = 0; // rad, +Z 기준 yaw
@@ -36,7 +37,7 @@ export class RiderController {
     return out.set(Math.sin(this.heading), 0, Math.cos(this.heading));
   }
 
-  update(dt: number, input: Input): void {
+  update(dt: number, input: Input, terrain: Terrain): void {
     const c = CONFIG.rider;
 
     // 조향: 속도가 붙을수록 회전 반경이 커지도록 감쇠
@@ -55,15 +56,20 @@ export class RiderController {
     }
     this.speed = THREE.MathUtils.clamp(this.speed, -c.maxReverseSpeed, c.maxSpeed);
 
-    // 이동 (평지: y는 0 고정)
+    // 이동
     const dir = this.forwardDir(_dir);
     this.object.position.addScaledVector(dir, this.speed * dt);
     this.object.rotation.y = this.heading;
 
-    // 평지 경계 밖으로 못 나가게 클램프
-    const limit = CONFIG.world.groundSize / 2 - 2;
-    this.object.position.x = THREE.MathUtils.clamp(this.object.position.x, -limit, limit);
-    this.object.position.z = THREE.MathUtils.clamp(this.object.position.z, -limit, limit);
+    // 지형 가장자리 밖으로 못 나가게 클램프
+    const margin = CONFIG.world.edgeMargin;
+    const limitX = terrain.widthMeters / 2 - margin;
+    const limitZ = terrain.depthMeters / 2 - margin;
+    this.object.position.x = THREE.MathUtils.clamp(this.object.position.x, -limitX, limitX);
+    this.object.position.z = THREE.MathUtils.clamp(this.object.position.z, -limitZ, limitZ);
+
+    // 지형 높이 스냅 (활강 물리 전 임시)
+    this.object.position.y = terrain.getHeight(this.object.position.x, this.object.position.z);
   }
 }
 

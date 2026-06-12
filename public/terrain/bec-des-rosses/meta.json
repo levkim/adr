@@ -1,0 +1,30 @@
+{
+  "id": "bec-des-rosses",
+  "name": "벡 데 로스",
+  "nameEn": "Bec des Rosses",
+  "width": 350,
+  "height": 371,
+  "zoom": 13,
+  "originPx": {
+    "x": 1090938,
+    "y": 745280
+  },
+  "bbox": {
+    "west": 7.272,
+    "south": 46.052,
+    "east": 7.332,
+    "north": 46.096
+  },
+  "start": {
+    "lat": 46.0718,
+    "lon": 7.2998
+  },
+  "finish": {
+    "lat": 46.0778,
+    "lon": 7.2995
+  },
+  "metersPerPx": 13.256640688881458,
+  "minElevation": 1229.75390625,
+  "maxElevation": 3271.578125,
+  "encoding": "float32-le-row-major-north-first"
+}
