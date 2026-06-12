@@ -14,17 +14,27 @@ export const CONFIG = {
     slopeAlign: 0.25, // 0=완전 수직, 1=사면 법선 정렬
     leanMax: 0.6, // rad (~34°), 턴 린 최대 각
     leanResponse: 7, // 1/s, 린 반응 속도
+    forePitchMax: 0.38, // rad (~22°), W/S 전후 기울기 최대 각
+    foreLeanResponse: 5, // 1/s, 전후 기울기 반응 속도
+  },
+  // ── 파우더 스노우 (신설) — 기본 30cm, 30cm 단위 추가 설정 ──
+  snow: {
+    depth: 0.3, // m, 신설 깊이. 모든 파우더 물리의 기준
+    powderDrag: 7, // m/s² per (m 깊이), 보드가 눈을 밀고 가는 저항 계수
+    foreLeanReduce: 0.8, // 앞쏠림(+1)이 plow 저항을 줄이는 비율 → 앞쏠림 시 0.2배
+    // 뒤쏠림(-1)은 같은 비율로 저항 증가(테일 플로우) → 1.8배 = 파우더 브레이크
+    planeSpeed: 14, // m/s, 이 속도에 가까워질수록 보드가 떠올라 저항 감소
+    minPlaning: 0.15, // 완전 플레이닝 시 남는 저항 비율
+    floatGripLoss: 0.5, // 깊이(m)당 에지 그립 손실 (눈이 무너져 그립 감소)
+    landingAbsorb: 0.6, // 깊이(m)당 착지 충격 흡수 비율 (파우더 쿠션)
   },
   physics: {
     gravity: 9.81, // m/s²
-    snowFriction: 0.045, // 운동 마찰계수 (다져진 눈)
-    brakeFriction: 0.45, // 브레이크(S) 시 마찰계수 — 스피드 체크
+    snowFriction: 0.045, // 운동 마찰계수 (베이스 활주 저항)
     airDrag: 0.0045, // 공기저항 계수 k @ 기준체중 75kg (감속 = k·v²·75/체중)
     // → 75kg 기준 35° 사면 터미널 ~34m/s, 무거우면 더 빠르다
     massRef: 75, // kg, airDrag가 정의된 기준 체중
     edgeGrip: 5, // 1/s, 횡미끄럼이 보드 방향으로 수렴하는 속도 (카빙 그립)
-    pushAccel: 2.5, // m/s², 평탄/저속에서 푸시(W) 가속
-    pushMaxSpeed: 6, // m/s, 푸시로 낼 수 있는 최대 속도
     jumpSpeed: 3.8, // m/s, 점프 시 사면 법선 방향 속도 (체공은 경사·속도에서 자연 발생)
     crouchDragFactor: 0.45, // 크라우치 시 공기저항 배율 (턱 자세 가속)
     crouchFrictionFactor: 0.85, // 크라우치 시 마찰 배율

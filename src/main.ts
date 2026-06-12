@@ -82,10 +82,6 @@ async function main(): Promise<void> {
     '눈과 보드 사이 운동 마찰계수. 높이면 전반적으로 느려지고 관성이 빨리 죽습니다. 다져진 눈=낮음, 습설=높음.',
   );
   help(
-    phyFolder.add(CONFIG.physics, 'brakeFriction', 0.1, 1).name('브레이크 마찰'),
-    'S(브레이크) 입력 시 적용되는 마찰계수. 높이면 제동이 강해집니다.',
-  );
-  help(
     phyFolder.add(CONFIG.physics, 'airDrag', 0, 0.02).name('공기저항'),
     '속도 제곱에 비례하는 감속 계수. 최고 속도(터미널)를 결정합니다. 낮추면 더 빨라집니다.',
   );
@@ -108,6 +104,29 @@ async function main(): Promise<void> {
   help(
     phyFolder.add(CONFIG.physics, 'launchFactor', 0.5, 3).name('롤오버 런치'),
     '볼록한 지형(롤오버)에서 공중으로 뜨는 민감도. 낮추면 둔덕마다 쉽게 뜨고, 높이면 지면에 더 달라붙습니다.',
+  );
+  const snowFolder = gui.addFolder('파우더 스노우');
+  help(
+    snowFolder
+      .add(CONFIG.snow, 'depth', { '30cm (기본)': 0.3, '60cm': 0.6, '90cm': 0.9, '120cm': 1.2 })
+      .name('신설 깊이'),
+    '쌓인 파우더 깊이. 깊을수록 저항이 커져 앞쏠림(W) 없이는 출발이 어렵고, 그립이 줄어 부유감이 커지며, 착지가 부드러워지고 스프레이가 커집니다.',
+  );
+  help(
+    snowFolder.add(CONFIG.snow, 'powderDrag', 0, 15).name('파우더 저항'),
+    '깊이 1m당 보드가 눈을 밀고 가는 감속(m/s²). 90cm 기준 중립 자세로는 급사면에서도 출발이 안 되는 수준이 기본값입니다.',
+  );
+  help(
+    snowFolder.add(CONFIG.snow, 'foreLeanReduce', 0, 1).name('앞쏠림 효과'),
+    'W(앞쏠림)가 파우더 저항을 줄이는 비율. S(뒤쏠림)는 같은 비율로 저항을 늘려 파우더 브레이크가 됩니다.',
+  );
+  help(
+    snowFolder.add(CONFIG.snow, 'planeSpeed', 5, 30).name('플레이닝 속도'),
+    '이 속도(m/s)에 가까워질수록 보드가 눈 위로 떠올라 저항이 줄어듭니다. 낮추면 쉽게 떠서 빨라집니다.',
+  );
+  help(
+    snowFolder.add(CONFIG.snow, 'floatGripLoss', 0, 1).name('그립 손실'),
+    '깊이 1m당 에지 그립 손실. 깊은 눈에서 턴이 미끄러지듯 무뎌지는 부유감을 만듭니다.',
   );
   const riderFolder = gui.addFolder('조향');
   help(

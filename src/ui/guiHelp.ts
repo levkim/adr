@@ -21,7 +21,7 @@ function ensureTip(): HTMLDivElement {
     'border:1px solid rgba(255,255,255,0.15)',
     'border-radius:6px',
     'pointer-events:none',
-    'z-index:1000',
+    'z-index:100000', // lil-gui 패널(1001)보다 항상 앞
     'display:none',
     'box-shadow:0 4px 14px rgba(0,0,0,0.4)',
   ].join(';');

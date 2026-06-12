@@ -51,10 +51,8 @@ export class RiderController {
     this.physics.update(dt, input, terrain);
     this.object.position.copy(this.physics.position);
 
-    // 크라우치 자세 (캡슐 눌림) — 푸시 중 저속에서는 생략
-    const wantCrouch =
-      this.physics.crouching && (this.physics.speed > CONFIG.physics.pushMaxSpeed || !this.physics.grounded);
-    const target = wantCrouch ? 1 : 0;
+    // 크라우치 자세 (캡슐 눌림)
+    const target = this.physics.crouching ? 1 : 0;
     const ct = 1 - Math.exp(-CONFIG.rider.crouchVisualLerp * dt);
     this.crouchAmount += (target - this.crouchAmount) * ct;
     const squash = 1 - 0.35 * this.crouchAmount;
@@ -83,12 +81,17 @@ export class RiderController {
     this.lean += (leanTarget - this.lean) * (1 - Math.exp(-r.leanResponse * dt));
     _roll.setFromAxisAngle(_fwdAxis, this.lean);
     _target.multiply(_roll);
+    // 전후 체중이동: W=앞쏠림(노즈 쪽), S=뒤쏠림(테일 쪽)
+    _pitch.setFromAxisAngle(_rightAxis, this.physics.leanFore * r.forePitchMax);
+    _target.multiply(_pitch);
     this.object.quaternion.slerp(_target, 1 - Math.exp(-10 * dt));
   }
 }
 
 const _up = new THREE.Vector3(0, 1, 0);
 const _fwdAxis = new THREE.Vector3(0, 0, 1);
+const _rightAxis = new THREE.Vector3(1, 0, 0);
+const _pitch = new THREE.Quaternion();
 const _bodyUp = new THREE.Vector3();
 const _align = new THREE.Quaternion();
 const _yaw = new THREE.Quaternion();

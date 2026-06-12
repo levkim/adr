@@ -17,6 +17,8 @@ export class RiderPhysics {
   yawRate = 0;
   grounded = true;
   crouching = false;
+  /** -1(뒤쏠림)~+1(앞쏠림), 전후 체중이동 (스무딩된 값) */
+  leanFore = 0;
   /** 이번 프레임에 착지했는지 (카메라 셰이크 등 소비용) */
   landedThisFrame = false;
   /** 마지막 착지의 지면 수직 충격 속도 (m/s) */
@@ -33,6 +35,7 @@ export class RiderPhysics {
     this.heading = heading;
     this.grounded = true;
     this.crouching = false;
+    this.leanFore = 0;
     this.landedThisFrame = false;
     this.lastImpact = 0;
   }
@@ -53,6 +56,8 @@ export class RiderPhysics {
 
     this.landedThisFrame = false;
     this.crouching = input.crouch;
+    // 전후 체중이동 스무딩 (W=앞쏠림 +1, S=뒤쏠림 -1)
+    this.leanFore += (input.leanFore - this.leanFore) * (1 - Math.exp(-r.foreLeanResponse * dt));
 
     // ── 조향: 속도가 붙을수록 회전 반경 증가, 저속에서는 점차 약화 ──
     const speed = this.speed;
@@ -73,20 +78,34 @@ export class RiderPhysics {
       _gravity.addScaledVector(n, p.gravity * n.y); // g - n(g·n), g·n = -G·n.y
       this.velocity.addScaledVector(_gravity, dt);
 
-      // 에지 그립: 보드 횡방향 속도 성분을 지수 감쇠 → 속도가 보드 방향으로 휜다
+      // 에지 그립: 보드 횡방향 속도 성분을 지수 감쇠 → 속도가 보드 방향으로 휜다.
+      // 깊은 파우더에서는 눈이 무너져 그립이 약해진다 (부유감)
+      const snow = CONFIG.snow;
       const board = this.boardDir(_board);
       const along = this.velocity.dot(board);
       _lateral.copy(this.velocity).addScaledVector(board, -along);
-      const gripDecay = Math.exp(-p.edgeGrip * dt);
+      const gripEff = p.edgeGrip * (1 - Math.min(0.7, snow.depth * snow.floatGripLoss));
+      const gripDecay = Math.exp(-gripEff * dt);
       this.velocity.copy(_lateral.multiplyScalar(gripDecay)).addScaledVector(board, along);
 
-      // 마찰 (수직항력 비례) + 브레이크. 크라우치 시 마찰·드래그 감소 → 가속
-      let mu = input.brake ? p.brakeFriction : p.snowFriction;
+      // 베이스 활주 마찰 (수직항력 비례)
+      let mu = p.snowFriction;
       if (this.crouching) mu *= p.crouchFrictionFactor;
       const frictionDecel = mu * p.gravity * n.y * dt;
       const v = this.velocity.length();
       if (v > 0) {
         this.velocity.multiplyScalar(Math.max(0, v - frictionDecel) / v);
+      }
+
+      // 파우더 플로우 저항: 깊이에 비례, 전후 체중이동·플레이닝으로 조절.
+      // 앞쏠림(+1) → 노즈가 떠서 저항 0.2배, 뒤쏠림(-1) → 테일이 박혀 1.8배(브레이크).
+      // 속도가 planeSpeed에 가까워지면 보드가 떠올라 저항이 minPlaning까지 감소
+      const v1 = this.velocity.length();
+      const plow = 1 - snow.foreLeanReduce * this.leanFore;
+      const planing = Math.max(snow.minPlaning, 1 - v1 / snow.planeSpeed);
+      const powderDecel = snow.powderDrag * snow.depth * plow * planing * dt;
+      if (v1 > 0) {
+        this.velocity.multiplyScalar(Math.max(0, v1 - powderDecel) / v1);
       }
 
       // 공기저항 (k·v², 체중 반비례 — 무거울수록 덜 감속)
@@ -95,11 +114,6 @@ export class RiderPhysics {
       const v2 = this.velocity.length();
       if (v2 > 0) {
         this.velocity.multiplyScalar(Math.max(0, v2 - k * v2 * v2 * dt) / v2);
-      }
-
-      // 푸시 (저속에서만 유효 — 스케이팅)
-      if (input.push && this.velocity.length() < p.pushMaxSpeed) {
-        this.velocity.addScaledVector(board, p.pushAccel * dt);
       }
 
       // 점프: 사면 법선 방향 — 체공은 경사·속도에서 자연 발생
@@ -176,7 +190,9 @@ export class RiderPhysics {
       terrain.getNormal(this.position.x, this.position.z, this.groundNormal);
       const into = this.velocity.dot(this.groundNormal);
       if (into < 0) {
-        this.lastImpact = -into;
+        // 파우더 쿠션: 깊을수록 착지 충격 흡수
+        const absorb = Math.min(0.8, CONFIG.snow.depth * CONFIG.snow.landingAbsorb);
+        this.lastImpact = -into * (1 - absorb);
         this.velocity.addScaledVector(this.groundNormal, -into);
       } else {
         this.lastImpact = 0;

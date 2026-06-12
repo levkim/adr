@@ -36,11 +36,12 @@ export class PowderFx {
     // 착지 펄스: 잠시 강도 유지 후 감쇠
     this.landingPulse *= Math.exp(-3.5 * dt);
 
-    // ── 공용 스프레이 강도 ──
+    // ── 공용 스프레이 강도 (신설 깊이에 비례) ──
+    const depthFactor = 0.55 + 0.45 * Math.min(1, CONFIG.snow.depth / 0.9);
     const grounded = phy.grounded && speed > s.minSpeed;
     this.intensity = grounded
-      ? Math.min(1, speedT * (0.3 + 0.7 * this.steerSmooth) + this.landingPulse)
-      : Math.min(1, this.landingPulse);
+      ? Math.min(1, (speedT * (0.3 + 0.7 * this.steerSmooth) + this.landingPulse) * depthFactor)
+      : Math.min(1, this.landingPulse * depthFactor);
 
     // ── 월드 스프레이 방출 ──
     if (grounded) {
