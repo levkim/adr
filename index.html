@@ -37,6 +37,17 @@
         opacity: 0.85;
         font-variant-numeric: tabular-nums;
       }
+      #hud-camera {
+        position: fixed;
+        top: 14px;
+        left: 16px;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 14px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        user-select: none;
+        pointer-events: none;
+        z-index: 6;
+      }
       #hud-help {
         position: fixed;
         right: 16px;
@@ -56,8 +67,9 @@
       <span id="hud-speed">0 km/h</span>
       <span id="hud-altitude">0 m</span>
     </div>
+    <div id="hud-camera">📷 3인칭 (C)</div>
     <div id="hud-help">
-      W/↑ 푸시·크라우치 · S/↓ 브레이크 · A/D 또는 ←/→ 카빙 · Space 점프 · R 리셋
+      W/↑ 푸시·크라우치 · S/↓ 브레이크 · A/D 또는 ←/→ 카빙 · Space 점프 · C 카메라 · R 리셋
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

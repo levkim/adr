@@ -8,8 +8,11 @@ import { RiderPhysics } from './physics';
 export class RiderController {
   readonly object = new THREE.Group();
   readonly physics = new RiderPhysics();
+  /** 0=서있음, 1=완전 크라우치 (시각 보간값, 카메라도 참조) */
+  crouchAmount = 0;
+  /** 최근 조향 입력 (-1~1, 1인칭 헤드 롤용) */
+  lastSteer = 0;
   private readonly body: THREE.Mesh;
-  private crouchAmount = 0; // 0=서있음, 1=완전 크라우치
 
   constructor() {
     const c = CONFIG.rider;
@@ -42,6 +45,7 @@ export class RiderController {
   }
 
   update(dt: number, input: Input, terrain: Terrain): void {
+    this.lastSteer = input.steer;
     this.physics.update(dt, input, terrain);
     this.object.position.copy(this.physics.position);
 

@@ -32,19 +32,56 @@ export const CONFIG = {
   camera: {
     fov: 70,
     far: 20000, // 산 전체(~5km)가 보여야 함
-    distance: 8, // 라이더 후방 기본 거리 (m)
-    height: 3.2, // 라이더 기준 카메라 높이 (m)
-    lookAtHeight: 1.2, // 시선이 향하는 라이더 위 지점 (m)
-    followLerp: 4, // 위치 보간 속도 (1/s)
-    terrainClearance: 1.5, // m, 카메라가 지면 아래로 파고들지 않는 최소 높이
-    distanceSpeedGain: 0.1, // m per (m/s), 속도에 따른 거리 증가
-    fovSpeedGain: 0.35, // deg per (m/s), 속도에 따른 FOV 증가
-    fovMaxBoost: 14, // deg, FOV 증가 상한
-    airPullback: 3, // m, 점프/체공 시 추가 풀백
+    transitionTime: 0.8, // s, 모드 전환 보간 시간
     fovLerp: 3, // 1/s, FOV 보간 속도
+    terrainClearance: 1.5, // m, 카메라가 지면 아래로 파고들지 않는 최소 높이
     shakeImpactScale: 0.09, // 착지 충격(m/s) → 셰이크 강도 변환
     shakeMaxAmp: 0.45, // m, 셰이크 최대 진폭
     shakeDecay: 5, // 1/s, 셰이크 감쇠
+    // ── 3인칭 추적 (기본) ──
+    third: {
+      distance: 8, // 라이더 후방 기본 거리 (m)
+      height: 3.2, // 라이더 기준 카메라 높이 (m)
+      lookAtHeight: 1.2, // 시선이 향하는 라이더 위 지점 (m)
+      followLerp: 4, // 위치 보간 속도 (1/s)
+      distanceSpeedGain: 0.1, // m per (m/s), 속도에 따른 거리 증가
+      fovSpeedGain: 0.35, // deg per (m/s), 속도에 따른 FOV 증가
+      fovMaxBoost: 14, // deg, FOV 증가 상한
+      airPullback: 3, // m, 점프/체공 시 추가 풀백
+    },
+    // ── 1인칭 고글 뷰 ──
+    first: {
+      headHeight: 1.55, // m, 시점 높이 (크라우치 시 낮아짐)
+      crouchDrop: 0.45, // m, 완전 크라우치 시 시점 하강
+      fovBoost: 8, // deg, 1인칭 기본 FOV 가산
+      fovSpeedGain: 0.2,
+      fovMaxBoost: 8,
+      motionIntensity: 0.7, // 0~1, 헤드 모션 전체 강도 (멀미 방지 설정)
+      bobAmp: 0.035, // m, 주행 바운스 진폭
+      bobFreq: 1.6, // Hz @ 10m/s (속도 비례)
+      rollMax: 0.1, // rad, 턴 시 헤드 롤
+      lookAhead: 0.45, // 시선이 속도 방향을 따라가는 비율 (0=보드 방향만)
+      shakeFactor: 0.35, // 착지 셰이크 감쇠 배율 (1인칭은 과하면 멀미)
+    },
+    // ── 숄더 캠 ──
+    shoulder: {
+      back: 2.6, // m
+      up: 1.55, // m
+      side: 0.55, // m, 어깨 측면 오프셋
+      lookAtHeight: 1.1,
+      followLerp: 9, // 근접 시점은 빠르게 따라붙어야 한다
+      fovBoost: 4,
+      fovSpeedGain: 0.25,
+      fovMaxBoost: 10,
+    },
+    // ── 드론/시네마틱 ──
+    drone: {
+      ahead: 26, // m, 진행 방향 앞
+      side: 20, // m, 측면
+      height: 11, // m
+      followLerp: 1.4, // 묵직하게 떠다니는 느낌
+      fov: 44, // 망원 느낌 고정
+    },
   },
   world: {
     edgeMargin: 30, // 지형 가장자리 접근 제한 (m)

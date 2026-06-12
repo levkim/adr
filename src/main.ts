@@ -6,8 +6,9 @@ import { startLoop } from './core/loop';
 import { Terrain } from './world/terrain';
 import { LOCATIONS } from './world/locations';
 import { RiderController } from './player/controller';
-import { FollowCamera } from './camera/followCamera';
+import { CameraSystem, MODE_LABEL } from './camera/cameraSystem';
 import { Hud } from './ui/hud';
+import { GoggleOverlay } from './ui/goggleOverlay';
 
 async function main(): Promise<void> {
   // ── 렌더러 ──────────────────────────────────────────────
@@ -59,10 +60,12 @@ async function main(): Promise<void> {
   const startHeading = Math.atan2(finishPos.x - startPos.x, finishPos.z - startPos.z);
   rider.spawnAt(startPos.x, startPos.z, startHeading, terrain);
 
-  const followCam = new FollowCamera(window.innerWidth / window.innerHeight);
-  followCam.snapTo(rider, terrain);
+  const cameraSystem = new CameraSystem(window.innerWidth / window.innerHeight);
+  scene.add(cameraSystem.camera); // 1인칭 기어(카메라 자식) 렌더에 필요
+  cameraSystem.snapTo(rider, terrain);
 
   const hud = new Hud();
+  const goggle = new GoggleOverlay();
 
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝' });
@@ -81,20 +84,25 @@ async function main(): Promise<void> {
   riderFolder.add(CONFIG.rider, 'minTurnSpeed', 0.5, 10);
   riderFolder.add(CONFIG.physics, 'crouchTurnFactor', 0.2, 1);
   const camFolder = gui.addFolder('카메라');
-  camFolder.add(CONFIG.camera, 'distance', 3, 20);
-  camFolder.add(CONFIG.camera, 'height', 1, 10);
-  camFolder.add(CONFIG.camera, 'followLerp', 1, 12);
-  camFolder.add(CONFIG.camera, 'distanceSpeedGain', 0, 0.3);
-  camFolder.add(CONFIG.camera, 'fovSpeedGain', 0, 1);
-  camFolder.add(CONFIG.camera, 'airPullback', 0, 8);
+  camFolder.add(CONFIG.camera, 'transitionTime', 0.2, 2);
+  camFolder.add(CONFIG.camera.third, 'distance', 3, 20);
+  camFolder.add(CONFIG.camera.third, 'height', 1, 10);
+  camFolder.add(CONFIG.camera.third, 'followLerp', 1, 12);
+  camFolder.add(CONFIG.camera.third, 'airPullback', 0, 8);
   camFolder.add(CONFIG.camera, 'shakeImpactScale', 0, 0.3);
   camFolder.add(CONFIG.camera, 'shakeMaxAmp', 0, 1);
   camFolder.close();
+  const fpFolder = gui.addFolder('1인칭 (멀미 설정)');
+  fpFolder.add(CONFIG.camera.first, 'motionIntensity', 0, 1).name('모션 강도');
+  fpFolder.add(CONFIG.camera.first, 'bobAmp', 0, 0.1);
+  fpFolder.add(CONFIG.camera.first, 'rollMax', 0, 0.3);
+  fpFolder.add(CONFIG.camera.first, 'lookAhead', 0, 1);
+  fpFolder.close();
 
   // ── 리사이즈 ────────────────────────────────────────────
   window.addEventListener('resize', () => {
-    followCam.camera.aspect = window.innerWidth / window.innerHeight;
-    followCam.camera.updateProjectionMatrix();
+    cameraSystem.camera.aspect = window.innerWidth / window.innerHeight;
+    cameraSystem.camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
@@ -106,18 +114,24 @@ async function main(): Promise<void> {
     // R: 드랍 인 지점으로 리셋
     if (input.justPressed('KeyR')) {
       rider.spawnAt(startPos.x, startPos.z, startHeading, terrain);
-      followCam.snapTo(rider, terrain);
+      cameraSystem.snapTo(rider, terrain);
     }
 
     rider.update(dt, input, terrain);
-    followCam.update(dt, rider, terrain);
+    cameraSystem.update(dt, input, rider, terrain);
+
+    // 1인칭에서는 라이더 본체 숨김 + 고글 오버레이
+    const isFirst = cameraSystem.modeId === 'first';
+    rider.object.visible = !isFirst;
+    goggle.setVisible(isFirst);
+    hud.setCameraMode(MODE_LABEL[cameraSystem.modeId]);
     hud.update(rider.physics.speed, rider.physics.position.y + terrain.meta.minElevation);
 
     sun.position.copy(rider.object.position).add(sunOffset);
     sun.target.position.copy(rider.object.position);
     sun.target.updateMatrixWorld();
 
-    renderer.render(scene, followCam.camera);
+    renderer.render(scene, cameraSystem.camera);
     input.endFrame();
   });
 }

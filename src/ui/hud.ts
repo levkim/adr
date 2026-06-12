@@ -1,13 +1,19 @@
-// HTML 오버레이 HUD: 속도 + 고도(실표고).
+// HTML 오버레이 HUD: 속도 + 고도(실표고) + 카메라 모드.
 export class Hud {
   private readonly speedEl: HTMLElement;
   private readonly altitudeEl: HTMLElement;
+  private readonly cameraEl: HTMLElement;
   private lastSpeed = -1;
   private lastAltitude = -1;
 
   constructor() {
     this.speedEl = mustGet('hud-speed');
     this.altitudeEl = mustGet('hud-altitude');
+    this.cameraEl = mustGet('hud-camera');
+  }
+
+  setCameraMode(label: string): void {
+    this.cameraEl.textContent = `📷 ${label} (C)`;
   }
 
   /**
