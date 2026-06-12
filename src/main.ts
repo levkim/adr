@@ -86,6 +86,8 @@ async function main(): Promise<void> {
   riderFolder.add(CONFIG.rider, 'turnSpeedRef', 2, 30);
   riderFolder.add(CONFIG.rider, 'minTurnSpeed', 0.5, 10);
   riderFolder.add(CONFIG.physics, 'crouchTurnFactor', 0.2, 1);
+  riderFolder.add(CONFIG.rider, 'slopeAlign', 0, 1).name('사면 정렬 비율');
+  riderFolder.add(CONFIG.rider, 'leanMax', 0, 1.2).name('턴 린 최대(rad)');
   const camFolder = gui.addFolder('카메라');
   camFolder.add(CONFIG.camera, 'transitionTime', 0.2, 2);
   camFolder.add(CONFIG.camera.third, 'distance', 3, 20);

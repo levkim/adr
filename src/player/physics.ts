@@ -13,6 +13,8 @@ export class RiderPhysics {
   readonly velocity = new THREE.Vector3();
   readonly groundNormal = new THREE.Vector3(0, 1, 0);
   heading = 0; // rad, +Z 기준 보드 yaw
+  /** rad/s, 이번 프레임에 실제 적용된 yaw 회전율 (자세 린 계산용) */
+  yawRate = 0;
   grounded = true;
   crouching = false;
   /** 이번 프레임에 착지했는지 (카메라 셰이크 등 소비용) */
@@ -60,6 +62,7 @@ export class RiderPhysics {
       (1 - r.standstillTurnFactor) * Math.min(1, speed / r.minTurnSpeed);
     turnFactor *= lowSpeedRamp;
     if (this.crouching && this.grounded) turnFactor *= p.crouchTurnFactor;
+    const headingBefore = this.heading;
     this.heading -= input.steer * r.turnRate * turnFactor * dt;
 
     if (this.grounded) {
@@ -123,6 +126,8 @@ export class RiderPhysics {
         this.velocity.multiplyScalar(Math.max(0, av - k * av * av * dt) / av);
       }
     }
+
+    this.yawRate = dt > 0 ? (this.heading - headingBefore) / dt : 0;
 
     // ── 적분 ──
     this.position.addScaledVector(this.velocity, dt);

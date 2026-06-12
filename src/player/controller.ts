@@ -12,6 +12,8 @@ export class RiderController {
   crouchAmount = 0;
   /** 최근 조향 입력 (-1~1, 1인칭 헤드 롤용) */
   lastSteer = 0;
+  /** rad, 현재 턴 린 각 (+ = 우측으로 기울임) */
+  lean = 0;
   private readonly body: THREE.Mesh;
 
   constructor() {
@@ -59,16 +61,36 @@ export class RiderController {
     this.body.scale.set(1, squash, 1);
     this.body.position.y = (CONFIG.rider.height / 2) * squash;
 
-    // 사면 정렬(접지) 또는 수평(공중) + yaw, 부드럽게 보간
-    const targetUp = this.physics.grounded ? this.physics.groundNormal : _up;
-    _align.setFromUnitVectors(_up, targetUp);
+    // ── 자세 ──
+    // 몸은 기본 수직(중력 정렬). 사면 법선은 slopeAlign 비율만 블렌드 (무릎 흡수)
+    const r = CONFIG.rider;
+    if (this.physics.grounded) {
+      _bodyUp.copy(_up).lerp(this.physics.groundNormal, r.slopeAlign).normalize();
+    } else {
+      _bodyUp.copy(_up);
+    }
+    _align.setFromUnitVectors(_up, _bodyUp);
     _yaw.setFromAxisAngle(_up, this.physics.heading);
     _target.multiplyQuaternions(_align, _yaw);
+    // 턴 린: 원심가속도 v·ω 와 중력의 균형 각도만큼 턴 안쪽으로 기울임
+    const leanTarget = this.physics.grounded
+      ? THREE.MathUtils.clamp(
+          Math.atan2(-this.physics.yawRate * this.physics.speed, CONFIG.physics.gravity),
+          -r.leanMax,
+          r.leanMax,
+        )
+      : 0;
+    this.lean += (leanTarget - this.lean) * (1 - Math.exp(-r.leanResponse * dt));
+    _roll.setFromAxisAngle(_fwdAxis, this.lean);
+    _target.multiply(_roll);
     this.object.quaternion.slerp(_target, 1 - Math.exp(-10 * dt));
   }
 }
 
 const _up = new THREE.Vector3(0, 1, 0);
+const _fwdAxis = new THREE.Vector3(0, 0, 1);
+const _bodyUp = new THREE.Vector3();
 const _align = new THREE.Quaternion();
 const _yaw = new THREE.Quaternion();
+const _roll = new THREE.Quaternion();
 const _target = new THREE.Quaternion();

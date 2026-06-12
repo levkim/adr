@@ -10,6 +10,10 @@ export const CONFIG = {
     minTurnSpeed: 3, // m/s, 이 속도 이하에서 조향이 점차 약해진다 (제자리 회전 방지)
     standstillTurnFactor: 0.35, // 정지 상태에서 남는 조향 비율 (드랍 인 전 방향 조정용)
     crouchVisualLerp: 8, // 1/s, 크라우치 자세 전환 속도
+    // 자세: 몸은 기본적으로 중력 방향 수직, 사면 정렬은 일부만 (무릎 흡수)
+    slopeAlign: 0.25, // 0=완전 수직, 1=사면 법선 정렬
+    leanMax: 0.6, // rad (~34°), 턴 린 최대 각
+    leanResponse: 7, // 1/s, 린 반응 속도
   },
   physics: {
     gravity: 9.81, // m/s²
