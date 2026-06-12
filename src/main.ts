@@ -9,6 +9,7 @@ import { RiderController } from './player/controller';
 import { CameraSystem, MODE_LABEL } from './camera/cameraSystem';
 import { Hud } from './ui/hud';
 import { GoggleOverlay } from './ui/goggleOverlay';
+import { help } from './ui/guiHelp';
 import { PowderFx } from './fx/powderFx';
 
 async function main(): Promise<void> {
@@ -72,45 +73,144 @@ async function main(): Promise<void> {
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝' });
   const phyFolder = gui.addFolder('물리');
-  phyFolder.add(CONFIG.rider, 'mass', 45, 120).name('몸무게 (kg)');
-  phyFolder.add(CONFIG.physics, 'snowFriction', 0, 0.2);
-  phyFolder.add(CONFIG.physics, 'brakeFriction', 0.1, 1);
-  phyFolder.add(CONFIG.physics, 'airDrag', 0, 0.02);
-  phyFolder.add(CONFIG.physics, 'edgeGrip', 0.5, 15);
-  phyFolder.add(CONFIG.physics, 'headingAlign', 0, 5);
-  phyFolder.add(CONFIG.physics, 'jumpSpeed', 1, 8);
-  phyFolder.add(CONFIG.physics, 'crouchDragFactor', 0.2, 1);
-  phyFolder.add(CONFIG.physics, 'launchFactor', 0.5, 3);
+  help(
+    phyFolder.add(CONFIG.rider, 'mass', 45, 120).name('몸무게 (kg)'),
+    '라이더 체중. 무거울수록 공기저항의 감속 효과가 상대적으로 작아져 최고 속도가 올라갑니다. 중력 가속 자체는 체중과 무관합니다.',
+  );
+  help(
+    phyFolder.add(CONFIG.physics, 'snowFriction', 0, 0.2).name('설면 마찰'),
+    '눈과 보드 사이 운동 마찰계수. 높이면 전반적으로 느려지고 관성이 빨리 죽습니다. 다져진 눈=낮음, 습설=높음.',
+  );
+  help(
+    phyFolder.add(CONFIG.physics, 'brakeFriction', 0.1, 1).name('브레이크 마찰'),
+    'S(브레이크) 입력 시 적용되는 마찰계수. 높이면 제동이 강해집니다.',
+  );
+  help(
+    phyFolder.add(CONFIG.physics, 'airDrag', 0, 0.02).name('공기저항'),
+    '속도 제곱에 비례하는 감속 계수. 최고 속도(터미널)를 결정합니다. 낮추면 더 빨라집니다.',
+  );
+  help(
+    phyFolder.add(CONFIG.physics, 'edgeGrip', 0.5, 15).name('에지 그립'),
+    '옆으로 미끄러지는 속도가 보드 방향으로 수렴하는 빠르기. 높으면 레일 탄 듯 정확한 카빙, 낮으면 드리프트처럼 미끄러집니다.',
+  );
+  help(
+    phyFolder.add(CONFIG.physics, 'headingAlign', 0, 5).name('자동 정렬'),
+    '조향하지 않을 때 보드가 진행 방향으로 저절로 정렬되는 속도. 0이면 보드 방향이 그대로 유지됩니다.',
+  );
+  help(
+    phyFolder.add(CONFIG.physics, 'jumpSpeed', 1, 8).name('점프력'),
+    'Space 점프 시 사면에서 수직으로 튀어오르는 초기 속도(m/s). 체공 시간·거리는 경사와 주행 속도에 따라 달라집니다.',
+  );
+  help(
+    phyFolder.add(CONFIG.physics, 'crouchDragFactor', 0.2, 1).name('크라우치 드래그'),
+    '크라우치(턱) 자세에서 공기저항 배율. 낮을수록 웅크렸을 때 가속 효과가 큽니다.',
+  );
+  help(
+    phyFolder.add(CONFIG.physics, 'launchFactor', 0.5, 3).name('롤오버 런치'),
+    '볼록한 지형(롤오버)에서 공중으로 뜨는 민감도. 낮추면 둔덕마다 쉽게 뜨고, 높이면 지면에 더 달라붙습니다.',
+  );
   const riderFolder = gui.addFolder('조향');
-  riderFolder.add(CONFIG.rider, 'turnRate', 0.5, 5);
-  riderFolder.add(CONFIG.rider, 'turnSpeedRef', 2, 30);
-  riderFolder.add(CONFIG.rider, 'minTurnSpeed', 0.5, 10);
-  riderFolder.add(CONFIG.physics, 'crouchTurnFactor', 0.2, 1);
-  riderFolder.add(CONFIG.rider, 'slopeAlign', 0, 1).name('사면 정렬 비율');
-  riderFolder.add(CONFIG.rider, 'leanMax', 0, 1.2).name('턴 린 최대(rad)');
+  help(
+    riderFolder.add(CONFIG.rider, 'turnRate', 0.5, 5).name('턴 속도'),
+    '최대 조향 각속도(rad/s). 높이면 민첩하지만 과회전으로 라인이 죽기 쉽습니다.',
+  );
+  help(
+    riderFolder.add(CONFIG.rider, 'turnSpeedRef', 2, 30).name('턴 둔화 기준속도'),
+    '이 속도(m/s)를 넘으면 조향이 점차 무뎌져 회전 반경이 커집니다. 실제 카빙처럼 고속에서 큰 호를 그리게 합니다.',
+  );
+  help(
+    riderFolder.add(CONFIG.rider, 'minTurnSpeed', 0.5, 10).name('저속 턴 게이트'),
+    '이 속도(m/s) 이하에서는 조향이 점차 약해집니다. 제자리 스핀을 방지합니다.',
+  );
+  help(
+    riderFolder.add(CONFIG.physics, 'crouchTurnFactor', 0.2, 1).name('크라우치 턴 배율'),
+    '크라우치 중 조향 배율. 웅크리면 빨라지는 대신 둔해지는 트레이드오프입니다.',
+  );
+  help(
+    riderFolder.add(CONFIG.rider, 'slopeAlign', 0, 1).name('사면 정렬 비율'),
+    '몸이 사면 법선에 맞춰 기우는 비율. 0=완전 수직(중력 정렬), 1=경사면에 90도. 실제 라이더는 0.2~0.3 정도가 자연스럽습니다.',
+  );
+  help(
+    riderFolder.add(CONFIG.rider, 'leanMax', 0, 1.2).name('턴 린 최대(rad)'),
+    '턴 시 원심력 균형으로 몸이 턴 안쪽으로 기우는 최대 각도. 0.6≈34°.',
+  );
   const camFolder = gui.addFolder('카메라');
-  camFolder.add(CONFIG.camera, 'transitionTime', 0.2, 2);
-  camFolder.add(CONFIG.camera.third, 'distance', 3, 20);
-  camFolder.add(CONFIG.camera.third, 'height', 1, 10);
-  camFolder.add(CONFIG.camera.third, 'followLerp', 1, 12);
-  camFolder.add(CONFIG.camera.third, 'airPullback', 0, 8);
-  camFolder.add(CONFIG.camera, 'shakeImpactScale', 0, 0.3);
-  camFolder.add(CONFIG.camera, 'shakeMaxAmp', 0, 1);
+  help(
+    camFolder.add(CONFIG.camera, 'transitionTime', 0.2, 2).name('전환 시간'),
+    'C 키로 카메라 모드를 바꿀 때 보간에 걸리는 시간(초).',
+  );
+  help(
+    camFolder.add(CONFIG.camera.third, 'distance', 3, 20).name('3인칭 거리'),
+    '3인칭 카메라의 라이더 후방 기본 거리(m). 속도가 붙으면 자동으로 더 멀어집니다.',
+  );
+  help(
+    camFolder.add(CONFIG.camera.third, 'height', 1, 10).name('3인칭 높이'),
+    '3인칭 카메라가 라이더보다 높이 떠 있는 정도(m).',
+  );
+  help(
+    camFolder.add(CONFIG.camera.third, 'followLerp', 1, 12).name('추적 반응'),
+    '카메라가 라이더를 따라붙는 속도. 낮으면 묵직하게 끌려오고, 높으면 딱 붙습니다.',
+  );
+  help(
+    camFolder.add(CONFIG.camera.third, 'airPullback', 0, 8).name('체공 풀백'),
+    '점프/체공 중 카메라가 추가로 빠지는 거리(m). 에어의 스케일감을 살립니다.',
+  );
+  help(
+    camFolder.add(CONFIG.camera, 'shakeImpactScale', 0, 0.3).name('착지 셰이크 감도'),
+    '착지 충격(m/s)을 화면 흔들림 강도로 바꾸는 비율. 0이면 셰이크 없음.',
+  );
+  help(
+    camFolder.add(CONFIG.camera, 'shakeMaxAmp', 0, 1).name('셰이크 최대 진폭'),
+    '착지 셰이크의 최대 흔들림 거리(m).',
+  );
   camFolder.close();
   const fpFolder = gui.addFolder('1인칭 (멀미 설정)');
-  fpFolder.add(CONFIG.camera.first, 'motionIntensity', 0, 1).name('모션 강도');
-  fpFolder.add(CONFIG.camera.first, 'bobAmp', 0, 0.1);
-  fpFolder.add(CONFIG.camera.first, 'rollMax', 0, 0.3);
-  fpFolder.add(CONFIG.camera.first, 'lookAhead', 0, 1);
+  help(
+    fpFolder.add(CONFIG.camera.first, 'motionIntensity', 0, 1).name('모션 강도'),
+    '1인칭 헤드 모션(바운스·롤·셰이크) 전체 강도. 멀미가 느껴지면 낮추세요. 0이면 완전 고정 시점.',
+  );
+  help(
+    fpFolder.add(CONFIG.camera.first, 'bobAmp', 0, 0.1).name('바운스 진폭'),
+    '주행 중 머리가 위아래로 흔들리는 진폭(m). 속도에 비례해 빨라집니다.',
+  );
+  help(
+    fpFolder.add(CONFIG.camera.first, 'rollMax', 0, 0.3).name('턴 롤'),
+    '턴 시 머리가 기우는 최대 각도(rad).',
+  );
+  help(
+    fpFolder.add(CONFIG.camera.first, 'lookAhead', 0, 1).name('시선 선행'),
+    '시선이 보드 방향 대신 실제 진행 방향을 따라가는 비율. 높이면 라인이 잘 보이고 멀미가 줄지만 보드 감각은 약해집니다.',
+  );
   fpFolder.close();
   const fxFolder = gui.addFolder('연출');
-  fxFolder.add(CONFIG.fx, 'screenIntensity', 0, 1).name('화면 효과 강도');
-  fxFolder.add(CONFIG.fx.spray, 'baseRate', 0, 400);
-  fxFolder.add(CONFIG.fx.spray, 'turnRateGain', 0, 800);
-  fxFolder.add(CONFIG.fx.spray, 'opacity', 0, 1);
-  fxFolder.add(CONFIG.fx.cameraSnow, 'ambientDensity', 0, 1).name('강설 분위기');
-  fxFolder.add(CONFIG.fx.whiteroom, 'maxOpacity', 0, 1).name('화이트룸 최대');
-  fxFolder.add(CONFIG.fx.audio, 'master', 0, 1).name('볼륨');
+  help(
+    fxFolder.add(CONFIG.fx, 'screenIntensity', 0, 1).name('화면 효과 강도'),
+    '스플래터·김서림·화이트룸·근접 눈입자 등 모든 화면 효과의 마스터 강도. 가독성이 떨어지거나 멀미가 나면 낮추세요.',
+  );
+  help(
+    fxFolder.add(CONFIG.fx.spray, 'baseRate', 0, 400).name('스프레이 기본량'),
+    '직활강 시 기본 파우더 스프레이 방출량(입자/초). 속도에 비례합니다.',
+  );
+  help(
+    fxFolder.add(CONFIG.fx.spray, 'turnRateGain', 0, 800).name('턴 스프레이'),
+    '턴 강도에 비례해 추가되는 스프레이 방출량. 카빙할 때 눈보라가 커집니다.',
+  );
+  help(
+    fxFolder.add(CONFIG.fx.spray, 'opacity', 0, 1).name('스프레이 불투명도'),
+    '파우더 입자의 진하기.',
+  );
+  help(
+    fxFolder.add(CONFIG.fx.cameraSnow, 'ambientDensity', 0, 1).name('강설 분위기'),
+    '정지 상태에서도 시야에 흩날리는 눈의 기본 밀도. 0=맑음(블루버드), 높이면 강설 분위기.',
+  );
+  help(
+    fxFolder.add(CONFIG.fx.whiteroom, 'maxOpacity', 0, 1).name('화이트룸 최대'),
+    '고속 주행 시 시야 하단을 덮는 백색 베일의 최대 농도. 1인칭·숄더에서 가장 강하게 적용됩니다.',
+  );
+  help(
+    fxFolder.add(CONFIG.fx.audio, 'master', 0, 1).name('볼륨'),
+    '전체 사운드 볼륨 (바람·슬러시·카빙·착지·호흡). 0이면 무음.',
+  );
   fxFolder.close();
 
   // ── 리사이즈 ────────────────────────────────────────────
