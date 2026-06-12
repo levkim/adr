@@ -2,13 +2,12 @@ import * as THREE from 'three';
 import { CONFIG } from '../config';
 import type { Input } from '../core/input';
 import type { Terrain } from '../world/terrain';
+import { RiderPhysics } from './physics';
 
-// 셋업 단계의 캡슐 라이더. heading 방향으로 가감속/조향하고 지형 높이에 스냅한다.
-// 활강 물리(중력/경사 슬라이딩)는 3단계에서 들어온다.
+// 캡슐 라이더: 물리 상태를 시각화하고 사면에 맞춰 기울인다.
 export class RiderController {
   readonly object = new THREE.Group();
-  heading = 0; // rad, +Z 기준 yaw
-  speed = 0; // m/s, 부호는 전/후진
+  readonly physics = new RiderPhysics();
 
   constructor() {
     const c = CONFIG.rider;
@@ -32,46 +31,27 @@ export class RiderController {
     this.object.add(body, nose);
   }
 
-  /** heading 방향 단위 벡터 (rotation.y = heading 과 일치) */
-  forwardDir(out: THREE.Vector3): THREE.Vector3 {
-    return out.set(Math.sin(this.heading), 0, Math.cos(this.heading));
+  /** 드랍 인 지점에 배치 */
+  spawnAt(x: number, z: number, heading: number, terrain: Terrain): void {
+    this.physics.reset(x, terrain.getHeight(x, z), z, heading);
+    this.object.position.copy(this.physics.position);
+    this.object.quaternion.setFromAxisAngle(_up, heading);
   }
 
   update(dt: number, input: Input, terrain: Terrain): void {
-    const c = CONFIG.rider;
+    this.physics.update(dt, input, terrain);
+    this.object.position.copy(this.physics.position);
 
-    // 조향: 속도가 붙을수록 회전 반경이 커지도록 감쇠
-    const speedFactor = 1 / (1 + Math.max(Math.abs(this.speed) - c.turnSpeedRef, 0) / c.turnSpeedRef);
-    this.heading -= input.steer * c.turnRate * speedFactor * dt;
-
-    // 가감속
-    if (input.throttle > 0) {
-      this.speed += c.accel * dt;
-    } else if (input.throttle < 0) {
-      this.speed -= c.brakeDecel * dt;
-    } else {
-      // 무입력 시 0을 향해 자연 감속
-      const decel = c.friction * dt;
-      this.speed = Math.abs(this.speed) <= decel ? 0 : this.speed - Math.sign(this.speed) * decel;
-    }
-    this.speed = THREE.MathUtils.clamp(this.speed, -c.maxReverseSpeed, c.maxSpeed);
-
-    // 이동
-    const dir = this.forwardDir(_dir);
-    this.object.position.addScaledVector(dir, this.speed * dt);
-    this.object.rotation.y = this.heading;
-
-    // 지형 가장자리 밖으로 못 나가게 클램프
-    const margin = CONFIG.world.edgeMargin;
-    const limitX = terrain.widthMeters / 2 - margin;
-    const limitZ = terrain.depthMeters / 2 - margin;
-    this.object.position.x = THREE.MathUtils.clamp(this.object.position.x, -limitX, limitX);
-    this.object.position.z = THREE.MathUtils.clamp(this.object.position.z, -limitZ, limitZ);
-
-    // 지형 높이 스냅 (활강 물리 전 임시)
-    this.object.position.y = terrain.getHeight(this.object.position.x, this.object.position.z);
+    // 사면 정렬(접지) 또는 수평(공중) + yaw, 부드럽게 보간
+    const targetUp = this.physics.grounded ? this.physics.groundNormal : _up;
+    _align.setFromUnitVectors(_up, targetUp);
+    _yaw.setFromAxisAngle(_up, this.physics.heading);
+    _target.multiplyQuaternions(_align, _yaw);
+    this.object.quaternion.slerp(_target, 1 - Math.exp(-10 * dt));
   }
 }
 
-// 루프 내 객체 생성 금지 — update에서 재사용하는 임시 벡터
-const _dir = new THREE.Vector3();
+const _up = new THREE.Vector3(0, 1, 0);
+const _align = new THREE.Quaternion();
+const _yaw = new THREE.Quaternion();
+const _target = new THREE.Quaternion();

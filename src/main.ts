@@ -56,24 +56,25 @@ async function main(): Promise<void> {
   // 드랍 인 지점(정상)에 배치, 피니시 방향을 보게
   const startPos = terrain.geoToWorld(terrain.meta.start.lat, terrain.meta.start.lon);
   const finishPos = terrain.geoToWorld(terrain.meta.finish.lat, terrain.meta.finish.lon);
-  rider.object.position.set(startPos.x, terrain.getHeight(startPos.x, startPos.z), startPos.z);
-  rider.heading = Math.atan2(finishPos.x - startPos.x, finishPos.z - startPos.z);
-  rider.object.rotation.y = rider.heading;
+  const startHeading = Math.atan2(finishPos.x - startPos.x, finishPos.z - startPos.z);
+  rider.spawnAt(startPos.x, startPos.z, startHeading, terrain);
 
   const followCam = new FollowCamera(window.innerWidth / window.innerHeight);
-  followCam.snapTo(rider);
+  followCam.snapTo(rider, terrain);
 
   const hud = new Hud();
 
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝' });
-  const riderFolder = gui.addFolder('라이더');
-  riderFolder.add(CONFIG.rider, 'accel', 1, 40);
-  riderFolder.add(CONFIG.rider, 'brakeDecel', 1, 60);
-  riderFolder.add(CONFIG.rider, 'friction', 0, 15);
-  riderFolder.add(CONFIG.rider, 'maxSpeed', 5, 50);
+  const phyFolder = gui.addFolder('물리');
+  phyFolder.add(CONFIG.physics, 'snowFriction', 0, 0.2);
+  phyFolder.add(CONFIG.physics, 'brakeFriction', 0.1, 1);
+  phyFolder.add(CONFIG.physics, 'airDrag', 0, 0.02);
+  phyFolder.add(CONFIG.physics, 'edgeGrip', 0.5, 15);
+  phyFolder.add(CONFIG.physics, 'headingAlign', 0, 5);
+  const riderFolder = gui.addFolder('조향');
   riderFolder.add(CONFIG.rider, 'turnRate', 0.5, 5);
-  riderFolder.add(CONFIG.rider, 'turnSpeedRef', 2, 20);
+  riderFolder.add(CONFIG.rider, 'turnSpeedRef', 2, 30);
   const camFolder = gui.addFolder('카메라');
   camFolder.add(CONFIG.camera, 'distance', 3, 20);
   camFolder.add(CONFIG.camera, 'height', 1, 10);
@@ -92,15 +93,22 @@ async function main(): Promise<void> {
 
   // ── 게임 루프 ───────────────────────────────────────────
   startLoop((dt) => {
+    // R: 드랍 인 지점으로 리셋
+    if (input.justPressed('KeyR')) {
+      rider.spawnAt(startPos.x, startPos.z, startHeading, terrain);
+      followCam.snapTo(rider, terrain);
+    }
+
     rider.update(dt, input, terrain);
-    followCam.update(dt, rider);
-    hud.update(rider.speed);
+    followCam.update(dt, rider, terrain);
+    hud.update(rider.physics.speed, rider.physics.position.y + terrain.meta.minElevation);
 
     sun.position.copy(rider.object.position).add(sunOffset);
     sun.target.position.copy(rider.object.position);
     sun.target.updateMatrixWorld();
 
     renderer.render(scene, followCam.camera);
+    input.endFrame();
   });
 }
 

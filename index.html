@@ -31,6 +31,12 @@
         font-weight: 700;
         font-variant-numeric: tabular-nums;
       }
+      #hud-altitude {
+        display: block;
+        font-size: 15px;
+        opacity: 0.85;
+        font-variant-numeric: tabular-nums;
+      }
       #hud-help {
         position: fixed;
         right: 16px;
@@ -46,8 +52,11 @@
     </style>
   </head>
   <body>
-    <div id="hud"><span id="hud-speed">0 km/h</span></div>
-    <div id="hud-help">W/↑ 가속 · S/↓ 감속 · A/D 또는 ←/→ 턴</div>
+    <div id="hud">
+      <span id="hud-speed">0 km/h</span>
+      <span id="hud-altitude">0 m</span>
+    </div>
+    <div id="hud-help">W/↑ 푸시 · S/↓ 브레이크 · A/D 또는 ←/→ 턴 · R 리셋</div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

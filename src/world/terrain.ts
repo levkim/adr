@@ -74,6 +74,14 @@ export class Terrain {
     return top * (1 - tr) + bot * tr;
   }
 
+  /** 월드 (x, z)의 지형 법선 — 중심차분, out에 기록 */
+  getNormal(x: number, z: number, out: THREE.Vector3): THREE.Vector3 {
+    const s = this.meta.metersPerPx;
+    const dx = (this.getHeight(x + s, z) - this.getHeight(x - s, z)) / (2 * s);
+    const dz = (this.getHeight(x, z + s) - this.getHeight(x, z - s)) / (2 * s);
+    return out.set(-dx, 1, -dz).normalize();
+  }
+
   /** 위경도 → 월드 xz (베이크와 동일한 Web Mercator 픽셀 매핑) */
   geoToWorld(lat: number, lon: number): { x: number; z: number } {
     const { zoom, originPx, width, height, metersPerPx } = this.meta;

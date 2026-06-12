@@ -1,9 +1,11 @@
-// 키보드 입력 상태. 매 프레임 폴링 방식으로 읽는다.
+// 키보드 입력 상태. 매 프레임 폴링 방식으로 읽고, 단발 키는 justPressed로 소비한다.
 export class Input {
   private readonly keys = new Set<string>();
+  private readonly pressedThisFrame = new Set<string>();
 
   constructor() {
     window.addEventListener('keydown', (e) => {
+      if (!e.repeat) this.pressedThisFrame.add(e.code);
       this.keys.add(e.code);
       // 스크롤 등 브라우저 기본 동작 방지
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
@@ -14,17 +16,31 @@ export class Input {
     window.addEventListener('blur', () => this.keys.clear());
   }
 
-  private pressed(...codes: string[]): boolean {
+  private down(...codes: string[]): boolean {
     return codes.some((c) => this.keys.has(c));
-  }
-
-  /** 전진(+1)/후진(-1) 입력 */
-  get throttle(): number {
-    return (this.pressed('KeyW', 'ArrowUp') ? 1 : 0) - (this.pressed('KeyS', 'ArrowDown') ? 1 : 0);
   }
 
   /** 좌(-1)/우(+1) 조향 입력 */
   get steer(): number {
-    return (this.pressed('KeyD', 'ArrowRight') ? 1 : 0) - (this.pressed('KeyA', 'ArrowLeft') ? 1 : 0);
+    return (this.down('KeyD', 'ArrowRight') ? 1 : 0) - (this.down('KeyA', 'ArrowLeft') ? 1 : 0);
+  }
+
+  /** 푸시/스케이팅 (저속 가속) */
+  get push(): boolean {
+    return this.down('KeyW', 'ArrowUp');
+  }
+
+  /** 브레이크 (스피드 체크) */
+  get brake(): boolean {
+    return this.down('KeyS', 'ArrowDown');
+  }
+
+  /** 이번 프레임에 눌렸는지 (단발). 프레임 끝에 endFrame 호출 필요 */
+  justPressed(code: string): boolean {
+    return this.pressedThisFrame.has(code);
+  }
+
+  endFrame(): void {
+    this.pressedThisFrame.clear();
   }
 }
