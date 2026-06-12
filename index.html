@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>프리라이드 파우더</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+        background: #000;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      canvas {
+        display: block;
+      }
+      #hud {
+        position: fixed;
+        left: 16px;
+        bottom: 16px;
+        color: #fff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        user-select: none;
+        pointer-events: none;
+      }
+      #hud-speed {
+        font-size: 28px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      #hud-help {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 13px;
+        text-align: right;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        user-select: none;
+        pointer-events: none;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="hud"><span id="hud-speed">0 km/h</span></div>
+    <div id="hud-help">W/↑ 가속 · S/↓ 감속 · A/D 또는 ←/→ 턴</div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
