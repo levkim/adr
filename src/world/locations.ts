@@ -20,6 +20,11 @@ export interface LocationDef {
   zoom: number;
   /** 수목한계선 표고 (m) — 이 아래로 나무 절차 배치 */
   treeline: number;
+  // ── 시작 화면 카드 표시용 ──
+  country: string;
+  summit: number; // 정상 표고 (m, 실측 기준)
+  vertical: number; // 런 낙차 (m)
+  desc: string;
 }
 
 export const LOCATIONS: Record<string, LocationDef> = {
@@ -40,6 +45,10 @@ export const LOCATIONS: Record<string, LocationDef> = {
     finish: { lat: 46.0778, lon: 7.2995 },
     zoom: 13,
     treeline: 2200, // 발레 알프스 수목한계선 — 런 구간은 전부 알파인
+    country: '스위스 · 베르비에',
+    summit: 3222,
+    vertical: 400,
+    desc: 'FWT 결승 무대. 급사면 노스페이스에 클리프와 슈트가 깔린 알파인 빅 라인.',
   },
   'hakuba-happo': {
     id: 'hakuba-happo',
@@ -55,6 +64,10 @@ export const LOCATIONS: Record<string, LocationDef> = {
     finish: { lat: 36.6969, lon: 137.7676 },
     zoom: 13,
     treeline: 1850, // 핫포 능선 일대 — 런 하단부가 트리런이 된다
+    country: '일본 · 나가노 하쿠바',
+    summit: 2696,
+    vertical: 870,
+    desc: '우시로타테야마 능선의 북동 사면. 깊은 일본 파우더와 하단 트리런.',
   },
   'valdez-thompson-pass': {
     id: 'valdez-thompson-pass',
@@ -68,5 +81,9 @@ export const LOCATIONS: Record<string, LocationDef> = {
     finish: { lat: 61.1444, lon: -145.8578 },
     zoom: 13,
     treeline: 750, // 추가치 연안 수목한계선 — 런 최하단 협곡부만 수림
+    country: '미국 · 알래스카 발데즈',
+    summit: 1963,
+    vertical: 1530,
+    desc: '추가치 산군의 빅마운틴 헬리스키 라인. 벤치 없는 1.5km 연속 사면.',
   },
 };

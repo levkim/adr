@@ -14,6 +14,8 @@ import { help } from './ui/guiHelp';
 import { PowderFx } from './fx/powderFx';
 import { Run } from './scoring/run';
 import { ResultScreen } from './ui/resultScreen';
+import { StartScreen, type Selection } from './ui/startScreen';
+import { applyEnvironment, LIGHT_PRESETS } from './world/environment';
 
 async function main(): Promise<void> {
   // ── 렌더러 ──────────────────────────────────────────────
@@ -24,13 +26,12 @@ async function main(): Promise<void> {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
 
-  // ── 씬 / 환경 ───────────────────────────────────────────
+  // ── 씬 / 조명 셸 ────────────────────────────────────────
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x9ec3e6); // 블루버드 하늘 임시 톤
+  scene.background = new THREE.Color(0x9ec3e6);
   scene.fog = new THREE.Fog(0x9ec3e6, CONFIG.world.fogNear, CONFIG.world.fogFar);
 
   const sun = new THREE.DirectionalLight(0xffffff, 2.2);
-  sun.position.set(120, 180, 80);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.left = -60;
@@ -38,33 +39,41 @@ async function main(): Promise<void> {
   sun.shadow.camera.top = 60;
   sun.shadow.camera.bottom = -60;
   scene.add(sun);
-  scene.add(new THREE.HemisphereLight(0xbcd8f5, 0xe8eef5, 0.8));
+  const hemi = new THREE.HemisphereLight(0xbcd8f5, 0xe8eef5, 0.8);
+  scene.add(hemi);
+
+  // ── 선택: 딥링크(?loc=) 또는 시작 화면 ──────────────────
+  const params = new URLSearchParams(window.location.search);
+  const deepLoc = params.get('loc');
+  let sel: Selection;
+  if (deepLoc && LOCATIONS[deepLoc]) {
+    const c = params.get('char');
+    const l = params.get('light');
+    sel = {
+      loc: deepLoc,
+      char: c && c in CONFIG.characters ? (c as CharacterId) : CONFIG.rider.character,
+      light: l && LIGHT_PRESETS[l] ? l : 'bluebird',
+    };
+  } else {
+    sel = await new StartScreen().choose();
+  }
+  CONFIG.rider.character = sel.char;
+  const locId = sel.loc;
 
   // ── 실측 지형 ───────────────────────────────────────────
-  // 장소 선택: ?loc=bec-des-rosses | hakuba-happo | valdez-thompson-pass
-  // (시작 화면 UI는 9단계에서)
-  const locId = new URLSearchParams(window.location.search).get('loc') ?? 'bec-des-rosses';
-  if (!LOCATIONS[locId]) {
-    throw new Error(`알 수 없는 장소: ${locId} (가능: ${Object.keys(LOCATIONS).join(', ')})`);
-  }
   const terrain = await Terrain.load(locId);
   scene.add(terrain.buildMesh());
+
+  // 시간대/광원 프리셋 적용
+  let sunOffset = applyEnvironment(scene, sun, hemi, LIGHT_PRESETS[sel.light] ?? LIGHT_PRESETS.bluebird);
+  sun.position.copy(sunOffset);
 
   // 나무/바위 절차 배치 (경사·고도 규칙, 시드 고정)
   const props = Props.generate(terrain, LOCATIONS[locId].treeline);
   scene.add(props.group);
   console.log(`절차 배치: 나무 ${props.treeCount}그루, 바위 ${props.rockCount}개`);
-  console.log(
-    `지형 로드: ${terrain.meta.nameEn} ${terrain.meta.width}x${terrain.meta.height}px, ` +
-      `${terrain.meta.minElevation.toFixed(0)}~${terrain.meta.maxElevation.toFixed(0)}m`,
-  );
 
   // ── 라이더 / 카메라 / HUD ───────────────────────────────
-  // 캐릭터 선택: ?char=male-snowboarder | female-snowboarder | male-skier | female-skier
-  const charParam = new URLSearchParams(window.location.search).get('char');
-  if (charParam && charParam in CONFIG.characters) {
-    CONFIG.rider.character = charParam as keyof typeof CONFIG.characters;
-  }
   const input = new Input();
   const rider = new RiderController();
   scene.add(rider.object);
@@ -93,7 +102,10 @@ async function main(): Promise<void> {
     run = new Run(finishPos, startAlt, finishAlt);
     result.hide();
   };
-  const result = new ResultScreen(startRun);
+  // '장소·캐릭터 변경' → 쿼리 제거 후 리로드 → 시작 화면
+  const result = new ResultScreen(startRun, () => {
+    window.location.href = window.location.pathname;
+  });
 
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝' });
@@ -113,6 +125,19 @@ async function main(): Promise<void> {
         rider.setCharacter(id);
       }),
     '라이더 캐릭터 4종(남/여 스키어, 남/여 스노보더)을 전환합니다. 스노보드/스키에 따라 장비와 자세가 바뀝니다.',
+  );
+  // 시간대/날씨 프리셋
+  const envState = { light: sel.light };
+  const lightOptions: Record<string, string> = {};
+  for (const p of Object.values(LIGHT_PRESETS)) lightOptions[p.name] = p.id;
+  help(
+    charFolder
+      .add(envState, 'light', lightOptions)
+      .name('시간대/날씨')
+      .onChange((id: string) => {
+        sunOffset = applyEnvironment(scene, sun, hemi, LIGHT_PRESETS[id]);
+      }),
+    '블루버드(쾌청)/아침(낮은 햇빛)/강설(흐림) 광원·하늘·안개·강설 분위기 프리셋.',
   );
   const phyFolder = gui.addFolder('물리');
   help(
@@ -284,9 +309,6 @@ async function main(): Promise<void> {
     cameraSystem.camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
-
-  // 그림자 카메라가 라이더를 따라다니도록
-  const sunOffset = sun.position.clone();
 
   // ── 게임 루프 ───────────────────────────────────────────
   startLoop((dt) => {

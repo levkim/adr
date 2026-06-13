@@ -10,7 +10,10 @@ export class ResultScreen {
   private readonly root: HTMLDivElement;
   private readonly mapCanvas: HTMLCanvasElement;
 
-  constructor(private readonly onRetry: () => void) {
+  constructor(
+    private readonly onRetry: () => void,
+    private readonly onHome?: () => void,
+  ) {
     this.root = document.createElement('div');
     this.root.style.cssText = [
       'position:fixed',
@@ -75,14 +78,19 @@ export class ResultScreen {
         <div>낙상</div><div style="text-align:right">${card.crashes}회</div>
       </div>
       <button id="retry-btn" style="width:100%;margin-top:20px;padding:12px;border:0;border-radius:8px;background:#3a9ae0;color:#fff;font-size:15px;font-weight:700;cursor:pointer">다시 하기 (R)</button>
+      <button id="home-btn" style="width:100%;margin-top:8px;padding:10px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:transparent;color:#cdd6df;font-size:13px;cursor:pointer">장소·캐릭터 변경</button>
     `;
 
     this.root.appendChild(left);
     this.root.appendChild(card$);
     this.root.style.display = 'flex';
 
-    const btn = card$.querySelector('#retry-btn') as HTMLButtonElement;
-    btn.addEventListener('click', () => this.onRetry());
+    (card$.querySelector('#retry-btn') as HTMLButtonElement).addEventListener('click', () =>
+      this.onRetry(),
+    );
+    const homeBtn = card$.querySelector('#home-btn') as HTMLButtonElement;
+    if (this.onHome) homeBtn.addEventListener('click', () => this.onHome!());
+    else homeBtn.style.display = 'none';
   }
 
   /** 탑다운 힐셰이드 + 궤적 */
