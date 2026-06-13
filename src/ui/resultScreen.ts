@@ -1,5 +1,6 @@
 import type { Terrain } from '../world/terrain';
 import type { Run, ScoreCard } from '../scoring/run';
+import { renderHillshade, worldToMapPx } from './terrainMap';
 
 // 결과 화면: 항목별 저지 점수 + 라인 궤적을 산 위(탑다운 힐셰이드)에 표시 + 다시 하기.
 // 캔버스 2D + HTML 오버레이로 구성.
@@ -98,38 +99,11 @@ export class ResultScreen {
     const ctx = this.mapCanvas.getContext('2d');
     if (!ctx) return;
     const S = MAP_SIZE;
-    const W = terrain.widthMeters;
-    const D = terrain.depthMeters;
-    const img = ctx.createImageData(S, S);
-    const px2world = (px: number, py: number) => ({
-      x: (px / S - 0.5) * W,
-      z: (py / S - 0.5) * D,
-    });
-    // 북서 광원 힐셰이드 (북쪽 = 위)
-    const step = W / S;
-    for (let py = 0; py < S; py++) {
-      for (let px = 0; px < S; px++) {
-        const w = px2world(px, py);
-        const hC = terrain.getHeight(w.x, w.z);
-        const hX = terrain.getHeight(w.x + step, w.z);
-        const hZ = terrain.getHeight(w.x, w.z + step);
-        const dzdx = (hX - hC) / step;
-        const dzdz = (hZ - hC) / step;
-        const inv = 1 / Math.hypot(dzdx, 1, dzdz);
-        const shade = Math.max(0, -dzdx * inv * -0.5 + inv * 0.7071 + -dzdz * inv * -0.5);
-        // 고도에 따라 살짝 푸른 설면 톤
-        const v = 70 + shade * 170;
-        const i = (py * S + px) * 4;
-        img.data[i] = v * 0.93;
-        img.data[i + 1] = v * 0.97;
-        img.data[i + 2] = Math.min(255, v * 1.04 + 8);
-        img.data[i + 3] = 255;
-      }
-    }
-    ctx.putImageData(img, 0, 0);
+    ctx.clearRect(0, 0, S, S);
+    ctx.drawImage(renderHillshade(terrain, S), 0, 0);
 
     // 궤적
-    const toPx = (x: number, z: number) => ({ x: (x / W + 0.5) * S, y: (z / D + 0.5) * S });
+    const toPx = (x: number, z: number) => worldToMapPx(terrain, x, z, S);
     const traj = run.trajectory;
     if (traj.length > 1) {
       ctx.lineWidth = 3;

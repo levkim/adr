@@ -16,6 +16,7 @@ import { Run } from './scoring/run';
 import { ResultScreen } from './ui/resultScreen';
 import { StartScreen, type Selection } from './ui/startScreen';
 import { applyEnvironment, LIGHT_PRESETS } from './world/environment';
+import { Minimap } from './ui/minimap';
 
 async function main(): Promise<void> {
   // ── 렌더러 ──────────────────────────────────────────────
@@ -95,6 +96,7 @@ async function main(): Promise<void> {
   const hud = new Hud();
   const goggle = new GoggleOverlay();
   const fx = new PowderFx(scene, cameraSystem.camera);
+  const minimap = new Minimap(terrain, startPos, finishPos);
 
   // ── 런 / 채점 / 결과 화면 ───────────────────────────────
   let run = new Run(finishPos, startAlt, finishAlt);
@@ -314,8 +316,9 @@ async function main(): Promise<void> {
 
   // ── 게임 루프 ───────────────────────────────────────────
   startLoop((dt) => {
-    // R: 새 런 시작 (드랍 인 리셋 + 결과 화면 닫기)
+    // R: 새 런 시작 (드랍 인 리셋 + 결과 화면 닫기), M: 미니맵 토글
     if (input.justPressed('KeyR')) startRun();
+    if (input.justPressed('KeyM')) minimap.toggle();
 
     // 런 진행 중에만 물리/채점 갱신 (피니시 후에는 정지)
     if (run.state !== 'finished') {
@@ -340,6 +343,7 @@ async function main(): Promise<void> {
     hud.setCameraMode(MODE_LABEL[cameraSystem.modeId]);
     hud.update(rider.physics.speed, rider.physics.position.y + terrain.meta.minElevation);
     hud.tickFps(dt);
+    minimap.update(dt, rider.physics.position.x, rider.physics.position.z, rider.physics.heading);
 
     sun.position.copy(rider.object.position).add(sunOffset);
     sun.target.position.copy(rider.object.position);
