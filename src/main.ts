@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import GUI from 'lil-gui';
-import { CONFIG } from './config';
+import { CONFIG, type CharacterId } from './config';
 import { Input } from './core/input';
 import { startLoop } from './core/loop';
 import { Terrain } from './world/terrain';
@@ -60,6 +60,11 @@ async function main(): Promise<void> {
   );
 
   // ── 라이더 / 카메라 / HUD ───────────────────────────────
+  // 캐릭터 선택: ?char=male-snowboarder | female-snowboarder | male-skier | female-skier
+  const charParam = new URLSearchParams(window.location.search).get('char');
+  if (charParam && charParam in CONFIG.characters) {
+    CONFIG.rider.character = charParam as keyof typeof CONFIG.characters;
+  }
   const input = new Input();
   const rider = new RiderController();
   scene.add(rider.object);
@@ -92,6 +97,23 @@ async function main(): Promise<void> {
 
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝' });
+  // 캐릭터 선택 (4종 전환)
+  const charFolder = gui.addFolder('캐릭터');
+  const charOptions: Record<string, CharacterId> = {};
+  for (const [id, p] of Object.entries(CONFIG.characters)) {
+    charOptions[p.name] = id as CharacterId;
+  }
+  const charState = { character: CONFIG.rider.character };
+  help(
+    charFolder
+      .add(charState, 'character', charOptions)
+      .name('선택')
+      .onChange((id: CharacterId) => {
+        CONFIG.rider.character = id;
+        rider.setCharacter(id);
+      }),
+    '라이더 캐릭터 4종(남/여 스키어, 남/여 스노보더)을 전환합니다. 스노보드/스키에 따라 장비와 자세가 바뀝니다.',
+  );
   const phyFolder = gui.addFolder('물리');
   help(
     phyFolder.add(CONFIG.rider, 'mass', 45, 120).name('몸무게 (kg)'),

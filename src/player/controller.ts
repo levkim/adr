@@ -1,11 +1,13 @@
 import * as THREE from 'three';
-import { CONFIG } from '../config';
+import { CONFIG, type CharacterId } from '../config';
 import type { Input } from '../core/input';
 import type { Terrain } from '../world/terrain';
 import type { Props } from '../world/props';
 import { RiderPhysics } from './physics';
+import { RiderModel } from './riderModel';
 
-// 캡슐 라이더: 물리 상태를 시각화하고 사면에 맞춰 기울인다.
+// 라이더: 물리 상태를 절차적 풀기어 모델로 시각화한다.
+// object가 yaw/경사정렬/턴 린/전후 피치/낙상을 처리하고, 모델이 사지를 포즈한다.
 export class RiderController {
   readonly object = new THREE.Group();
   readonly physics = new RiderPhysics();
@@ -16,29 +18,19 @@ export class RiderController {
   /** rad, 현재 턴 린 각 (+ = 우측으로 기울임) */
   lean = 0;
   private crashTip = 0; // 0~1, 낙상 쓰러짐 보간
-  private readonly body: THREE.Mesh;
+  private model: RiderModel;
 
-  constructor() {
-    const c = CONFIG.rider;
+  constructor(characterId: CharacterId = CONFIG.rider.character) {
+    this.model = new RiderModel(CONFIG.characters[characterId]);
+    this.object.add(this.model.group);
+  }
 
-    const body = new THREE.Mesh(
-      new THREE.CapsuleGeometry(c.radius, c.height - c.radius * 2, 8, 16),
-      new THREE.MeshStandardMaterial({ color: 0xd9472b, roughness: 0.7 }),
-    );
-    body.position.y = c.height / 2;
-    body.castShadow = true;
-    this.body = body;
-
-    // 진행 방향 표시용 노즈 마커
-    const nose = new THREE.Mesh(
-      new THREE.ConeGeometry(0.14, 0.45, 12),
-      new THREE.MeshStandardMaterial({ color: 0x22262e, roughness: 0.5 }),
-    );
-    nose.rotation.x = Math.PI / 2;
-    nose.position.set(0, 0.35, c.radius + 0.25);
-    nose.castShadow = true;
-
-    this.object.add(body, nose);
+  /** 캐릭터 교체 (모델 재생성) */
+  setCharacter(characterId: CharacterId): void {
+    this.object.remove(this.model.group);
+    this.model.dispose();
+    this.model = new RiderModel(CONFIG.characters[characterId]);
+    this.object.add(this.model.group);
   }
 
   /** 드랍 인 지점에 배치 */
@@ -46,6 +38,9 @@ export class RiderController {
     this.physics.reset(x, terrain.getHeight(x, z), z, heading);
     this.object.position.copy(this.physics.position);
     this.object.quaternion.setFromAxisAngle(_up, heading);
+    this.crouchAmount = 0;
+    this.lean = 0;
+    this.crashTip = 0;
   }
 
   update(dt: number, input: Input, terrain: Terrain, props?: Props): void {
@@ -53,15 +48,12 @@ export class RiderController {
     this.physics.update(dt, input, terrain, props);
     this.object.position.copy(this.physics.position);
 
-    // 크라우치 자세 (캡슐 눌림)
+    // 크라우치 보간값 (모델 포즈 + 카메라 헤드 드롭에서 참조)
     const target = this.physics.crouching ? 1 : 0;
     const ct = 1 - Math.exp(-CONFIG.rider.crouchVisualLerp * dt);
     this.crouchAmount += (target - this.crouchAmount) * ct;
-    const squash = 1 - 0.35 * this.crouchAmount;
-    this.body.scale.set(1, squash, 1);
-    this.body.position.y = (CONFIG.rider.height / 2) * squash;
 
-    // ── 자세 ──
+    // ── 몸체 방향 ──
     // 몸은 기본 수직(중력 정렬). 사면 법선은 slopeAlign 비율만 블렌드 (무릎 흡수)
     const r = CONFIG.rider;
     if (this.physics.grounded) {
@@ -94,6 +86,15 @@ export class RiderController {
       _target.multiply(_crashQ);
     }
     this.object.quaternion.slerp(_target, 1 - Math.exp(-10 * dt));
+
+    // ── 사지 포즈 ──
+    this.model.pose(dt, {
+      crouch: this.crouchAmount,
+      airborne: !this.physics.grounded,
+      crashed: this.physics.crashed,
+      speed: this.physics.speed,
+      lean: this.lean,
+    });
   }
 }
 
