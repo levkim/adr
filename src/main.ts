@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import GUI from 'lil-gui';
 import { CONFIG, type CharacterId } from './config';
 import { Input } from './core/input';
+import { GestureController } from './core/gesture';
 import { startLoop } from './core/loop';
 import { Terrain } from './world/terrain';
 import { LOCATIONS } from './world/locations';
@@ -94,6 +95,26 @@ async function main(): Promise<void> {
   const input = new Input();
   const rider = new RiderController();
   scene.add(rider.object);
+
+  // 손 제스처 조종 (옵트인) — 검출값을 Input에 주입
+  const gesture = new GestureController((c) => input.setGesture(c));
+  const gestureBtn = document.createElement('button');
+  gestureBtn.textContent = '✋ 제스처 (G)';
+  gestureBtn.style.cssText = [
+    'position:fixed',
+    'right:16px',
+    'bottom:36px',
+    'z-index:8',
+    'padding:7px 12px',
+    'border:1px solid rgba(255,255,255,0.25)',
+    'border-radius:8px',
+    'background:rgba(20,24,30,0.7)',
+    'color:#eef3f8',
+    'font-size:13px',
+    'cursor:pointer',
+  ].join(';');
+  gestureBtn.addEventListener('click', () => void gesture.toggle());
+  document.body.appendChild(gestureBtn);
 
   // 드랍 인 지점(정상)에 배치, 피니시 방향을 보게
   const startPos = terrain.geoToWorld(terrain.meta.start.lat, terrain.meta.start.lon);
@@ -324,6 +345,21 @@ async function main(): Promise<void> {
     '전체 사운드 볼륨 (바람·슬러시·카빙·착지·호흡). 0이면 무음.',
   );
   fxFolder.close();
+  const gFolder = gui.addFolder('손 제스처');
+  help(
+    gFolder.add(CONFIG.gesture, 'steerGain', 0.5, 5).name('조향 민감도'),
+    '손바닥 좌우 기울기(roll)를 조향으로 바꾸는 민감도.',
+  );
+  help(
+    gFolder.add(CONFIG.gesture, 'leanGain', 0.5, 5).name('전후 민감도'),
+    '손바닥 수평↔수직(pitch)을 전후 체중이동으로 바꾸는 민감도.',
+  );
+  help(gFolder.add(CONFIG.gesture, 'invertSteer').name('조향 반전'), '거울/손 방향이 반대면 켜세요.');
+  help(gFolder.add(CONFIG.gesture, 'invertLean').name('전후 반전'), '앞/뒤가 반대로 동작하면 켜세요.');
+  gFolder.add(CONFIG.gesture, 'deadzone', 0, 0.4).name('데드존');
+  gFolder.add(CONFIG.gesture, 'smoothing', 1, 15).name('스무딩');
+  gFolder.add({ recalibrate: () => gesture.requestCalibration() }, 'recalibrate').name('중립 재보정 (N)');
+  gFolder.close();
 
   // ── 리사이즈 ────────────────────────────────────────────
   window.addEventListener('resize', () => {
@@ -341,9 +377,11 @@ async function main(): Promise<void> {
     // 설면 스파클 깜빡임 (셰이더 컴파일 후에만 존재)
     const tShader = (terrainMesh.material as THREE.Material).userData.shader;
     if (tShader) tShader.uniforms.uTime.value = elapsed;
-    // R: 새 런 시작 (드랍 인 리셋 + 결과 화면 닫기), M: 미니맵 토글
+    // R: 새 런 시작, M: 미니맵, G: 제스처 토글, N: 제스처 중립 재보정
     if (input.justPressed('KeyR')) startRun();
     if (input.justPressed('KeyM')) minimap.toggle();
+    if (input.justPressed('KeyG')) void gesture.toggle();
+    if (input.justPressed('KeyN')) gesture.requestCalibration();
 
     // 런 진행 중에만 물리/채점 갱신 (피니시 후에는 정지)
     if (run.state !== 'finished') {
