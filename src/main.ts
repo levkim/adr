@@ -16,6 +16,7 @@ import { Run } from './scoring/run';
 import { ResultScreen } from './ui/resultScreen';
 import { StartScreen, type Selection } from './ui/startScreen';
 import { applyEnvironment, LIGHT_PRESETS } from './world/environment';
+import { Sky } from './world/sky';
 import { Minimap } from './ui/minimap';
 import { Flags } from './world/flags';
 
@@ -26,6 +27,9 @@ async function main(): Promise<void> {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // 필름 톤매핑 — 밝은 설면이 날아가지 않고 자연스러운 대비 (노출은 프리셋별)
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
   document.body.appendChild(renderer.domElement);
 
   // ── 씬 / 조명 셸 ────────────────────────────────────────
@@ -43,6 +47,8 @@ async function main(): Promise<void> {
   scene.add(sun);
   const hemi = new THREE.HemisphereLight(0xbcd8f5, 0xe8eef5, 0.8);
   scene.add(hemi);
+  const sky = new Sky();
+  scene.add(sky.mesh);
 
   // ── 선택: 딥링크(?loc=) 또는 시작 화면 ──────────────────
   const params = new URLSearchParams(window.location.search);
@@ -69,7 +75,14 @@ async function main(): Promise<void> {
   scene.add(terrainMesh);
 
   // 시간대/광원 프리셋 적용
-  let sunOffset = applyEnvironment(scene, sun, hemi, LIGHT_PRESETS[sel.light] ?? LIGHT_PRESETS.bluebird);
+  let sunOffset = applyEnvironment(
+    renderer,
+    scene,
+    sun,
+    hemi,
+    sky,
+    LIGHT_PRESETS[sel.light] ?? LIGHT_PRESETS.bluebird,
+  );
   sun.position.copy(sunOffset);
 
   // 나무/바위 절차 배치 (경사·고도 규칙, 시드 고정)
@@ -144,7 +157,7 @@ async function main(): Promise<void> {
       .add(envState, 'light', lightOptions)
       .name('시간대/날씨')
       .onChange((id: string) => {
-        sunOffset = applyEnvironment(scene, sun, hemi, LIGHT_PRESETS[id]);
+        sunOffset = applyEnvironment(renderer, scene, sun, hemi, sky, LIGHT_PRESETS[id]);
       }),
     '블루버드(쾌청)/아침(낮은 햇빛)/강설(흐림) 광원·하늘·안개·강설 분위기 프리셋.',
   );
@@ -324,6 +337,10 @@ async function main(): Promise<void> {
   startLoop((dt) => {
     elapsed += dt;
     flags.update(elapsed);
+    sky.follow(cameraSystem.camera.position);
+    // 설면 스파클 깜빡임 (셰이더 컴파일 후에만 존재)
+    const tShader = (terrainMesh.material as THREE.Material).userData.shader;
+    if (tShader) tShader.uniforms.uTime.value = elapsed;
     // R: 새 런 시작 (드랍 인 리셋 + 결과 화면 닫기), M: 미니맵 토글
     if (input.justPressed('KeyR')) startRun();
     if (input.justPressed('KeyM')) minimap.toggle();

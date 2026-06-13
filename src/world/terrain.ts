@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { applySurfaceColors } from './surface';
+import { applySurfaceColors, createSurfaceMaterial } from './surface';
 
 // 베이크된 heightmap 로드 / 지형 메시 생성 / 높이 샘플링.
 // 월드 좌표계: 원점 = heightmap 중심, +x 동쪽, +z 남쪽,
@@ -131,11 +131,7 @@ export class Terrain {
     geometry.computeVertexNormals();
     applySurfaceColors(geometry);
 
-    const material = new THREE.MeshStandardMaterial({
-      vertexColors: true,
-      roughness: 0.92,
-      metalness: 0,
-    });
+    const material = createSurfaceMaterial();
     const mesh = new THREE.Mesh(geometry, material);
     mesh.receiveShadow = true;
     return mesh;
