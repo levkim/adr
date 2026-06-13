@@ -1,6 +1,7 @@
 import { LOCATIONS } from '../world/locations';
 import { LIGHT_PRESETS } from '../world/environment';
 import { CONFIG, type CharacterId } from '../config';
+import { tournskiLogoImg } from './brand';
 
 // 시작 화면: 실제 산 카드(장소) + 라이더(4종) + 컨디션(광원) 선택 → 출발.
 // 시드 대신 "장소 선택"이 시작 메뉴라는 컨셉을 구현.
@@ -62,14 +63,32 @@ export class StartScreen {
 
         <button id="ss-go" style="width:100%;max-width:360px;padding:15px;border:0;border-radius:10px;background:#2f8fe0;color:#fff;font-size:17px;font-weight:800;cursor:pointer">드랍 인 ▸</button>
         <div style="font-size:12px;opacity:0.5;margin-top:14px;line-height:1.7">
-          조작: A/D·←/→ 카빙 · W/S 앞·뒤 체중이동 · Shift 크라우치/그랩 · Space 점프 · C 카메라 · R 다시<br>
+          조작: A/D·←/→ 카빙 · W/S 앞·뒤 체중이동 · Shift 크라우치/그랩 · Space 점프 · C 카메라 · M 미니맵 · R 다시<br>
           지형은 공개 DEM(AWS Terrain Tiles)으로 실제 표고를 재현했습니다.
         </div>
+        <div id="ss-brand" style="margin-top:26px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0.92"></div>
       </div>`;
 
     this.renderLocs();
     this.renderChars();
     this.renderLights();
+
+    // 제작자 정보: tournski 로고 + 회사 소개
+    const brand = this.root.querySelector('#ss-brand') as HTMLElement;
+    const logo = tournskiLogoImg(40);
+    const link = document.createElement('a');
+    link.href = 'https://www.tournski.com';
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.style.cssText = 'pointer-events:auto;text-decoration:none';
+    link.appendChild(logo);
+    const caption = document.createElement('div');
+    caption.style.cssText = 'font-size:12px;color:#cdd6df;text-align:center;line-height:1.6';
+    caption.innerHTML =
+      '<a href="https://www.tournski.com" target="_blank" rel="noopener" style="color:#5fb0e6;text-decoration:none;pointer-events:auto">www.tournski.com</a><br>스노우마운틴 어드벤쳐 컴퍼니 · since 2005';
+    brand.appendChild(link);
+    brand.appendChild(caption);
+
     (this.root.querySelector('#ss-go') as HTMLButtonElement).addEventListener('click', () => {
       this.root.remove();
       resolve(this.sel);

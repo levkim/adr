@@ -17,6 +17,7 @@ import { ResultScreen } from './ui/resultScreen';
 import { StartScreen, type Selection } from './ui/startScreen';
 import { applyEnvironment, LIGHT_PRESETS } from './world/environment';
 import { Minimap } from './ui/minimap';
+import { Flags } from './world/flags';
 
 async function main(): Promise<void> {
   // ── 렌더러 ──────────────────────────────────────────────
@@ -97,6 +98,10 @@ async function main(): Promise<void> {
   const goggle = new GoggleOverlay();
   const fx = new PowderFx(scene, cameraSystem.camera);
   const minimap = new Minimap(terrain, startPos, finishPos);
+
+  // 시작·베이스에 펄럭이는 tournski 깃발
+  const flags = new Flags(terrain, startPos, finishPos);
+  scene.add(flags.group);
 
   // ── 런 / 채점 / 결과 화면 ───────────────────────────────
   let run = new Run(finishPos, startAlt, finishAlt);
@@ -315,7 +320,10 @@ async function main(): Promise<void> {
   });
 
   // ── 게임 루프 ───────────────────────────────────────────
+  let elapsed = 0;
   startLoop((dt) => {
+    elapsed += dt;
+    flags.update(elapsed);
     // R: 새 런 시작 (드랍 인 리셋 + 결과 화면 닫기), M: 미니맵 토글
     if (input.justPressed('KeyR')) startRun();
     if (input.justPressed('KeyM')) minimap.toggle();

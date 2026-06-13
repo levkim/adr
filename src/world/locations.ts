@@ -86,6 +86,24 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 1530,
     desc: '추가치 산군의 빅마운틴 헬리스키 라인. 벤치 없는 1.5km 연속 사면.',
   },
+  // 4번째: 지르갈란 알라투
+  'jyrgalan-alatoo': {
+    id: 'jyrgalan-alatoo',
+    name: '지르갈란 알라투',
+    nameEn: 'Jyrgalan Ala-Too',
+    // 사용자 지정 좌표(지르갈란 알라투 스키 리조트). DEM 검증 일치: 시작 3349m(제시 3350),
+    // 도착 2251m(제시 2250). 전 구간 하강(5~24°), 시작 폴라인 방위 6° ≈ 피니시 방위 19°.
+    // 낙차 1100m, 수평 5.6km 롱 런.
+    bbox: { west: 78.928, south: 42.56, east: 78.98, north: 42.626 },
+    start: { lat: 42.569864, lon: 78.943531 }, // 42°34'11.51"N 78°56'36.71"E
+    finish: { lat: 42.617739, lon: 78.966358 }, // 42°37'03.86"N 78°57'59.09"E
+    zoom: 13,
+    treeline: 2950, // 상단 알파인 → 하단 라치/가문비 트리런
+    country: '키르기스스탄 · 지르갈란',
+    summit: 3350,
+    vertical: 1100,
+    desc: '톈샨 동부 지르갈란의 롱 런. 3350m 알파인에서 라치 숲을 지나 1.1km 강하.',
+  },
   'ala-archa': {
     id: 'ala-archa',
     name: '알라아르차 (톈샨)',
@@ -103,22 +121,5 @@ export const LOCATIONS: Record<string, LocationDef> = {
     summit: 4450,
     vertical: 1720,
     desc: '톈샨 알라아르차 산군의 빙하 빅 라인. 4400m대 정상에서 1.7km 연속 강하.',
-  },
-  'jyrgalan-alatoo': {
-    id: 'jyrgalan-alatoo',
-    name: '지르갈란 알라투',
-    nameEn: 'Jyrgalan Ala-Too',
-    // 사용자 지정 좌표(지르갈란 알라투 스키 리조트). DEM 검증 일치: 시작 3349m(제시 3350),
-    // 도착 2251m(제시 2250). 전 구간 하강(5~24°), 시작 폴라인 방위 6° ≈ 피니시 방위 19°.
-    // 낙차 1100m, 수평 5.6km 롱 런.
-    bbox: { west: 78.928, south: 42.56, east: 78.98, north: 42.626 },
-    start: { lat: 42.569864, lon: 78.943531 }, // 42°34'11.51"N 78°56'36.71"E
-    finish: { lat: 42.617739, lon: 78.966358 }, // 42°37'03.86"N 78°57'59.09"E
-    zoom: 13,
-    treeline: 2950, // 상단 알파인 → 하단 라치/가문비 트리런
-    country: '키르기스스탄 · 지르갈란',
-    summit: 3350,
-    vertical: 1100,
-    desc: '톈샨 동부 지르갈란의 롱 런. 3350m 알파인에서 라치 숲을 지나 1.1km 강하.',
   },
 };
