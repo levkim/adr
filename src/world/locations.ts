@@ -86,4 +86,22 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 1530,
     desc: '추가치 산군의 빅마운틴 헬리스키 라인. 벤치 없는 1.5km 연속 사면.',
   },
+  'ala-archa': {
+    id: 'ala-archa',
+    name: '알라아르차 (톈샨)',
+    nameEn: 'Ala Archa, Tian Shan',
+    // 좌표 검증: 비슈케크 남쪽 알라아르차 산군 DEM 분석 (2026-06).
+    // 최고봉 4763m(스보보드나야 코레야 일대) 인근, 낙차 스캔으로 선정한
+    // 4454m봉 → 서측 계곡 2731m 연속 폴라인(낙차 1723m, 14~53°, 역경사 없음).
+    bbox: { west: 74.47, south: 42.495, east: 74.54, north: 42.53 },
+    // 드랍 인: 정상부 평탄셀을 피해 페이스 5% 하단(4383m, 27°)
+    start: { lat: 42.5122, lon: 74.5201 },
+    finish: { lat: 42.5151, lon: 74.488 },
+    zoom: 13,
+    treeline: 2900, // 톈샨 가문비 한계선 — 런 최하단부만 수림
+    country: '키르기스스탄 · 톈샨',
+    summit: 4450,
+    vertical: 1720,
+    desc: '톈샨 알라아르차 산군의 빙하 빅 라인. 4400m대 정상에서 1.7km 연속 강하.',
+  },
 };

@@ -1,0 +1,30 @@
+{
+  "id": "ala-archa",
+  "name": "알라아르차 (톈샨)",
+  "nameEn": "Ala Archa, Tian Shan",
+  "width": 408,
+  "height": 278,
+  "zoom": 13,
+  "originPx": {
+    "x": 1482395,
+    "y": 774326
+  },
+  "bbox": {
+    "west": 74.47,
+    "south": 42.495,
+    "east": 74.54,
+    "north": 42.53
+  },
+  "start": {
+    "lat": 42.5122,
+    "lon": 74.5201
+  },
+  "finish": {
+    "lat": 42.5151,
+    "lon": 74.488
+  },
+  "metersPerPx": 14.086005295716488,
+  "minElevation": 2416,
+  "maxElevation": 4573,
+  "encoding": "float32-le-row-major-north-first"
+}
