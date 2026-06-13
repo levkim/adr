@@ -1,0 +1,30 @@
+{
+  "id": "jyrgalan-alatoo",
+  "name": "지르갈란 알라투",
+  "nameEn": "Jyrgalan Ala-Too",
+  "width": 304,
+  "height": 523,
+  "zoom": 13,
+  "originPx": {
+    "x": 1508364,
+    "y": 773567
+  },
+  "bbox": {
+    "west": 78.928,
+    "south": 42.56,
+    "east": 78.98,
+    "north": 42.626
+  },
+  "start": {
+    "lat": 42.569864,
+    "lon": 78.943531
+  },
+  "finish": {
+    "lat": 42.617739,
+    "lon": 78.966358
+  },
+  "metersPerPx": 14.067848621343959,
+  "minElevation": 2155,
+  "maxElevation": 3525,
+  "encoding": "float32-le-row-major-north-first"
+}

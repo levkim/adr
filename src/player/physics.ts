@@ -153,6 +153,12 @@ export class RiderPhysics {
         this.velocity.multiplyScalar(Math.max(0, v2 - k * v2 * v2 * dt) / v2);
       }
 
+      // 스케이팅: 저속에서 앞쏠림(W) 유지 시 약하게 추진 — 플랫/벤치 탈출용(폴링·스케이팅).
+      // 고속(steep)에서는 임계속도를 넘어 자동 비활성 → 깊은 파우더의 "앞쏠림 없이 못 감" 유지
+      if (!noInput && this.leanFore > 0.3 && this.velocity.length() < p.skateMaxSpeed) {
+        this.velocity.addScaledVector(board, p.skateAccel * this.leanFore * dt);
+      }
+
       // 점프: 사면 법선 방향 — 체공은 경사·속도에서 자연 발생
       if (input.jumpPressed && !noInput) {
         this.velocity.addScaledVector(n, p.jumpSpeed);

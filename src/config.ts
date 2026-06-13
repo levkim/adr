@@ -90,6 +90,8 @@ export const CONFIG = {
     // → 75kg 기준 35° 사면 터미널 ~34m/s, 무거우면 더 빠르다
     massRef: 75, // kg, airDrag가 정의된 기준 체중
     edgeGrip: 5, // 1/s, 횡미끄럼이 보드 방향으로 수렴하는 속도 (카빙 그립)
+    skateAccel: 3.5, // m/s², 저속에서 W(앞쏠림) 유지 시 스케이팅 추진 — 플랫/벤치 탈출용
+    skateMaxSpeed: 4, // m/s, 스케이팅으로 낼 수 있는 최대 속도 (이 이상은 중력으로만)
     jumpSpeed: 3.8, // m/s, 점프 시 사면 법선 방향 속도 (체공은 경사·속도에서 자연 발생)
     crouchDragFactor: 0.45, // 크라우치 시 공기저항 배율 (턱 자세 가속)
     crouchFrictionFactor: 0.85, // 크라우치 시 마찰 배율
