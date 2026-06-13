@@ -229,15 +229,15 @@ export const CONFIG = {
       breath: 0.4, // 1인칭 호흡
     },
   },
-  // ── 손 제스처 조종 (MediaPipe, 옵트인) ──
-  gesture: {
-    steerGain: 2.2, // 손바닥 roll(좌우 기울기) → 조향 민감도
-    leanGain: 2.4, // 손바닥 pitch(수평↔수직) → 전후 체중이동 민감도
-    invertSteer: false, // 조향 방향 반전 (거울/손 방향에 따라)
+  // ── 스마트폰 기울기(자이로) 조종 (옵트인) ──
+  tilt: {
+    steerGain: 0.06, // 좌우 기울기(도) → 조향. |기울기|*gain (15°에서 ~0.9)
+    leanGain: 0.05, // 앞뒤 기울기(도) → 전후 체중이동
+    invertSteer: false, // 조향 방향 반전
     invertLean: false, // 전후 반전
+    swapAxes: false, // 가로모드: 조향/전후 축 교환
     deadzone: 0.12, // 중립 근처 무시 (떨림 방지)
-    smoothing: 6, // 1/s, 값 스무딩 속도
-    fistCrouch: 1.45, // 주먹 판정 임계 (손가락끝-손목 거리/손크기, 이하=주먹=크라우치)
+    smoothing: 8, // 1/s, 값 스무딩 속도
   },
   // ── 절차 배치 (나무/바위) ──
   props: {

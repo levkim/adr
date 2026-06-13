@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import GUI from 'lil-gui';
 import { CONFIG, type CharacterId } from './config';
 import { Input } from './core/input';
-import { GestureController } from './core/gesture';
+import { TiltController } from './core/tilt';
 import { startLoop } from './core/loop';
 import { Terrain } from './world/terrain';
 import { LOCATIONS } from './world/locations';
@@ -96,11 +96,11 @@ async function main(): Promise<void> {
   const rider = new RiderController();
   scene.add(rider.object);
 
-  // 손 제스처 조종 (옵트인) — 검출값을 Input에 주입
-  const gesture = new GestureController((c) => input.setGesture(c));
-  const gestureBtn = document.createElement('button');
-  gestureBtn.textContent = '✋ 제스처 (G)';
-  gestureBtn.style.cssText = [
+  // 스마트폰 기울기 조종 (옵트인) — 자이로 값을 Input에 주입
+  const tilt = new TiltController(input);
+  const tiltBtn = document.createElement('button');
+  tiltBtn.textContent = '📱 기울기 (G)';
+  tiltBtn.style.cssText = [
     'position:fixed',
     'right:16px',
     'bottom:36px',
@@ -113,8 +113,8 @@ async function main(): Promise<void> {
     'font-size:13px',
     'cursor:pointer',
   ].join(';');
-  gestureBtn.addEventListener('click', () => void gesture.toggle());
-  document.body.appendChild(gestureBtn);
+  tiltBtn.addEventListener('click', () => void tilt.toggle());
+  document.body.appendChild(tiltBtn);
 
   // 드랍 인 지점(정상)에 배치, 피니시 방향을 보게
   const startPos = terrain.geoToWorld(terrain.meta.start.lat, terrain.meta.start.lon);
@@ -345,20 +345,21 @@ async function main(): Promise<void> {
     '전체 사운드 볼륨 (바람·슬러시·카빙·착지·호흡). 0이면 무음.',
   );
   fxFolder.close();
-  const gFolder = gui.addFolder('손 제스처');
+  const gFolder = gui.addFolder('기울기 조종 (폰)');
   help(
-    gFolder.add(CONFIG.gesture, 'steerGain', 0.5, 5).name('조향 민감도'),
-    '손바닥 좌우 기울기(roll)를 조향으로 바꾸는 민감도.',
+    gFolder.add(CONFIG.tilt, 'steerGain', 0.01, 0.2).name('조향 민감도'),
+    '폰 좌우 기울기(도)를 조향으로 바꾸는 민감도.',
   );
   help(
-    gFolder.add(CONFIG.gesture, 'leanGain', 0.5, 5).name('전후 민감도'),
-    '손바닥 수평↔수직(pitch)을 전후 체중이동으로 바꾸는 민감도.',
+    gFolder.add(CONFIG.tilt, 'leanGain', 0.01, 0.2).name('전후 민감도'),
+    '폰 앞뒤 기울기(도)를 전후 체중이동으로 바꾸는 민감도.',
   );
-  help(gFolder.add(CONFIG.gesture, 'invertSteer').name('조향 반전'), '거울/손 방향이 반대면 켜세요.');
-  help(gFolder.add(CONFIG.gesture, 'invertLean').name('전후 반전'), '앞/뒤가 반대로 동작하면 켜세요.');
-  gFolder.add(CONFIG.gesture, 'deadzone', 0, 0.4).name('데드존');
-  gFolder.add(CONFIG.gesture, 'smoothing', 1, 15).name('스무딩');
-  gFolder.add({ recalibrate: () => gesture.requestCalibration() }, 'recalibrate').name('중립 재보정 (N)');
+  help(gFolder.add(CONFIG.tilt, 'invertSteer').name('조향 반전'), '좌우가 반대로 동작하면 켜세요.');
+  help(gFolder.add(CONFIG.tilt, 'invertLean').name('전후 반전'), '앞/뒤가 반대로 동작하면 켜세요.');
+  help(gFolder.add(CONFIG.tilt, 'swapAxes').name('가로모드(축교환)'), '폰을 가로로 들면 켜세요.');
+  gFolder.add(CONFIG.tilt, 'deadzone', 0, 0.4).name('데드존');
+  gFolder.add(CONFIG.tilt, 'smoothing', 1, 15).name('스무딩');
+  gFolder.add({ recalibrate: () => tilt.requestCalibration() }, 'recalibrate').name('중립 재보정 (N)');
   gFolder.close();
 
   // ── 리사이즈 ────────────────────────────────────────────
@@ -380,8 +381,8 @@ async function main(): Promise<void> {
     // R: 새 런 시작, M: 미니맵, G: 제스처 토글, N: 제스처 중립 재보정
     if (input.justPressed('KeyR')) startRun();
     if (input.justPressed('KeyM')) minimap.toggle();
-    if (input.justPressed('KeyG')) void gesture.toggle();
-    if (input.justPressed('KeyN')) gesture.requestCalibration();
+    if (input.justPressed('KeyG')) void tilt.toggle();
+    if (input.justPressed('KeyN')) tilt.requestCalibration();
 
     // 런 진행 중에만 물리/채점 갱신 (피니시 후에는 정지)
     if (run.state !== 'finished') {
