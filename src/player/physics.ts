@@ -103,7 +103,9 @@ export class RiderPhysics {
     turnFactor *= lowSpeedRamp;
     if (this.crouching && this.grounded) turnFactor *= p.crouchTurnFactor;
     const headingBefore = this.heading;
-    this.heading -= (noInput ? 0 : input.steer) * r.turnRate * turnFactor * dt;
+    // 접지: 카빙 조향(속도 감쇠) / 공중: 자유 스핀(감쇠 없음)
+    const steerRate = this.grounded ? r.turnRate * turnFactor : r.airTurnRate;
+    this.heading -= (noInput ? 0 : input.steer) * steerRate * dt;
 
     if (this.grounded) {
       const n = this.groundNormal;

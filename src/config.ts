@@ -7,6 +7,7 @@ export const CONFIG = {
     height: 1.7, // m
     turnRate: 1.8, // rad/s, 최대 조향 속도 (주행 카빙 기준 — 과회전 방지)
     turnSpeedRef: 8, // m/s, 이 속도 이상에서 조향이 점차 무뎌지기 시작
+    airTurnRate: 5.5, // rad/s, 공중 회전 속도 (스핀 트릭 — 속도 감쇠 없음). 1.15s 체공이면 360°
     minTurnSpeed: 3, // m/s, 이 속도 이하에서 조향이 점차 약해진다 (제자리 회전 방지)
     standstillTurnFactor: 0.35, // 정지 상태에서 남는 조향 비율 (드랍 인 전 방향 조정용)
     crouchVisualLerp: 8, // 1/s, 크라우치 자세 전환 속도
@@ -193,6 +194,39 @@ export const CONFIG = {
     friction: 0.5, // 낙상 슬라이딩 마찰계수 (빠르게 멈춤)
     invulnTime: 1.5, // s, 회복 직후 충돌 무시 (같은 장애물 연속 낙상 방지)
     minSpeed: 1.5, // m/s, 이 속도 이하로 느려져야 일어난다
+  },
+  // ── 점수 (FWT 채점 모방) ──
+  scoring: {
+    startSpeed: 1.5, // m/s, 이 속도를 넘으면 런 시작(타이머 가동)
+    finishRadius: 50, // m, 피니시 도달 판정 반경
+    trajSampleInterval: 0.22, // s, 라인 궤적 기록 간격
+    trick: {
+      minAirtime: 0.45, // s, 이보다 짧은 체공은 트릭으로 안 침
+      cleanAngleDeg: 30, // 착지 시 보드-진행 정렬 오차가 이 이하면 클린
+      wobbleAngleDeg: 70, // 이 이상이면 botched → 낙상
+      airtimeStyle: 0.2, // 스타일 점수/초 체공
+      rotationStyle: 0.0019, // 스타일 점수/도 회전
+      grabBonus: 0.4, // 그랩 시 스타일 가산
+      refStyle: 5.5, // 100점 정규화 기준 누적 스타일 (스핀·그랩 없는 맨 에어로는 만점 어렵게)
+    },
+    line: {
+      steepStartDeg: 32, // 난이도 누적 시작 경사
+      steepFullDeg: 52, // 최대 난이도 경사
+      exposureRate: 16, // 난이도 누적 속도(점수/초) @ 최대 경사
+      cliffWeight: 7, // 클리프(체공) 난이도 가중
+      refDifficulty: 1000, // 100점 정규화 기준 누적 난이도
+    },
+    fluidity: {
+      goodFlowSpeed: 8, // m/s, 이 이하 저속 주행이면 흐름 감점
+      stallPenalty: 10, // 점수/초, 정지·저속
+      reversePenalty: 20, // 점수/초, 역주행(오르막 진행)
+      crashPenalty: 14, // 낙상 시 흐름 감점
+    },
+    control: {
+      crashPenalty: 26, // 낙상 1회 감점
+      wobblePenalty: 8, // 휘청 착지 1회 감점
+    },
+    weights: { line: 0.3, air: 0.25, fluidity: 0.2, control: 0.25 },
   },
   surface: {
     snowMaxSlopeDeg: 38, // 이 경사까지는 완전 설면

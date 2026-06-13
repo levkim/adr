@@ -12,6 +12,8 @@ import { Hud } from './ui/hud';
 import { GoggleOverlay } from './ui/goggleOverlay';
 import { help } from './ui/guiHelp';
 import { PowderFx } from './fx/powderFx';
+import { Run } from './scoring/run';
+import { ResultScreen } from './ui/resultScreen';
 
 async function main(): Promise<void> {
   // ── 렌더러 ──────────────────────────────────────────────
@@ -66,6 +68,8 @@ async function main(): Promise<void> {
   const startPos = terrain.geoToWorld(terrain.meta.start.lat, terrain.meta.start.lon);
   const finishPos = terrain.geoToWorld(terrain.meta.finish.lat, terrain.meta.finish.lon);
   const startHeading = Math.atan2(finishPos.x - startPos.x, finishPos.z - startPos.z);
+  const startAlt = terrain.getHeight(startPos.x, startPos.z) + terrain.meta.minElevation;
+  const finishAlt = terrain.getHeight(finishPos.x, finishPos.z) + terrain.meta.minElevation;
   rider.spawnAt(startPos.x, startPos.z, startHeading, terrain);
 
   const cameraSystem = new CameraSystem(window.innerWidth / window.innerHeight);
@@ -75,6 +79,16 @@ async function main(): Promise<void> {
   const hud = new Hud();
   const goggle = new GoggleOverlay();
   const fx = new PowderFx(scene, cameraSystem.camera);
+
+  // ── 런 / 채점 / 결과 화면 ───────────────────────────────
+  let run = new Run(finishPos, startAlt, finishAlt);
+  const startRun = (): void => {
+    rider.spawnAt(startPos.x, startPos.z, startHeading, terrain);
+    cameraSystem.snapTo(rider, terrain);
+    run = new Run(finishPos, startAlt, finishAlt);
+    result.hide();
+  };
+  const result = new ResultScreen(startRun);
 
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝' });
@@ -158,6 +172,10 @@ async function main(): Promise<void> {
   help(
     riderFolder.add(CONFIG.rider, 'leanMax', 0, 1.2).name('턴 린 최대(rad)'),
     '턴 시 원심력 균형으로 몸이 턴 안쪽으로 기우는 최대 각도. 0.6≈34°.',
+  );
+  help(
+    riderFolder.add(CONFIG.rider, 'airTurnRate', 1, 8).name('공중 스핀 속도'),
+    '공중에서 좌우 키로 회전하는 속도(rad/s). 높이면 360/720 스핀이 쉬워집니다.',
   );
   const camFolder = gui.addFolder('카메라');
   help(
@@ -250,16 +268,24 @@ async function main(): Promise<void> {
 
   // ── 게임 루프 ───────────────────────────────────────────
   startLoop((dt) => {
-    // R: 드랍 인 지점으로 리셋
-    if (input.justPressed('KeyR')) {
-      rider.spawnAt(startPos.x, startPos.z, startHeading, terrain);
-      cameraSystem.snapTo(rider, terrain);
+    // R: 새 런 시작 (드랍 인 리셋 + 결과 화면 닫기)
+    if (input.justPressed('KeyR')) startRun();
+
+    // 런 진행 중에만 물리/채점 갱신 (피니시 후에는 정지)
+    if (run.state !== 'finished') {
+      rider.update(dt, input, terrain, props);
+      const frame = run.update(dt, rider, terrain);
+      if (rider.physics.crashedThisFrame) hud.showPopup('낙상!');
+      else if (frame.trick && frame.trick.landing !== 'crash') {
+        hud.showPopup(frame.trick.label, 1300);
+      }
+      // 이번 프레임에 피니시했다면 결과 카드 표시 (run.result는 피니시 시에만 세팅)
+      const card = run.result;
+      if (card) result.show(card, run, terrain);
     }
 
-    rider.update(dt, input, terrain, props);
     cameraSystem.update(dt, input, rider, terrain);
     fx.update(dt, rider, cameraSystem);
-    if (rider.physics.crashedThisFrame) hud.showPopup('낙상!');
 
     // 1인칭에서는 라이더 본체 숨김 + 고글 오버레이
     const isFirst = cameraSystem.modeId === 'first';
