@@ -62,7 +62,9 @@ async function main(): Promise<void> {
 
   // ── 실측 지형 ───────────────────────────────────────────
   const terrain = await Terrain.load(locId);
-  scene.add(terrain.buildMesh());
+  const terrainMesh = terrain.buildMesh();
+  terrainMesh.matrixAutoUpdate = false; // 정적 메시 — 매 프레임 행렬 갱신 생략
+  scene.add(terrainMesh);
 
   // 시간대/광원 프리셋 적용
   let sunOffset = applyEnvironment(scene, sun, hemi, LIGHT_PRESETS[sel.light] ?? LIGHT_PRESETS.bluebird);
@@ -337,6 +339,7 @@ async function main(): Promise<void> {
     goggle.setVisible(isFirst);
     hud.setCameraMode(MODE_LABEL[cameraSystem.modeId]);
     hud.update(rider.physics.speed, rider.physics.position.y + terrain.meta.minElevation);
+    hud.tickFps(dt);
 
     sun.position.copy(rider.object.position).add(sunOffset);
     sun.target.position.copy(rider.object.position);

@@ -48,6 +48,17 @@
         pointer-events: none;
         z-index: 6;
       }
+      #hud-fps {
+        position: fixed;
+        top: 14px;
+        right: 16px;
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        user-select: none;
+        pointer-events: none;
+        z-index: 6;
+      }
       #hud-help {
         position: fixed;
         right: 16px;
@@ -68,6 +79,7 @@
       <span id="hud-altitude">0 m</span>
     </div>
     <div id="hud-camera">📷 3인칭 (C)</div>
+    <div id="hud-fps">— fps</div>
     <div id="hud-help">
       W/↑ 앞쏠림 · S/↓ 뒤쏠림(파우더 브레이크) · A/D 또는 ←/→ 카빙·공중 스핀 · Shift
       크라우치·그랩 · Space 점프 · C 카메라 · R 리셋/다시

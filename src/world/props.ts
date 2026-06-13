@@ -149,7 +149,9 @@ export class Props {
     const geo = new THREE.IcosahedronGeometry(1, 0);
     const mat = new THREE.MeshStandardMaterial({ color: 0x655f58, roughness: 0.95 });
     const mesh = new THREE.InstancedMesh(geo, mat, rocks.length);
-    mesh.castShadow = true;
+    // 바위는 낮고 그림자 기여가 작아 셰도우 패스에서 제외 (최적화)
+    mesh.castShadow = false;
+    mesh.matrixAutoUpdate = false;
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
     const pos = new THREE.Vector3();

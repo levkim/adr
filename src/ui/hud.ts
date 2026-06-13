@@ -3,17 +3,36 @@ export class Hud {
   private readonly speedEl: HTMLElement;
   private readonly altitudeEl: HTMLElement;
   private readonly cameraEl: HTMLElement;
+  private readonly fpsEl: HTMLElement;
   private lastSpeed = -1;
   private lastAltitude = -1;
+  private fpsAccum = 0;
+  private fpsFrames = 0;
+  private fpsTimer = 0;
 
   constructor() {
     this.speedEl = mustGet('hud-speed');
     this.altitudeEl = mustGet('hud-altitude');
     this.cameraEl = mustGet('hud-camera');
+    this.fpsEl = mustGet('hud-fps');
   }
 
   setCameraMode(label: string): void {
     this.cameraEl.textContent = `📷 ${label} (C)`;
+  }
+
+  /** FPS 미터 (성능 목표 60fps 검증용). 0.25초마다 평균 표시 */
+  tickFps(dt: number): void {
+    if (dt <= 0) return;
+    this.fpsAccum += 1 / dt;
+    this.fpsFrames++;
+    this.fpsTimer += dt;
+    if (this.fpsTimer >= 0.25) {
+      const fps = Math.round(this.fpsAccum / this.fpsFrames);
+      this.fpsEl.textContent = `${fps} fps`;
+      this.fpsEl.style.color = fps >= 55 ? '#7fdca0' : fps >= 35 ? '#e6d27a' : '#e69090';
+      this.fpsAccum = this.fpsFrames = this.fpsTimer = 0;
+    }
   }
 
   /** 중앙 팝업 (낙상/트릭 등) */
