@@ -122,4 +122,20 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 1720,
     desc: '톈샨 알라아르차 산군의 빙하 빅 라인. 4400m대 정상에서 1.7km 연속 강하.',
   },
+  'tanigawadake': {
+    id: 'tanigawadake',
+    name: '다니가와다케',
+    nameEn: 'Mt. Tanigawadake',
+    // 사용자 지정 좌표. DEM 검증: 시작 1927m → 베이스 742m, 전 구간 하강(3~46°),
+    // 동사면(텐진다이라 방향) 강하. 낙차 1185m, 수평 2.9km.
+    bbox: { west: 138.918, south: 36.823, east: 138.974, north: 36.847 },
+    start: { lat: 36.833508, lon: 138.930214 }, // 36°50'00.63"N 138°55'48.77"E
+    finish: { lat: 36.836472, lon: 138.962447 }, // 36°50'11.30"N 138°57'44.81"E
+    zoom: 13,
+    treeline: 1700, // 상단 알파인 → 하단 텐진다이라 트리런
+    country: '일본 · 군마 谷川岳',
+    summit: 1977,
+    vertical: 1185,
+    desc: '일본 군마 다니가와다케의 동사면. 정상에서 텐진다이라로 1.2km 강하, 하단 트리런.',
+  },
 };

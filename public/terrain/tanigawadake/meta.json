@@ -1,0 +1,30 @@
+{
+  "id": "tanigawadake",
+  "name": "다니가와다케",
+  "nameEn": "Mt. Tanigawadake",
+  "width": 327,
+  "height": 176,
+  "zoom": 13,
+  "originPx": {
+    "x": 1857832,
+    "y": 817389
+  },
+  "bbox": {
+    "west": 138.918,
+    "south": 36.823,
+    "east": 138.974,
+    "north": 36.847
+  },
+  "start": {
+    "lat": 36.833508,
+    "lon": 138.930214
+  },
+  "finish": {
+    "lat": 36.836472,
+    "lon": 138.962447
+  },
+  "metersPerPx": 15.29438624722782,
+  "minElevation": 619,
+  "maxElevation": 1967,
+  "encoding": "float32-le-row-major-north-first"
+}
