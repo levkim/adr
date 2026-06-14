@@ -157,6 +157,7 @@ async function main(): Promise<void> {
     result.hide();
     horsePrompt.setMounted(false);
     horsePrompt.hidePrompt();
+    updateHorseBtn();
     horseSlowT = 0;
     horseCooldown = 0;
   };
@@ -172,6 +173,7 @@ async function main(): Promise<void> {
     () => {
       rider.mount();
       horsePrompt.setMounted(true);
+      updateHorseBtn();
     },
     () => {
       horseCooldown = CONFIG.horse.promptCooldown;
@@ -179,6 +181,7 @@ async function main(): Promise<void> {
     () => {
       rider.dismount();
       horsePrompt.setMounted(false);
+      updateHorseBtn();
     },
   );
 
@@ -201,16 +204,37 @@ async function main(): Promise<void> {
   ].join(';');
   document.body.appendChild(resetBtn);
   resetBtn.addEventListener('click', startRun);
+
+  // 상시 '말타기' 토글 버튼 (출발점 버튼 오른편)
+  const horseBtn = document.createElement('button');
+  horseBtn.textContent = '🐴 말타기';
+  horseBtn.title = 'Horse backcountry';
+  horseBtn.style.cssText = resetBtn.style.cssText;
+  document.body.appendChild(horseBtn);
+  const updateHorseBtn = (): void => {
+    horseBtn.textContent = rider.mounted ? '🐴 내리기' : '🐴 말타기';
+  };
+  horseBtn.addEventListener('click', () => {
+    if (rider.mounted) rider.dismount();
+    else rider.mount();
+    horsePrompt.setMounted(rider.mounted);
+    updateHorseBtn();
+  });
+
+  // 상단 버튼들을 📷 시점 표시 오른쪽에 차례로 배치 (라벨 길이 변동 시 재배치)
   const camElForReset = document.getElementById('hud-camera');
-  const placeResetBtn = (): void => {
+  const placeTopBtns = (): void => {
     if (!camElForReset) return;
     const r = camElForReset.getBoundingClientRect();
     resetBtn.style.left = `${r.right + 8}px`;
     resetBtn.style.top = `${r.top}px`;
+    const rr = resetBtn.getBoundingClientRect();
+    horseBtn.style.left = `${rr.right + 8}px`;
+    horseBtn.style.top = `${r.top}px`;
   };
-  placeResetBtn();
-  if (camElForReset) new ResizeObserver(placeResetBtn).observe(camElForReset); // 라벨 변경 시 재배치
-  window.addEventListener('resize', placeResetBtn);
+  placeTopBtns();
+  if (camElForReset) new ResizeObserver(placeTopBtns).observe(camElForReset); // 라벨 변경 시 재배치
+  window.addEventListener('resize', placeTopBtns);
 
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝 / Tuning' });
