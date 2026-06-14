@@ -91,17 +91,17 @@ export const LOCATIONS: Record<string, LocationDef> = {
     id: 'jyrgalan-alatoo',
     name: '지르갈란 알라투',
     nameEn: 'Jyrgalan Ala-Too',
-    // 사용자 지정 좌표(지르갈란 알라투). DEM 검증: 시작 3669m → 도착 2251m,
-    // 전 구간 하강(6~24°), 피니시 방위 4°(거의 정북). 낙차 1418m, 수평 7.0km 롱 런.
+    // 사용자 지정 좌표(지르갈란 알라투). DEM 검증: 시작 3164m → 도착 2251m,
+    // 전 구간 하강(5~19°, NE향). 낙차 913m, 수평 4.7km.
     bbox: { west: 78.922, south: 42.546, east: 78.984, north: 42.626 },
-    start: { lat: 42.555206, lon: 78.9606 }, // 42°33'18.74"N 78°57'38.16"E
+    start: { lat: 42.579003, lon: 78.944483 }, // 42°34'44.41"N 78°56'40.14"E
     finish: { lat: 42.617739, lon: 78.966358 }, // 42°37'03.86"N 78°57'59.09"E
     zoom: 13,
     treeline: 2950, // 상단 알파인 → 하단 라치/가문비 트리런
     country: '키르기스스탄 · 지르갈란',
-    summit: 3670,
-    vertical: 1418,
-    desc: '톈샨 동부 지르갈란의 롱 런. 3670m 알파인에서 라치 숲을 지나 1.4km 강하.',
+    summit: 3164,
+    vertical: 913,
+    desc: '톈샨 동부 지르갈란의 롱 런. 3164m에서 라치 숲을 지나 0.9km 강하.',
   },
   'ala-archa': {
     id: 'ala-archa',

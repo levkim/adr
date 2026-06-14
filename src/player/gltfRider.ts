@@ -9,10 +9,11 @@ import type { CharacterId } from '../config';
 
 const loader = new GLTFLoader();
 
-// 캐릭터별 회전 보정(도). Z-up→Y-up은 rotX=-90 공통, 정면 정렬은 rotY로.
-const ORIENT: Record<CharacterId, { rotX: number; rotY: number }> = {
-  snowboarder: { rotX: -90, rotY: -90 }, // 보드 X축 → 진행 Z축
-  skier: { rotX: -90, rotY: 0 }, // 스키 Y축 → 진행 Z축(정면, 180° 보정)
+// 캐릭터별 회전 보정(도). Z-up→Y-up은 rotX=-90 공통, 정면 정렬은 rotY로,
+// pitch는 기본 전방 기울기(+면 앞쏠림).
+const ORIENT: Record<CharacterId, { rotX: number; rotY: number; pitch: number }> = {
+  snowboarder: { rotX: -90, rotY: -90, pitch: 0 }, // 보드 X축 → 진행 Z축
+  skier: { rotX: -90, rotY: 0, pitch: 5 }, // 스키 Y축 → 진행 Z축(정면), 앞으로 5° 기울임
 };
 
 const _v = new THREE.Vector3();
@@ -31,11 +32,12 @@ export async function loadRiderGLB(
     return null; // 404 등 → 폴백
   }
   const model = gltf.scene;
-  const o = ORIENT[id] ?? { rotX: -90, rotY: 0 };
-  // 월드축 기준: 먼저 X로 업보정(Z-up→Y-up), 그다음 월드 Y로 요(yaw) — 순서 명확
+  const o = ORIENT[id] ?? { rotX: -90, rotY: 0, pitch: 0 };
+  // 월드축 기준: 업보정(X) → 요(Y) → 전방 기울기(X). 순서 명확
   const qx = new THREE.Quaternion().setFromAxisAngle(_X, THREE.MathUtils.degToRad(o.rotX));
   const qy = new THREE.Quaternion().setFromAxisAngle(_Y, THREE.MathUtils.degToRad(o.rotY));
-  model.quaternion.copy(qy).multiply(qx);
+  const qp = new THREE.Quaternion().setFromAxisAngle(_X, THREE.MathUtils.degToRad(o.pitch));
+  model.quaternion.copy(qp).multiply(qy).multiply(qx);
 
   const outer = new THREE.Group();
   outer.add(model);
