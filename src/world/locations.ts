@@ -137,4 +137,20 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 1185,
     desc: '일본 군마 다니가와다케의 동사면. 정상에서 텐진다이라로 1.2km 강하, 하단 트리런.',
   },
+  'karakol': {
+    id: 'karakol',
+    name: '카라콜 스키베이스',
+    nameEn: 'Karakol Ski Base',
+    // 사용자 지정 좌표(카라콜 스키베이스, 키르기스스탄). DEM 검증: 시작 3591m → 도착 2408m,
+    // 전 구간 하강(5~26°), 북서향. 낙차 1183m, 수평 5.9km.
+    bbox: { west: 78.452, south: 42.356, east: 78.53, north: 42.42 },
+    start: { lat: 42.370119, lon: 78.517217 }, // 42°22'12.43"N 78°31'01.98"E
+    finish: { lat: 42.408133, lon: 78.466408 }, // 42°24'29.28"N 78°27'59.07"E
+    zoom: 13,
+    treeline: 3000, // 톈샨 가문비 트리런으로 유명
+    country: '키르기스스탄 · 카라콜',
+    summit: 3591,
+    vertical: 1183,
+    desc: '키르기스스탄 카라콜의 톈샨 가문비 트리런. 3591m에서 1.2km 북서 사면 강하.',
+  },
 };
