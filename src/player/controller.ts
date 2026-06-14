@@ -75,7 +75,7 @@ export class RiderController {
   private async loadCharacterGlb(id: CharacterId): Promise<void> {
     const token = ++this.loadToken;
     const url = `${import.meta.env.BASE_URL}models/${id}.glb`;
-    const group = await loadRiderGLB(url);
+    const group = await loadRiderGLB(url, id);
     if (token !== this.loadToken) {
       if (group) disposeGroup(group);
       return; // 그 사이 캐릭터가 또 바뀜
