@@ -1,12 +1,36 @@
 {
-  "global": { "text": "", "url": "" },
+  "global": {
+    "text": "",
+    "url": ""
+  },
   "locations": {
-    "bec-des-rosses": { "text": "", "url": "" },
-    "hakuba-happo": { "text": "", "url": "" },
-    "valdez-thompson-pass": { "text": "", "url": "" },
-    "jyrgalan-alatoo": { "text": "", "url": "" },
-    "ala-archa": { "text": "", "url": "" },
-    "tanigawadake": { "text": "", "url": "" },
-    "karakol": { "text": "", "url": "" }
+    "bec-des-rosses": {
+      "text": "",
+      "url": ""
+    },
+    "hakuba-happo": {
+      "text": "",
+      "url": ""
+    },
+    "valdez-thompson-pass": {
+      "text": "",
+      "url": ""
+    },
+    "jyrgalan-alatoo": {
+      "text": "📣 알라투+카라콜 원정 GO!- 코스 완주 엔딩 인스타 스토리/게시물 공유 @tournski 태그시 5%할인 ↗",
+      "url": "https://www.tournworld.com/category/mainurlf2fad0af/suburl0b10ca29?category_id=55669"
+    },
+    "ala-archa": {
+      "text": "📣 알라투+카라콜 원정 GO!- 코스 완주 엔딩 인스타 스토리/게시물 공유 @tournski 태그시 5%할인 ↗",
+      "url": "https://www.tournworld.com/category/mainurlf2fad0af/suburl0b10ca29?category_id=55669"
+    },
+    "tanigawadake": {
+      "text": "",
+      "url": ""
+    },
+    "karakol": {
+      "text": "📣 알라투+카라콜 원정 GO!- 코스 완주 엔딩 인스타 스토리/게시물 공유 @tournski 태그시 5%할인 ↗",
+      "url": "https://www.tournworld.com/category/mainurlf2fad0af/suburl0b10ca29?category_id=55669"
+    }
   }
 }
