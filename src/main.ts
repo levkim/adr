@@ -24,8 +24,8 @@ import { Minimap } from './ui/minimap';
 import { Flags } from './world/flags';
 
 async function main(): Promise<void> {
-  // ── 관리자 이벤트 공지 (배너 + ?admin=1 패널) ──
-  new AdminEvent();
+  // ── 관리자 이벤트 공지 (장소별, announcements.json + ?admin=1 패널) ──
+  const admin = new AdminEvent();
 
   // ── 렌더러 ──────────────────────────────────────────────
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -73,6 +73,7 @@ async function main(): Promise<void> {
   }
   CONFIG.rider.character = sel.char;
   const locId = sel.loc;
+  admin.setLocation(locId); // 장소별 공지 배너
 
   // ── 실측 지형 ───────────────────────────────────────────
   const terrain = await Terrain.load(locId);
