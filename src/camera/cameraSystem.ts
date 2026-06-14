@@ -8,15 +8,16 @@ import type { Terrain } from '../world/terrain';
 // 각 모드는 매 프레임 목표 위치/시선/FOV를 계산하고,
 // 시스템이 추적 보간·전환 블렌드·지면 클리어런스·셰이크를 공통 처리한다.
 
-export type CameraModeId = 'third' | 'first' | 'shoulder' | 'drone';
+export type CameraModeId = 'third' | 'first' | 'shoulder' | 'drone' | 'front';
 
-const MODE_ORDER: CameraModeId[] = ['third', 'first', 'shoulder', 'drone'];
+const MODE_ORDER: CameraModeId[] = ['third', 'first', 'shoulder', 'drone', 'front'];
 
 export const MODE_LABEL: Record<CameraModeId, string> = {
-  third: '3인칭',
-  first: '1인칭 고글',
-  shoulder: '숄더',
-  drone: '드론',
+  third: '3인칭 / 3rd',
+  first: '1인칭 고글 / POV',
+  shoulder: '숄더 / Shoulder',
+  drone: '드론 / Drone',
+  front: '정면 / Front',
 };
 
 interface ModeTarget {
@@ -240,6 +241,20 @@ export class CameraSystem {
         out.stiffness = m.followLerp;
         out.roll = 0;
         out.shakeFactor = 0; // 드론은 흔들리지 않는다
+        break;
+      }
+      case 'front': {
+        // 정면 뷰: 라이더 진행 방향 앞에서 라이더를 마주본다 (얼굴이 다가옴)
+        const m = c.front;
+        const dist = m.distance + speed * m.distanceSpeedGain;
+        out.position.copy(phy.position).addScaledVector(_fwd, dist);
+        out.position.y = phy.position.y + m.height;
+        out.lookAt.copy(phy.position);
+        out.lookAt.y += m.lookAtHeight;
+        out.fov = c.fov + Math.min(speed * m.fovSpeedGain, m.fovMaxBoost);
+        out.stiffness = m.followLerp;
+        out.roll = 0;
+        out.shakeFactor = 0.6;
         break;
       }
     }

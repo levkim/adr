@@ -158,6 +158,16 @@ export const CONFIG = {
       followLerp: 1.4, // 묵직하게 떠다니는 느낌
       fov: 44, // 망원 느낌 고정
     },
+    // ── 정면 뷰 (라이더를 마주봄) ──
+    front: {
+      distance: 7, // m, 진행 방향 앞 거리
+      height: 2.0, // m
+      lookAtHeight: 1.1,
+      followLerp: 5,
+      distanceSpeedGain: 0.1,
+      fovSpeedGain: 0.3,
+      fovMaxBoost: 12,
+    },
   },
   world: {
     edgeMargin: 30, // 지형 가장자리 접근 제한 (m)
@@ -189,7 +199,7 @@ export const CONFIG = {
     // ── 카메라 부착 근접 파티클 (전방 원뿔) ──
     cameraSnow: {
       poolSize: 800,
-      budgets: { first: 800, shoulder: 600, third: 280, drone: 60 }, // 모드별 예산
+      budgets: { first: 800, shoulder: 600, third: 280, drone: 60, front: 280 }, // 모드별 예산
       coneDepth: 9, // m
       coneSpread: 0.6,
       windFactor: 1.0, // 속도 → 입자 스트리밍 속도
@@ -218,7 +228,7 @@ export const CONFIG = {
       attack: 1.8, // 1/s
       release: 2.4,
       // 모드별 반영 배율 (1인칭·숄더가 핵심)
-      modeFactor: { first: 1.0, shoulder: 0.8, third: 0.25, drone: 0 },
+      modeFactor: { first: 1.0, shoulder: 0.8, third: 0.25, drone: 0, front: 0.3 },
     },
     // ── 절차 생성 사운드 (WebAudio, 에셋 없음) ──
     audio: {
