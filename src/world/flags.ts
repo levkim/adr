@@ -5,16 +5,16 @@ import type { Terrain } from './terrain';
 // 시작·베이스 지점에 펄럭이는 tournski 깃발. 폴 + 천(로고 텍스처) + CPU 정점 웨이브.
 // 깃발 2개뿐이라 매 프레임 정점/법선 갱신 비용은 무시 가능.
 
-const FLAG_W = 2.6;
-const FLAG_H = 0.85;
-const POLE_H = 6.5;
+const FLAG_W = 5.6; // 더 크게 (멀리서도 보이게)
+const FLAG_H = 1.85;
+const POLE_H = 12;
 
 export class Flags {
   readonly group = new THREE.Group();
   private readonly waving: { geo: THREE.BufferGeometry; base: Float32Array }[] = [];
 
   constructor(terrain: Terrain, start: { x: number; z: number }, finish: { x: number; z: number }) {
-    const tex = new THREE.CanvasTexture(tournskiLogoCanvas(600, 180, '#f5f8fc'));
+    const tex = new THREE.CanvasTexture(tournskiLogoCanvas(900, 270, '#f5f8fc'));
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 4;
     const flagMat = new THREE.MeshStandardMaterial({
@@ -37,20 +37,20 @@ export class Flags {
       f.position.set(p.x, terrain.getHeight(p.x, p.z), p.z);
       f.rotation.y = yaw;
 
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, POLE_H, 8), poleMat);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, POLE_H, 10), poleMat);
       pole.position.y = POLE_H / 2;
       pole.castShadow = true;
 
       const ball = new THREE.Mesh(
-        new THREE.SphereGeometry(0.13, 10, 8),
+        new THREE.SphereGeometry(0.24, 12, 10),
         new THREE.MeshStandardMaterial({ color: accent, roughness: 0.4 }),
       );
-      ball.position.y = POLE_H + 0.05;
+      ball.position.y = POLE_H + 0.1;
 
-      const geo = new THREE.PlaneGeometry(FLAG_W, FLAG_H, 16, 1);
+      const geo = new THREE.PlaneGeometry(FLAG_W, FLAG_H, 24, 1);
       geo.translate(FLAG_W / 2, 0, 0); // 왼쪽 끝(x=0)이 폴에 고정
       const flag = new THREE.Mesh(geo, flagMat);
-      flag.position.set(0.06, POLE_H - 0.55, 0);
+      flag.position.set(0.1, POLE_H - 1.15, 0);
       flag.castShadow = true;
 
       this.waving.push({
@@ -69,9 +69,9 @@ export class Flags {
       for (let i = 0; i < pos.count; i++) {
         const x = w.base[i * 3];
         const k = x / FLAG_W; // 폴(0)에서 고정, 자유단(1)에서 최대
-        const z = (Math.sin(x * 3 - t * 6) * 0.2 + Math.sin(x * 5.3 - t * 9) * 0.06) * k;
+        const z = (Math.sin(x * 2.4 - t * 6) * 0.42 + Math.sin(x * 4.2 - t * 9) * 0.13) * k;
         pos.setZ(i, z);
-        pos.setY(i, w.base[i * 3 + 1] + Math.sin(x * 4 - t * 7) * 0.05 * k);
+        pos.setY(i, w.base[i * 3 + 1] + Math.sin(x * 3.2 - t * 7) * 0.1 * k);
       }
       pos.needsUpdate = true;
       w.geo.computeVertexNormals();
