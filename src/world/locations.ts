@@ -153,4 +153,20 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 1183,
     desc: '키르기스스탄 카라콜의 톈샨 가문비 트리런. 3591m에서 1.2km 북서 사면 강하.',
   },
+  'hakkaisan': {
+    id: 'hakkaisan',
+    name: '핫카이산 로프웨이',
+    nameEn: 'Hakkaisan Ropeway',
+    // 사용자 지정 좌표(핫카이산 로프웨이 스키리조트, 일본 니가타). DEM 검증: 시작 1157m → 정지 382m,
+    // 전 구간 하강(11~27°), 남서향. 낙차 775m, 수평 2.1km. z14(7.6m/px).
+    bbox: { west: 138.965, south: 37.098, east: 139.005, north: 37.135 },
+    start: { lat: 37.12485, lon: 138.992225 }, // 37°07'29.46"N 138°59'32.01"E
+    finish: { lat: 37.109242, lon: 138.978594 }, // 37°06'33.27"N 138°58'42.94"E
+    zoom: 14,
+    treeline: 1500, // 런 전 구간 수림 (너도밤나무·침엽수 트리런)
+    country: '일본 · 니가타 八海山',
+    summit: 1157,
+    vertical: 775,
+    desc: '일본 니가타 핫카이산 로프웨이. 정상역 1157m에서 베이스로 775m 트리런.',
+  },
 };

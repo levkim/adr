@@ -1,0 +1,30 @@
+{
+  "id": "hakkaisan",
+  "name": "핫카이산 로프웨이",
+  "nameEn": "Hakkaisan Ropeway",
+  "width": 467,
+  "height": 541,
+  "zoom": 14,
+  "originPx": {
+    "x": 3716211,
+    "y": 1630578
+  },
+  "bbox": {
+    "west": 138.965,
+    "south": 37.098,
+    "east": 139.005,
+    "north": 37.135
+  },
+  "start": {
+    "lat": 37.12485,
+    "lon": 138.992225
+  },
+  "finish": {
+    "lat": 37.109242,
+    "lon": 138.978594
+  },
+  "metersPerPx": 7.618958101766054,
+  "minElevation": 249.1171875,
+  "maxElevation": 1308.2109375,
+  "encoding": "float32-le-row-major-north-first"
+}

@@ -44,6 +44,28 @@ async function fetchTile(z: number, x: number, y: number): Promise<PNG> {
   }
 }
 
+// ── 이상치 제거 (불량 DEM 픽셀로 인한 스파이크 방지) ────
+function despike(heights: Float32Array, w: number, h: number): void {
+  const win: number[] = [];
+  for (let r = 0; r < h; r++) {
+    for (let c = 0; c < w; c++) {
+      win.length = 0;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const rr = r + dr, cc = c + dc;
+          if (rr < 0 || rr >= h || cc < 0 || cc >= w) continue;
+          win.push(heights[rr * w + cc]);
+        }
+      }
+      if (win.length < 3) continue;
+      win.sort((a, b) => a - b);
+      const median = win[win.length >> 1];
+      if (Math.abs(heights[r * w + c] - median) > 600) heights[r * w + c] = median;
+    }
+  }
+}
+
 // ── 힐셰이드 미리보기 (구글어스 형태 비교용) ────────────
 function renderHillshade(
   heights: Float32Array,
@@ -114,6 +136,9 @@ async function bake(loc: LocationDef): Promise<void> {
       }
     }
   }
+
+  // 이상치(불량 픽셀) 제거: 주변 중앙값과 600m 넘게 벗어나는 셀을 중앙값으로 대체
+  despike(heights, w, h);
 
   // 통계
   let min = Infinity, max = -Infinity, maxIdx = 0;
