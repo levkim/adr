@@ -20,6 +20,7 @@ import { HorsePrompt } from './ui/horsePrompt';
 import { AdminEvent } from './ui/adminEvent';
 import { applyEnvironment, LIGHT_PRESETS } from './world/environment';
 import { Sky } from './world/sky';
+import { BearEvent } from './world/bearEvent';
 import { Minimap } from './ui/minimap';
 import { Flags } from './world/flags';
 
@@ -153,6 +154,10 @@ async function main(): Promise<void> {
   const flags = new Flags(terrain, startPos, finishPos);
   scene.add(flags.group);
 
+  // 곰 추격 이벤트 (50% 등장 → 30% 옆으로 이탈)
+  const bearEvent = new BearEvent(scene);
+  const totalRunDist = Math.hypot(finishPos.x - startPos.x, finishPos.z - startPos.z);
+
   // ── 런 / 채점 / 결과 화면 ───────────────────────────────
   let run = new Run(finishPos, startAlt, finishAlt);
   const startRun = (): void => {
@@ -165,6 +170,7 @@ async function main(): Promise<void> {
     updateHorseBtn();
     horseSlowT = 0;
     horseCooldown = 0;
+    bearEvent.reset();
   };
   // '장소·캐릭터 변경' → 쿼리 제거 후 리로드 → 시작 화면
   const result = new ResultScreen(startRun, () => {
@@ -476,6 +482,22 @@ async function main(): Promise<void> {
       // 이번 프레임에 피니시했다면 결과 카드 표시 (run.result는 피니시 시에만 세팅)
       const card = run.result;
       if (card) result.show(card, run, terrain);
+
+      // 곰 추격 이벤트 (런 시작 후부터 도착지 거리 기준)
+      if (run.state !== 'idle') {
+        const distToFin = Math.hypot(
+          rider.physics.position.x - finishPos.x,
+          rider.physics.position.z - finishPos.z,
+        );
+        bearEvent.update(
+          dt,
+          rider.physics.position,
+          rider.physics.heading,
+          distToFin,
+          totalRunDist,
+          terrain,
+        );
+      }
 
       // 평지 + 저속 지속 → '말 타고 갈래?' 프롬프트
       if (!rider.mounted) {
