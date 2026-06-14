@@ -25,21 +25,18 @@ export class AdminEvent {
     this.banner = document.createElement('div');
     this.banner.style.cssText = [
       'position:fixed',
-      'top:8px',
-      'left:50%',
-      'transform:translateX(-50%)',
-      'max-width:60vw',
+      'top:46px', // 좌상단 시점(📷 3인칭) 버튼 바로 아래
+      'left:16px',
+      'max-width:72vw',
       'z-index:9',
       'display:none',
-      'padding:6px 14px',
-      'border-radius:16px',
-      'background:rgba(47,111,176,0.9)',
+      'padding:6px 12px',
+      'border-radius:12px',
+      'background:rgba(47,111,176,0.92)',
       'color:#fff',
       'font-size:13px',
+      'line-height:1.4',
       'font-family:system-ui,-apple-system,sans-serif',
-      'white-space:nowrap',
-      'overflow:hidden',
-      'text-overflow:ellipsis',
       'box-shadow:0 2px 10px rgba(0,0,0,0.4)',
       '-webkit-tap-highlight-color:transparent',
     ].join(';');
