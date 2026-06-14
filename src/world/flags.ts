@@ -5,9 +5,10 @@ import type { Terrain } from './terrain';
 // 시작·베이스 지점에 펄럭이는 tournski 깃발. 폴 + 천(로고 텍스처) + CPU 정점 웨이브.
 // 깃발 2개뿐이라 매 프레임 정점/법선 갱신 비용은 무시 가능.
 
-const FLAG_W = 5.6; // 더 크게 (멀리서도 보이게)
-const FLAG_H = 1.85;
-const POLE_H = 12;
+const FLAG_W = 5.0; // 크게(멀리서도 보이게) + 캐릭터 키 높이에 배치
+const FLAG_H = 1.7;
+const POLE_H = 3.6; // 라이더 눈높이 부근
+const FLAG_Y = 1.9; // 깃발 중심 높이(캐릭터 키 ~1.7m 부근)
 
 export class Flags {
   readonly group = new THREE.Group();
@@ -50,7 +51,7 @@ export class Flags {
       const geo = new THREE.PlaneGeometry(FLAG_W, FLAG_H, 24, 1);
       geo.translate(FLAG_W / 2, 0, 0); // 왼쪽 끝(x=0)이 폴에 고정
       const flag = new THREE.Mesh(geo, flagMat);
-      flag.position.set(0.1, POLE_H - 1.15, 0);
+      flag.position.set(0.1, FLAG_Y, 0); // 캐릭터 키 높이
       flag.castShadow = true;
 
       this.waving.push({
