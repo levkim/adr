@@ -1,14 +1,10 @@
-// 캐릭터 프리셋 타입 (레퍼런스 4종)
-export type CharacterId =
-  | 'male-snowboarder'
-  | 'female-snowboarder'
-  | 'male-skier'
-  | 'female-skier';
+// 캐릭터: 스노보더 / 스키어 2종 (public/models/{id}.glb 로 모델 교체, 없으면 절차적)
+export type CharacterId = 'snowboarder' | 'skier';
 
 export interface CharacterPreset {
   name: string;
   discipline: 'snowboard' | 'ski';
-  jacket: string; // 재킷 색
+  jacket: string; // 재킷 색 (절차적 폴백·시작화면 칩 색)
   pants: string; // 팬츠 색
   goggle: string; // 고글 미러 틴트
   board: string; // 보드 톱시트 / 스키 톤
@@ -33,43 +29,27 @@ export const CONFIG = {
     leanResponse: 7, // 1/s, 린 반응 속도
     forePitchMax: 0.38, // rad (~22°), W/S 전후 기울기 최대 각
     foreLeanResponse: 5, // 1/s, 전후 기울기 반응 속도
-    // 캐릭터: 4명 프리셋 중 기본값 (URL ?char= 로 변경, 시작 화면은 9단계)
-    character: 'male-snowboarder' as CharacterId,
+    // 캐릭터 기본값 (URL ?char=snowboarder|skier, 시작 화면에서 선택)
+    character: 'snowboarder' as CharacterId,
   },
   // ── 캐릭터 프리셋 (레퍼런스 4종) ──
   // tournski=자체 브랜드(헬멧 표기 O), 제3자 브랜드 로고는 형태만 참고하고 표기 안 함
   characters: {
-    'male-snowboarder': {
-      name: '남자 스노보더',
+    snowboarder: {
+      name: '스노보더',
       discipline: 'snowboard',
       jacket: '#2f6fb0', // 블루
       pants: '#2a5f96',
       goggle: '#6fb6e6', // 블루 미러
       board: '#caa36b', // 우드톱
     },
-    'female-snowboarder': {
-      name: '여자 스노보더',
-      discipline: 'snowboard',
-      jacket: '#c0392b', // 레드
-      pants: '#a5322a',
-      goggle: '#6fb6e6',
-      board: '#caa36b',
-    },
-    'male-skier': {
-      name: '남자 스키어',
+    skier: {
+      name: '스키어',
       discipline: 'ski',
       jacket: '#73777c', // 그레이
       pants: '#5c6065',
       goggle: '#aebfcc', // 실버 미러
       board: '#3a3f47', // 스키 톤
-    },
-    'female-skier': {
-      name: '여자 스키어',
-      discipline: 'ski',
-      jacket: '#6f7a39', // 올리브
-      pants: '#5f6733',
-      goggle: '#9a86d8', // 퍼플 미러
-      board: '#3a3f47',
     },
   } satisfies Record<string, CharacterPreset>,
   // ── 파우더 스노우 (신설) — 기본 30cm, 30cm 단위 추가 설정 ──

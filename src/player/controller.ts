@@ -6,10 +6,11 @@ import type { Props } from '../world/props';
 import { RiderPhysics } from './physics';
 import { RiderModel } from './riderModel';
 import { Horse, HORSE_BACK_Y } from './horse';
+import { loadRiderGLB } from './gltfRider';
 
-// 라이더: 물리 상태를 절차적 풀기어 모델로 시각화한다.
-// object가 yaw/경사정렬/턴 린/전후 피치/낙상을 처리하고, 모델이 사지를 포즈한다.
-// 평지 탈출용 '말 타기' 모드를 가진다(중력 무시·최대 60km/h 주행).
+// 라이더: 물리 상태를 모델로 시각화한다. public/models/{id}.glb 가 있으면 그 모델(정적)을,
+// 없으면 절차적 풀기어 모델(사지 포즈 가능)을 쓴다. object가 yaw/경사정렬/턴 린/전후 피치/
+// 낙상/플립을 처리한다. 평지 탈출용 '말 타기' 모드(중력 무시·최대 60km/h)를 가진다.
 export class RiderController {
   readonly object = new THREE.Group();
   readonly physics = new RiderPhysics();
@@ -25,13 +26,21 @@ export class RiderController {
   private readonly horse = new Horse();
   private crashTip = 0; // 0~1, 낙상 쓰러짐 보간
   private readonly baseQuat = new THREE.Quaternion(); // 스무딩된 베이스 방향(플립 제외)
-  private model: RiderModel;
+  private model: RiderModel; // 절차적 폴백
+  private glb: THREE.Group | null = null; // 로드된 GLB (있으면 우선)
+  private loadToken = 0;
 
   constructor(characterId: CharacterId = CONFIG.rider.character) {
     this.model = new RiderModel(CONFIG.characters[characterId]);
     this.object.add(this.model.group);
     this.horse.group.visible = false;
     this.object.add(this.horse.group);
+    void this.loadCharacterGlb(characterId);
+  }
+
+  /** 현재 표시 중인 비주얼 (GLB 우선, 없으면 절차적) */
+  private get visual(): THREE.Object3D {
+    return this.glb ?? this.model.group;
   }
 
   /** 말에 올라탄다 (현재 속도 계승) */
@@ -39,7 +48,7 @@ export class RiderController {
     if (this.mounted) return;
     this.mounted = true;
     this.horse.group.visible = true;
-    this.model.group.position.set(0, HORSE_BACK_Y, -0.05);
+    this.visual.position.set(0, HORSE_BACK_Y, -0.05);
     this.horseSpeed = Math.max(0, this.physics.speed);
     this.physics.grounded = true;
   }
@@ -49,16 +58,47 @@ export class RiderController {
     if (!this.mounted) return;
     this.mounted = false;
     this.horse.group.visible = false;
-    this.model.group.position.set(0, 0, 0);
+    this.visual.position.set(0, 0, 0);
     this.physics.grounded = true;
   }
 
-  /** 캐릭터 교체 (모델 재생성) */
+  /** 캐릭터 교체 (절차적 재생성 + GLB 재로드) */
   setCharacter(characterId: CharacterId): void {
     this.object.remove(this.model.group);
     this.model.dispose();
     this.model = new RiderModel(CONFIG.characters[characterId]);
     this.object.add(this.model.group);
+    this.applyGlb(null); // 일단 절차적, GLB 로드되면 교체
+    void this.loadCharacterGlb(characterId);
+  }
+
+  private async loadCharacterGlb(id: CharacterId): Promise<void> {
+    const token = ++this.loadToken;
+    const url = `${import.meta.env.BASE_URL}models/${id}.glb`;
+    const group = await loadRiderGLB(url);
+    if (token !== this.loadToken) {
+      if (group) disposeGroup(group);
+      return; // 그 사이 캐릭터가 또 바뀜
+    }
+    this.applyGlb(group);
+  }
+
+  private applyGlb(group: THREE.Group | null): void {
+    if (this.glb) {
+      this.object.remove(this.glb);
+      disposeGroup(this.glb);
+    }
+    this.glb = group;
+    const offY = this.mounted ? HORSE_BACK_Y : 0;
+    const offZ = this.mounted ? -0.05 : 0;
+    if (group) {
+      this.object.add(group);
+      group.position.set(0, offY, offZ);
+      this.model.group.visible = false;
+    } else {
+      this.model.group.visible = true;
+      this.model.group.position.set(0, offY, offZ);
+    }
   }
 
   /** 드랍 인 지점에 배치 */
@@ -126,14 +166,16 @@ export class RiderController {
     _pitch.setFromAxisAngle(_rightAxis, pitchAngle);
     this.object.quaternion.multiplyQuaternions(this.baseQuat, _pitch);
 
-    // ── 사지 포즈 ──
-    this.model.pose(dt, {
-      crouch: this.crouchAmount,
-      airborne: !this.physics.grounded,
-      crashed: this.physics.crashed,
-      speed: this.physics.speed,
-      lean: this.lean,
-    });
+    // ── 사지 포즈 (절차적 모델만; GLB는 정적이라 통째 회전만) ──
+    if (!this.glb) {
+      this.model.pose(dt, {
+        crouch: this.crouchAmount,
+        airborne: !this.physics.grounded,
+        crashed: this.physics.crashed,
+        speed: this.physics.speed,
+        lean: this.lean,
+      });
+    }
   }
 
   /** 말 타기 주행: 중력 무시, 조이스틱/키보드로 조향·가감속(최대 60km/h), 지면 추종 */
@@ -181,8 +223,22 @@ export class RiderController {
     this.object.quaternion.slerp(_target, 1 - Math.exp(-10 * dt));
 
     this.horse.update(dt, this.horseSpeed);
-    this.model.pose(dt, { crouch: 0, airborne: false, crashed: false, speed: this.horseSpeed, lean: 0 });
+    if (!this.glb) {
+      this.model.pose(dt, { crouch: 0, airborne: false, crashed: false, speed: this.horseSpeed, lean: 0 });
+    }
   }
+}
+
+function disposeGroup(group: THREE.Object3D): void {
+  group.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (m.isMesh) {
+      m.geometry?.dispose();
+      const mat = m.material;
+      if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
+      else mat?.dispose();
+    }
+  });
 }
 
 const _fwdAxisH = new THREE.Vector3();

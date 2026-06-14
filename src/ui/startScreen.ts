@@ -48,10 +48,8 @@ const UI = {
 } as const;
 
 const CHAR_EN: Record<string, string> = {
-  'male-snowboarder': 'M Snowboarder',
-  'female-snowboarder': 'F Snowboarder',
-  'male-skier': 'M Skier',
-  'female-skier': 'F Skier',
+  snowboarder: 'Snowboarder',
+  skier: 'Skier',
 };
 const LIGHT_EN: Record<string, string> = {
   bluebird: 'Bluebird',
