@@ -16,6 +16,7 @@ import { PowderFx } from './fx/powderFx';
 import { Run } from './scoring/run';
 import { ResultScreen } from './ui/resultScreen';
 import { StartScreen, type Selection } from './ui/startScreen';
+import { HorsePrompt } from './ui/horsePrompt';
 import { applyEnvironment, LIGHT_PRESETS } from './world/environment';
 import { Sky } from './world/sky';
 import { Minimap } from './ui/minimap';
@@ -154,11 +155,32 @@ async function main(): Promise<void> {
     cameraSystem.snapTo(rider, terrain);
     run = new Run(finishPos, startAlt, finishAlt);
     result.hide();
+    horsePrompt.setMounted(false);
+    horsePrompt.hidePrompt();
+    horseSlowT = 0;
+    horseCooldown = 0;
   };
   // '장소·캐릭터 변경' → 쿼리 제거 후 리로드 → 시작 화면
   const result = new ResultScreen(startRun, () => {
     window.location.href = window.location.pathname;
   });
+
+  // 말 타기 프롬프트(평지 탈출)
+  let horseSlowT = 0;
+  let horseCooldown = 0;
+  const horsePrompt = new HorsePrompt(
+    () => {
+      rider.mount();
+      horsePrompt.setMounted(true);
+    },
+    () => {
+      horseCooldown = CONFIG.horse.promptCooldown;
+    },
+    () => {
+      rider.dismount();
+      horsePrompt.setMounted(false);
+    },
+  );
 
   // 출발점 복귀 터치 버튼 — 상단 시점변경(📷) 버튼 오른편에 배치
   const resetBtn = document.createElement('button');
@@ -400,6 +422,7 @@ async function main(): Promise<void> {
   });
 
   // ── 게임 루프 ───────────────────────────────────────────
+  const _hn = new THREE.Vector3();
   let elapsed = 0;
   startLoop((dt) => {
     elapsed += dt;
@@ -408,7 +431,7 @@ async function main(): Promise<void> {
     // 설면 스파클 깜빡임 (셰이더 컴파일 후에만 존재)
     const tShader = (terrainMesh.material as THREE.Material).userData.shader;
     if (tShader) tShader.uniforms.uTime.value = elapsed;
-    // R: 새 런 시작, M: 미니맵, G: 제스처 토글, N: 제스처 중립 재보정
+    // R: 새 런 시작, M: 미니맵, J: 조이스틱
     if (input.justPressed('KeyR')) startRun();
     if (input.justPressed('KeyM')) minimap.toggle();
     if (input.justPressed('KeyJ')) joystick.toggle();
@@ -424,6 +447,22 @@ async function main(): Promise<void> {
       // 이번 프레임에 피니시했다면 결과 카드 표시 (run.result는 피니시 시에만 세팅)
       const card = run.result;
       if (card) result.show(card, run, terrain);
+
+      // 평지 + 저속 지속 → '말 타고 갈래?' 프롬프트
+      if (!rider.mounted) {
+        horseCooldown = Math.max(0, horseCooldown - dt);
+        terrain.getNormal(rider.physics.position.x, rider.physics.position.z, _hn);
+        const flat = _hn.y > CONFIG.horse.promptSlopeCos;
+        const slow = rider.physics.speed < CONFIG.horse.promptSpeed;
+        horseSlowT = rider.physics.grounded && flat && slow ? horseSlowT + dt : 0;
+        if (horseSlowT > CONFIG.horse.promptDelay && horseCooldown <= 0 && !horsePrompt.promptVisible) {
+          horsePrompt.showPrompt();
+        }
+        if (horsePrompt.promptVisible && !slow) {
+          horsePrompt.hidePrompt();
+          horseSlowT = 0;
+        }
+      }
     }
 
     cameraSystem.update(dt, input, rider, terrain);

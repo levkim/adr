@@ -5,9 +5,11 @@ import type { Terrain } from '../world/terrain';
 import type { Props } from '../world/props';
 import { RiderPhysics } from './physics';
 import { RiderModel } from './riderModel';
+import { Horse, HORSE_BACK_Y } from './horse';
 
 // 라이더: 물리 상태를 절차적 풀기어 모델로 시각화한다.
 // object가 yaw/경사정렬/턴 린/전후 피치/낙상을 처리하고, 모델이 사지를 포즈한다.
+// 평지 탈출용 '말 타기' 모드를 가진다(중력 무시·최대 60km/h 주행).
 export class RiderController {
   readonly object = new THREE.Group();
   readonly physics = new RiderPhysics();
@@ -17,6 +19,10 @@ export class RiderController {
   lastSteer = 0;
   /** rad, 현재 턴 린 각 (+ = 우측으로 기울임) */
   lean = 0;
+  /** 말 타기 상태 */
+  mounted = false;
+  private horseSpeed = 0;
+  private readonly horse = new Horse();
   private crashTip = 0; // 0~1, 낙상 쓰러짐 보간
   private readonly baseQuat = new THREE.Quaternion(); // 스무딩된 베이스 방향(플립 제외)
   private model: RiderModel;
@@ -24,6 +30,27 @@ export class RiderController {
   constructor(characterId: CharacterId = CONFIG.rider.character) {
     this.model = new RiderModel(CONFIG.characters[characterId]);
     this.object.add(this.model.group);
+    this.horse.group.visible = false;
+    this.object.add(this.horse.group);
+  }
+
+  /** 말에 올라탄다 (현재 속도 계승) */
+  mount(): void {
+    if (this.mounted) return;
+    this.mounted = true;
+    this.horse.group.visible = true;
+    this.model.group.position.set(0, HORSE_BACK_Y, -0.05);
+    this.horseSpeed = Math.max(0, this.physics.speed);
+    this.physics.grounded = true;
+  }
+
+  /** 말에서 내린다 (속도 계승해 스키 물리로 복귀) */
+  dismount(): void {
+    if (!this.mounted) return;
+    this.mounted = false;
+    this.horse.group.visible = false;
+    this.model.group.position.set(0, 0, 0);
+    this.physics.grounded = true;
   }
 
   /** 캐릭터 교체 (모델 재생성) */
@@ -36,6 +63,7 @@ export class RiderController {
 
   /** 드랍 인 지점에 배치 */
   spawnAt(x: number, z: number, heading: number, terrain: Terrain): void {
+    this.dismount();
     this.physics.reset(x, terrain.getHeight(x, z), z, heading);
     this.object.position.copy(this.physics.position);
     this.object.quaternion.setFromAxisAngle(_up, heading);
@@ -46,6 +74,10 @@ export class RiderController {
   }
 
   update(dt: number, input: Input, terrain: Terrain, props?: Props): void {
+    if (this.mounted) {
+      this.horseUpdate(dt, input, terrain);
+      return;
+    }
     this.lastSteer = this.physics.crashed ? 0 : input.steer;
     this.physics.update(dt, input, terrain, props);
     this.object.position.copy(this.physics.position);
@@ -103,7 +135,57 @@ export class RiderController {
       lean: this.lean,
     });
   }
+
+  /** 말 타기 주행: 중력 무시, 조이스틱/키보드로 조향·가감속(최대 60km/h), 지면 추종 */
+  private horseUpdate(dt: number, input: Input, terrain: Terrain): void {
+    const h = CONFIG.horse;
+    const phy = this.physics;
+    this.lastSteer = input.steer;
+
+    phy.heading -= input.steer * h.turnRate * dt;
+    // 전진(leanFore+)=가속, 후진(-)=브레이크/후진, 무입력=감속
+    if (input.leanFore > 0.1) this.horseSpeed += h.accel * dt;
+    else if (input.leanFore < -0.1) this.horseSpeed -= h.brake * dt;
+    else {
+      const d = h.friction * dt;
+      this.horseSpeed = this.horseSpeed > 0 ? Math.max(0, this.horseSpeed - d) : this.horseSpeed;
+    }
+    this.horseSpeed = THREE.MathUtils.clamp(this.horseSpeed, -h.reverseMax, h.maxSpeed);
+
+    // 이동 + 지형 추종
+    _fwdAxisH.set(Math.sin(phy.heading), 0, Math.cos(phy.heading));
+    phy.position.addScaledVector(_fwdAxisH, this.horseSpeed * dt);
+    const margin = CONFIG.world.edgeMargin;
+    phy.position.x = THREE.MathUtils.clamp(
+      phy.position.x,
+      -terrain.widthMeters / 2 + margin,
+      terrain.widthMeters / 2 - margin,
+    );
+    phy.position.z = THREE.MathUtils.clamp(
+      phy.position.z,
+      -terrain.depthMeters / 2 + margin,
+      terrain.depthMeters / 2 - margin,
+    );
+    phy.position.y = terrain.getHeight(phy.position.x, phy.position.z);
+    // 다운스트림(카메라·미니맵·HUD·채점)이 읽도록 물리 상태 동기화
+    phy.velocity.copy(_fwdAxisH).multiplyScalar(this.horseSpeed);
+    phy.grounded = true;
+    this.object.position.copy(phy.position);
+
+    // 자세: 수직 + 사면 일부 정렬 + yaw
+    terrain.getNormal(phy.position.x, phy.position.z, phy.groundNormal);
+    _bodyUp.copy(_up).lerp(phy.groundNormal, CONFIG.rider.slopeAlign).normalize();
+    _align.setFromUnitVectors(_up, _bodyUp);
+    _yaw.setFromAxisAngle(_up, phy.heading);
+    _target.multiplyQuaternions(_align, _yaw);
+    this.object.quaternion.slerp(_target, 1 - Math.exp(-10 * dt));
+
+    this.horse.update(dt, this.horseSpeed);
+    this.model.pose(dt, { crouch: 0, airborne: false, crashed: false, speed: this.horseSpeed, lean: 0 });
+  }
 }
+
+const _fwdAxisH = new THREE.Vector3();
 
 const _up = new THREE.Vector3(0, 1, 0);
 const _fwdAxis = new THREE.Vector3(0, 0, 1);

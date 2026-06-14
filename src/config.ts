@@ -240,6 +240,19 @@ export const CONFIG = {
       breath: 0.4, // 1인칭 호흡
     },
   },
+  // ── 말 타기 (평지 탈출) ──
+  horse: {
+    maxSpeed: 16.7, // m/s ≈ 60km/h
+    accel: 8, // m/s², 전진 입력 시
+    brake: 14, // m/s², 후진 입력 시
+    friction: 4, // m/s², 무입력 시 감속
+    reverseMax: 2.5, // m/s, 후진 최대
+    turnRate: 1.7, // rad/s, 조향
+    promptSpeed: 3, // m/s(≈11km/h) 이하 + 평지면 프롬프트
+    promptSlopeCos: 0.95, // 평지 판정 (지면 법선 y > 이값, ~18°)
+    promptDelay: 1.3, // s, 느림 유지 시간
+    promptCooldown: 8, // s, NO 후 재표시 안 함
+  },
   // ── 절차 배치 (나무/바위) ──
   props: {
     spacing: 11, // m, 배치 후보 격자 간격
