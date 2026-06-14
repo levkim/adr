@@ -82,10 +82,10 @@ export class RiderPhysics {
     this.crashedThisFrame = false;
     this.invulnTimer = Math.max(0, this.invulnTimer - dt);
 
-    // 낙상 중: 입력 무시, 강한 마찰로 미끄러지다 일어난다
+    // 낙상 중: 입력 무시, 강한 마찰로 미끄러진다. 3초 지나면 자동으로 일어나 정상 복귀
     if (this.crashed) {
       this.crashTimer -= dt;
-      if (this.crashTimer <= 0 && this.speed < CONFIG.crash.minSpeed) {
+      if (this.crashTimer <= 0) {
         this.crashed = false;
         this.invulnTimer = CONFIG.crash.invulnTime;
         this.velocity.set(0, 0, 0);

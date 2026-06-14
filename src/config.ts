@@ -250,10 +250,9 @@ export const CONFIG = {
   },
   // ── 낙상 ──
   crash: {
-    duration: 2.2, // s, 낙상 후 일어나기까지
+    duration: 3, // s, 낙상 후 이 시간이 지나면 자동으로 일어나 정상 복귀
     friction: 0.5, // 낙상 슬라이딩 마찰계수 (빠르게 멈춤)
     invulnTime: 1.5, // s, 회복 직후 충돌 무시 (같은 장애물 연속 낙상 방지)
-    minSpeed: 1.5, // m/s, 이 속도 이하로 느려져야 일어난다
   },
   // ── 점수 (FWT 채점 모방) ──
   scoring: {
