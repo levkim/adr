@@ -160,6 +160,36 @@ async function main(): Promise<void> {
     window.location.href = window.location.pathname;
   });
 
+  // 출발점 복귀 터치 버튼 — 상단 시점변경(📷) 버튼 오른편에 배치
+  const resetBtn = document.createElement('button');
+  resetBtn.textContent = '↩ 출발점';
+  resetBtn.title = '드랍 인으로 복귀 (R)';
+  resetBtn.style.cssText = [
+    'position:fixed',
+    'top:14px',
+    'z-index:6',
+    'padding:5px 10px',
+    'border-radius:16px',
+    'background:rgba(20,24,30,0.55)',
+    'border:1px solid rgba(255,255,255,0.18)',
+    'color:#eef3f8',
+    'font-size:14px',
+    'cursor:pointer',
+    '-webkit-tap-highlight-color:transparent',
+  ].join(';');
+  document.body.appendChild(resetBtn);
+  resetBtn.addEventListener('click', startRun);
+  const camElForReset = document.getElementById('hud-camera');
+  const placeResetBtn = (): void => {
+    if (!camElForReset) return;
+    const r = camElForReset.getBoundingClientRect();
+    resetBtn.style.left = `${r.right + 8}px`;
+    resetBtn.style.top = `${r.top}px`;
+  };
+  placeResetBtn();
+  if (camElForReset) new ResizeObserver(placeResetBtn).observe(camElForReset); // 라벨 변경 시 재배치
+  window.addEventListener('resize', placeResetBtn);
+
   // ── 디버그 튜닝 ─────────────────────────────────────────
   const gui = new GUI({ title: '튜닝 / Tuning' });
   // 우측에서 펼쳐지고 접히는 슬라이드 패널 (스마트폰 배려). 터치 기기는 기본 접힘.
