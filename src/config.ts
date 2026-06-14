@@ -240,16 +240,6 @@ export const CONFIG = {
       breath: 0.4, // 1인칭 호흡
     },
   },
-  // ── 스마트폰 기울기(자이로) 조종 (옵트인) ──
-  tilt: {
-    steerGain: 0.06, // 좌우 기울기(도) → 조향. |기울기|*gain (15°에서 ~0.9)
-    leanGain: 0.05, // 앞뒤 기울기(도) → 전후 체중이동
-    invertSteer: false, // 조향 방향 반전
-    invertLean: false, // 전후 반전
-    swapAxes: false, // 가로모드: 조향/전후 축 교환
-    deadzone: 0.12, // 중립 근처 무시 (떨림 방지)
-    smoothing: 8, // 1/s, 값 스무딩 속도
-  },
   // ── 절차 배치 (나무/바위) ──
   props: {
     spacing: 11, // m, 배치 후보 격자 간격

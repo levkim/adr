@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import GUI from 'lil-gui';
 import { CONFIG, type CharacterId } from './config';
 import { Input } from './core/input';
-import { TiltController } from './core/tilt';
 import { Joystick } from './ui/joystick';
 import { startLoop } from './core/loop';
 import { Terrain } from './world/terrain';
@@ -97,11 +96,11 @@ async function main(): Promise<void> {
   const rider = new RiderController();
   scene.add(rider.object);
 
-  // 스마트폰 기울기 조종 (옵트인) — 자이로 값을 Input에 주입
-  const tilt = new TiltController(input);
-  const tiltBtn = document.createElement('button');
-  tiltBtn.textContent = '📱 기울기 (G)';
-  tiltBtn.style.cssText = [
+  // 화면 터치 조이스틱 (옵트인) — 좌우=조향, 위아래=체중이동/플립, 탭=점프, 길게=그립
+  const joystick = new Joystick(input);
+  const joyBtn = document.createElement('button');
+  joyBtn.textContent = '🕹 조이스틱 (J)';
+  joyBtn.style.cssText = [
     'position:fixed',
     'right:16px',
     'bottom:36px',
@@ -114,26 +113,8 @@ async function main(): Promise<void> {
     'font-size:13px',
     'cursor:pointer',
   ].join(';');
-  document.body.appendChild(tiltBtn);
-
-  // 화면 터치 조이스틱 (옵트인) — 좌우=조향, 위아래=체중이동/플립, 탭=점프, 길게=그립
-  const joystick = new Joystick(input);
-  const joyBtn = document.createElement('button');
-  joyBtn.textContent = '🕹 조이스틱 (J)';
-  joyBtn.style.cssText = tiltBtn.style.cssText.replace('bottom:36px', 'bottom:74px');
   document.body.appendChild(joyBtn);
-
-  // 기울기 / 조이스틱은 같은 입력 채널이라 상호 배타
-  const toggleTilt = (): void => {
-    if (joystick.enabled) joystick.toggle();
-    void tilt.toggle();
-  };
-  const toggleJoystick = (): void => {
-    if (tilt.enabled) void tilt.toggle();
-    joystick.toggle();
-  };
-  tiltBtn.addEventListener('click', toggleTilt);
-  joyBtn.addEventListener('click', toggleJoystick);
+  joyBtn.addEventListener('click', () => joystick.toggle());
 
   // 드랍 인 지점(정상)에 배치, 피니시 방향을 보게
   const startPos = terrain.geoToWorld(terrain.meta.start.lat, terrain.meta.start.lon);
@@ -149,6 +130,13 @@ async function main(): Promise<void> {
 
   // 시점 표시(HUD)를 탭하면 카메라 순환 (스마트폰)
   document.getElementById('hud-camera')?.addEventListener('click', () => cameraSystem.cycle());
+
+  // 'How to control' 버튼 — 조작법 패널 펼침/접힘
+  const helpBtn = document.getElementById('help-btn');
+  const helpPanel = document.getElementById('help-panel');
+  helpBtn?.addEventListener('click', () => {
+    if (helpPanel) helpPanel.style.display = helpPanel.style.display === 'block' ? 'none' : 'block';
+  });
 
   const hud = new Hud();
   const goggle = new GoggleOverlay();
@@ -373,33 +361,6 @@ async function main(): Promise<void> {
     '전체 사운드 볼륨(0=무음). EN: Master volume.',
   );
   fxFolder.close();
-  const gFolder = gui.addFolder('폰 조종 / Phone control');
-  help(
-    gFolder.add(CONFIG.tilt, 'steerGain', 0.01, 0.2).name('조향 민감도 / Steer gain'),
-    '폰 좌우 기울기→조향 민감도. EN: Tilt-to-steer sensitivity.',
-  );
-  help(
-    gFolder.add(CONFIG.tilt, 'leanGain', 0.01, 0.2).name('전후 민감도 / Lean gain'),
-    '폰 앞뒤 기울기→체중이동 민감도. EN: Tilt-to-lean sensitivity.',
-  );
-  help(
-    gFolder.add(CONFIG.tilt, 'invertSteer').name('조향 반전 / Inv steer'),
-    '좌우가 반대면 켜기. EN: Flip steer direction.',
-  );
-  help(
-    gFolder.add(CONFIG.tilt, 'invertLean').name('전후 반전 / Inv lean'),
-    '앞뒤가 반대면 켜기. EN: Flip fore/aft direction.',
-  );
-  help(
-    gFolder.add(CONFIG.tilt, 'swapAxes').name('가로모드 / Landscape'),
-    '폰을 가로로 들면 켜기. EN: Swap axes for landscape.',
-  );
-  gFolder.add(CONFIG.tilt, 'deadzone', 0, 0.4).name('데드존 / Deadzone');
-  gFolder.add(CONFIG.tilt, 'smoothing', 1, 15).name('스무딩 / Smoothing');
-  gFolder
-    .add({ recalibrate: () => tilt.requestCalibration() }, 'recalibrate')
-    .name('중립 재보정 / Recalibrate (N)');
-  gFolder.close();
 
   // ── 리사이즈 ────────────────────────────────────────────
   window.addEventListener('resize', () => {
@@ -420,9 +381,7 @@ async function main(): Promise<void> {
     // R: 새 런 시작, M: 미니맵, G: 제스처 토글, N: 제스처 중립 재보정
     if (input.justPressed('KeyR')) startRun();
     if (input.justPressed('KeyM')) minimap.toggle();
-    if (input.justPressed('KeyG')) toggleTilt();
-    if (input.justPressed('KeyJ')) toggleJoystick();
-    if (input.justPressed('KeyN')) tilt.requestCalibration();
+    if (input.justPressed('KeyJ')) joystick.toggle();
 
     // 런 진행 중에만 물리/채점 갱신 (피니시 후에는 정지)
     if (run.state !== 'finished') {

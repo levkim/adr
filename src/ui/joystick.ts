@@ -1,6 +1,6 @@
 // 화면 터치 조이스틱 (옵트인). 좌우=조향, 위/아래=전후 체중이동(공중에선 앞/뒤 플립).
 // 짧게 탭=점프, 길게 누르기=그립(크라우치). 포인터 이벤트라 데스크톱 마우스로도 동작.
-// Input.setTilt(아날로그)·queueJump로 주입. 키보드/기울기와 동일 채널이라 상호 배타로 쓴다.
+// Input.setAnalog(아날로그)·queueJump로 주입. 키보드와 병행(키 입력 우선).
 
 const R = 64; // 베이스 반경(px)
 const KNOB = 30;
@@ -22,7 +22,7 @@ export class Joystick {
   private longTimer = 0;
 
   constructor(
-    private readonly input: { setTilt: (t: TiltLike) => void; queueJump: () => void },
+    private readonly input: { setAnalog: (t: AnalogLike) => void; queueJump: () => void },
   ) {
     this.base = document.createElement('div');
     this.base.style.cssText = [
@@ -75,7 +75,7 @@ export class Joystick {
     this.crouch = false;
     window.clearTimeout(this.longTimer);
     this.knob.style.transform = 'translate(0,0)';
-    this.input.setTilt({ steer: 0, leanFore: 0, crouch: false });
+    this.input.setAnalog({ steer: 0, leanFore: 0, crouch: false });
   }
 
   private onDown = (e: PointerEvent): void => {
@@ -125,11 +125,11 @@ export class Joystick {
     this.active = false;
     this.crouch = false;
     this.knob.style.transform = 'translate(0,0)';
-    this.input.setTilt({ steer: 0, leanFore: 0, crouch: false });
+    this.input.setAnalog({ steer: 0, leanFore: 0, crouch: false });
   };
 
   private emit(steer: number, leanFore: number): void {
-    this.input.setTilt({
+    this.input.setAnalog({
       steer: clamp(steer, -1, 1),
       leanFore: clamp(leanFore, -1, 1),
       crouch: this.crouch,
@@ -137,7 +137,7 @@ export class Joystick {
   }
 }
 
-interface TiltLike {
+interface AnalogLike {
   steer: number;
   leanFore: number;
   crouch: boolean;

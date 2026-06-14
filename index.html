@@ -68,17 +68,38 @@
         pointer-events: none;
         z-index: 6;
       }
-      #hud-help {
+      #help-btn {
         position: fixed;
         right: 16px;
         bottom: 16px;
-        color: rgba(255, 255, 255, 0.75);
+        z-index: 8;
+        padding: 7px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 8px;
+        background: rgba(20, 24, 30, 0.7);
+        color: #eef3f8;
         font-size: 13px;
-        text-align: right;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-        user-select: none;
-        pointer-events: none;
-        line-height: 1.6;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #help-panel {
+        position: fixed;
+        right: 16px;
+        bottom: 52px;
+        z-index: 8;
+        display: none;
+        max-width: 340px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        background: rgba(14, 18, 24, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        color: #dfe6ee;
+        font-size: 12.5px;
+        line-height: 1.7;
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
+      }
+      #help-panel b {
+        color: #7fc4f0;
       }
     </style>
   </head>
@@ -89,10 +110,20 @@
     </div>
     <div id="hud-camera">📷 3인칭 (C)</div>
     <div id="hud-fps">— fps</div>
-    <div id="hud-help">
-      W/↑ 앞쏠림 · S/↓ 뒤쏠림(파우더 브레이크) · A/D 또는 ←/→ 카빙·공중 스핀 · Shift
-      크라우치·그랩 · Space 점프 · C 카메라 · M 미니맵 · G 폰기울기 · R 리셋/다시
+    <div id="help-panel">
+      <b>⌨️ Keyboard</b><br />
+      A/D · ←/→ &nbsp;카빙 (carve)<br />
+      W/S &nbsp;앞·뒤 체중이동 (weight) &nbsp;— 공중에선 프론트/백플립<br />
+      A/D 공중 &nbsp;스핀 (spin) · Shift &nbsp;크라우치/그랩<br />
+      Space &nbsp;점프 (jump) · C &nbsp;카메라 · M &nbsp;미니맵 · R &nbsp;리셋<br />
+      <br />
+      <b>📱 Smartphone</b><br />
+      우하단 <b>🕹 조이스틱</b> 버튼으로 켜기 (turn on joystick)<br />
+      좌우 &nbsp;카빙 · 상하 &nbsp;체중이동/플립<br />
+      짧은 탭 &nbsp;점프 (tap = jump) · 길게 &nbsp;그립 (hold = grip)<br />
+      좌상단 <b>📷</b> 탭 &nbsp;시점 전환 (tap = camera)
     </div>
+    <button id="help-btn">❔ How to control</button>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
