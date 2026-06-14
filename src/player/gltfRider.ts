@@ -12,8 +12,8 @@ const loader = new GLTFLoader();
 // 캐릭터별 회전 보정(도). Z-up→Y-up은 rotX=-90 공통, 정면 정렬은 rotY로,
 // pitch는 기본 전방 기울기(+면 앞쏠림).
 const ORIENT: Record<CharacterId, { rotX: number; rotY: number; pitch: number }> = {
-  snowboarder: { rotX: -90, rotY: -90, pitch: 0 }, // 보드 X축 → 진행 Z축
-  skier: { rotX: -90, rotY: 0, pitch: 5 }, // 스키 Y축 → 진행 Z축(정면), 앞으로 5° 기울임
+  snowboarder: { rotX: -90, rotY: -90, pitch: 5 }, // 보드 X축 → 진행 Z축, 앞으로 5°
+  skier: { rotX: -90, rotY: 0, pitch: 5 }, // 스키 Y축 → 진행 Z축(정면), 앞으로 5°
 };
 
 const _v = new THREE.Vector3();
