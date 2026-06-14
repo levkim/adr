@@ -128,6 +128,9 @@ async function main(): Promise<void> {
   scene.add(cameraSystem.camera); // 1인칭 기어(카메라 자식) 렌더에 필요
   cameraSystem.snapTo(rider, terrain);
 
+  // 시점 표시(HUD)를 탭하면 카메라 순환 (스마트폰)
+  document.getElementById('hud-camera')?.addEventListener('click', () => cameraSystem.cycle());
+
   const hud = new Hud();
   const goggle = new GoggleOverlay();
   const fx = new PowderFx(scene, cameraSystem.camera);

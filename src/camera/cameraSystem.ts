@@ -37,6 +37,7 @@ export class CameraSystem {
   readonly fpGear: THREE.Group;
 
   private modeIndex = 0;
+  private cycleRequested = false; // 외부(시점 버튼 탭) 순환 요청
   private shakeEnergy = 0;
   private time = 0;
   private bobPhase = 0;
@@ -62,6 +63,11 @@ export class CameraSystem {
     return MODE_ORDER[this.modeIndex];
   }
 
+  /** 외부(시점 버튼 탭)에서 다음 카메라로 순환 */
+  cycle(): void {
+    this.cycleRequested = true;
+  }
+
   snapTo(rider: RiderController, terrain: Terrain): void {
     this.computeTarget(rider, terrain, 0, _target);
     this.pos.copy(_target.position);
@@ -77,8 +83,9 @@ export class CameraSystem {
     const c = CONFIG.camera;
     this.time += dt;
 
-    // 모드 순환
-    if (input.justPressed('KeyC')) {
+    // 모드 순환 (C 키 또는 시점 버튼 탭)
+    if (input.justPressed('KeyC') || this.cycleRequested) {
+      this.cycleRequested = false;
       this.fromPos.copy(this.pos);
       this.fromLook.copy(this.look);
       this.fromFov = this.fov;

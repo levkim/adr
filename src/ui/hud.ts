@@ -18,7 +18,7 @@ export class Hud {
   }
 
   setCameraMode(label: string): void {
-    this.cameraEl.textContent = `📷 ${label} (C)`;
+    this.cameraEl.textContent = `📷 ${label} (C·탭)`;
   }
 
   /** FPS 미터 (성능 목표 60fps 검증용). 0.25초마다 평균 표시 */
