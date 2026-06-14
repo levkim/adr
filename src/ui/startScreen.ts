@@ -64,8 +64,8 @@ export class StartScreen {
         <button id="ss-go" style="width:100%;max-width:360px;padding:15px;border:0;border-radius:10px;background:#2f8fe0;color:#fff;font-size:17px;font-weight:800;cursor:pointer">드랍 인 ▸</button>
         <div style="font-size:12px;opacity:0.6;margin-top:14px;line-height:1.7">
           <b style="opacity:0.85">⌨️ 키보드</b> &nbsp; A/D·←/→ 카빙 · W/S 앞·뒤 체중이동 · Shift 크라우치/그랩 · Space 점프 · C 카메라 · M 미니맵 · R 다시<br>
-          <b style="opacity:0.85">📱 스마트폰</b> &nbsp; 우하단 <b>'📱 기울기'</b> 버튼으로 켜기 → 폰 <b>좌우 기울기=카빙</b>, <b>앞뒤 기울기=체중이동</b>,
-          화면 <b>탭=점프</b>, <b>길게 누르기=크라우치</b>, 좌상단 <b>📷 시점 표시 탭=카메라 전환</b> · N 중립 재보정<br>
+          <b style="opacity:0.85">📱 스마트폰</b> &nbsp; <b>'📱 기울기'</b>(폰 좌우=카빙·앞뒤=체중이동) 또는 <b>'🕹 조이스틱'</b>(좌우=카빙·상하=체중이동) ·
+          <b>탭=점프</b> · <b>길게=그립</b> · 공중에서 상하로 <b>프론트/백플립</b> · 좌상단 <b>📷 탭=시점 전환</b><br>
           <span style="opacity:0.5">지형은 공개 DEM(AWS Terrain Tiles)으로 실제 표고를 재현했습니다.</span>
         </div>
         <div id="ss-brand" style="margin-top:26px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0.92"></div>

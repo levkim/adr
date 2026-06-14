@@ -20,6 +20,8 @@ export class RiderPhysics {
   crouching = false;
   /** -1(뒤쏠림)~+1(앞쏠림), 전후 체중이동 (스무딩된 값) */
   leanFore = 0;
+  /** rad, 공중 플립(피치) 누적 — 이륙 시 0, +프론트/-백. 접지 중에도 마지막 값 유지 */
+  flip = 0;
   /** 이번 프레임에 착지했는지 (카메라 셰이크 등 소비용) */
   landedThisFrame = false;
   /** 마지막 착지의 지면 수직 충격 속도 (m/s) */
@@ -43,6 +45,7 @@ export class RiderPhysics {
     this.grounded = true;
     this.crouching = false;
     this.leanFore = 0;
+    this.flip = 0;
     this.landedThisFrame = false;
     this.lastImpact = 0;
     this.crashed = false;
@@ -163,6 +166,7 @@ export class RiderPhysics {
       if (input.jumpPressed && !noInput) {
         this.velocity.addScaledVector(n, p.jumpSpeed);
         this.grounded = false;
+        this.flip = 0;
       }
 
       // 무조향 시 보드를 진행 방향으로 서서히 정렬
@@ -182,6 +186,8 @@ export class RiderPhysics {
       if (av > 0) {
         this.velocity.multiplyScalar(Math.max(0, av - k * av * av * dt) / av);
       }
+      // 공중 플립: 전후 입력(leanFore) → 피치 회전. 앞(+)=프론트플립, 뒤(-)=백플립
+      if (!noInput) this.flip += this.leanFore * p.flipRate * dt;
     }
 
     this.yawRate = dt > 0 ? (this.heading - headingBefore) / dt : 0;
@@ -228,6 +234,7 @@ export class RiderPhysics {
       if (gap > stick) {
         // 클리프 — 지면이 한 스텝 만에 꺼졌다
         this.grounded = false;
+        this.flip = 0;
       } else {
         // 롤오버 런치 판정 (원심 조건): 표면이 진행 중 볼록하게 꺾이는
         // 각속도 ω에 대해 v·ω > g·n.y 면 중력이 표면을 따라잡지 못한다
@@ -240,6 +247,7 @@ export class RiderPhysics {
         const convex = v > 0 && _normalDelta.dot(this.velocity) > 0;
         if (convex && v * omega > p.gravity * this.groundNormal.y * p.launchFactor) {
           this.grounded = false;
+          this.flip = 0;
         } else {
           // 지면 추종 (오르막 단차는 uphillSnap까지 흡수)
           this.position.y = gap < -p.uphillSnap ? this.position.y + p.uphillSnap : groundY;

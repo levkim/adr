@@ -93,6 +93,7 @@ export const CONFIG = {
     skateAccel: 3.5, // m/s², 저속에서 W(앞쏠림) 유지 시 스케이팅 추진 — 플랫/벤치 탈출용
     skateMaxSpeed: 4, // m/s, 스케이팅으로 낼 수 있는 최대 속도 (이 이상은 중력으로만)
     jumpSpeed: 3.8, // m/s, 점프 시 사면 법선 방향 속도 (체공은 경사·속도에서 자연 발생)
+    flipRate: 5.5, // rad/s, 공중 플립(앞/뒤 공중제비) 회전 속도. 1.15s 체공이면 360°
     crouchDragFactor: 0.45, // 크라우치 시 공기저항 배율 (턱 자세 가속)
     crouchFrictionFactor: 0.85, // 크라우치 시 마찰 배율
     crouchTurnFactor: 0.6, // 크라우치 시 조향 배율 (웅크리면 둔해진다)

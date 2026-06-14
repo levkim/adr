@@ -18,6 +18,7 @@ export class RiderController {
   /** rad, 현재 턴 린 각 (+ = 우측으로 기울임) */
   lean = 0;
   private crashTip = 0; // 0~1, 낙상 쓰러짐 보간
+  private readonly baseQuat = new THREE.Quaternion(); // 스무딩된 베이스 방향(플립 제외)
   private model: RiderModel;
 
   constructor(characterId: CharacterId = CONFIG.rider.character) {
@@ -38,6 +39,7 @@ export class RiderController {
     this.physics.reset(x, terrain.getHeight(x, z), z, heading);
     this.object.position.copy(this.physics.position);
     this.object.quaternion.setFromAxisAngle(_up, heading);
+    this.baseQuat.copy(this.object.quaternion);
     this.crouchAmount = 0;
     this.lean = 0;
     this.crashTip = 0;
@@ -75,9 +77,6 @@ export class RiderController {
     this.lean += (leanTarget - this.lean) * (1 - Math.exp(-r.leanResponse * dt));
     _roll.setFromAxisAngle(_fwdAxis, this.lean);
     _target.multiply(_roll);
-    // 전후 체중이동: W=앞쏠림(노즈 쪽), S=뒤쏠림(테일 쪽)
-    _pitch.setFromAxisAngle(_rightAxis, this.physics.leanFore * r.forePitchMax);
-    _target.multiply(_pitch);
     // 낙상: 옆으로 쓰러진 자세
     const crashTarget = this.physics.crashed ? 1 : 0;
     this.crashTip += (crashTarget - this.crashTip) * (1 - Math.exp(-8 * dt));
@@ -85,7 +84,15 @@ export class RiderController {
       _crashQ.setFromAxisAngle(_fwdAxis, this.crashTip * 1.45);
       _target.multiply(_crashQ);
     }
-    this.object.quaternion.slerp(_target, 1 - Math.exp(-10 * dt));
+    // 베이스 방향(yaw/경사/린/낙상)은 스무딩
+    this.baseQuat.slerp(_target, 1 - Math.exp(-10 * dt));
+    // 전후 피치(접지=체중이동) / 공중 플립은 직접 적용 — 플립은 다중 회전이라
+    // 슬러프하면 최단경로로 감겨 공중제비가 안 보인다
+    const pitchAngle = this.physics.grounded
+      ? this.physics.leanFore * r.forePitchMax
+      : this.physics.flip;
+    _pitch.setFromAxisAngle(_rightAxis, pitchAngle);
+    this.object.quaternion.multiplyQuaternions(this.baseQuat, _pitch);
 
     // ── 사지 포즈 ──
     this.model.pose(dt, {

@@ -3,6 +3,7 @@ import GUI from 'lil-gui';
 import { CONFIG, type CharacterId } from './config';
 import { Input } from './core/input';
 import { TiltController } from './core/tilt';
+import { Joystick } from './ui/joystick';
 import { startLoop } from './core/loop';
 import { Terrain } from './world/terrain';
 import { LOCATIONS } from './world/locations';
@@ -113,8 +114,26 @@ async function main(): Promise<void> {
     'font-size:13px',
     'cursor:pointer',
   ].join(';');
-  tiltBtn.addEventListener('click', () => void tilt.toggle());
   document.body.appendChild(tiltBtn);
+
+  // 화면 터치 조이스틱 (옵트인) — 좌우=조향, 위아래=체중이동/플립, 탭=점프, 길게=그립
+  const joystick = new Joystick(input);
+  const joyBtn = document.createElement('button');
+  joyBtn.textContent = '🕹 조이스틱 (J)';
+  joyBtn.style.cssText = tiltBtn.style.cssText.replace('bottom:36px', 'bottom:74px');
+  document.body.appendChild(joyBtn);
+
+  // 기울기 / 조이스틱은 같은 입력 채널이라 상호 배타
+  const toggleTilt = (): void => {
+    if (joystick.enabled) joystick.toggle();
+    void tilt.toggle();
+  };
+  const toggleJoystick = (): void => {
+    if (tilt.enabled) void tilt.toggle();
+    joystick.toggle();
+  };
+  tiltBtn.addEventListener('click', toggleTilt);
+  joyBtn.addEventListener('click', toggleJoystick);
 
   // 드랍 인 지점(정상)에 배치, 피니시 방향을 보게
   const startPos = terrain.geoToWorld(terrain.meta.start.lat, terrain.meta.start.lon);
@@ -211,6 +230,10 @@ async function main(): Promise<void> {
   help(
     phyFolder.add(CONFIG.physics, 'jumpSpeed', 1, 8).name('점프력'),
     'Space 점프 시 사면에서 수직으로 튀어오르는 초기 속도(m/s). 체공 시간·거리는 경사와 주행 속도에 따라 달라집니다.',
+  );
+  help(
+    phyFolder.add(CONFIG.physics, 'flipRate', 1, 9).name('플립 속도'),
+    '공중에서 앞/뒤(W/S·조이스틱 상하)로 도는 공중제비 속도(rad/s). 높이면 프론트/백플립이 쉬워집니다.',
   );
   help(
     phyFolder.add(CONFIG.physics, 'crouchDragFactor', 0.2, 1).name('크라우치 드래그'),
@@ -386,7 +409,8 @@ async function main(): Promise<void> {
     // R: 새 런 시작, M: 미니맵, G: 제스처 토글, N: 제스처 중립 재보정
     if (input.justPressed('KeyR')) startRun();
     if (input.justPressed('KeyM')) minimap.toggle();
-    if (input.justPressed('KeyG')) void tilt.toggle();
+    if (input.justPressed('KeyG')) toggleTilt();
+    if (input.justPressed('KeyJ')) toggleJoystick();
     if (input.justPressed('KeyN')) tilt.requestCalibration();
 
     // 런 진행 중에만 물리/채점 갱신 (피니시 후에는 정지)

@@ -60,26 +60,32 @@ export class TrickDetector {
     if (this.airtime < t.minAirtime) return null; // 잔점프는 트릭 아님
 
     const rotationDeg = (Math.abs(this.rotation) * 180) / Math.PI;
+    const flipDeg = (Math.abs(phy.flip) * 180) / Math.PI;
 
-    // 착지 정렬: 보드 방향 vs 수평 진행 방향의 오차
+    // 착지 정렬: 보드 방향 vs 수평 진행 방향(yaw) + 플립 완성도
     _board.set(Math.sin(phy.heading), 0, Math.cos(phy.heading));
     _vel.set(phy.velocity.x, 0, phy.velocity.z);
-    let offDeg = 90;
+    let yawOff = 90;
     if (_vel.lengthSq() > 0.5) {
       const cos = THREE.MathUtils.clamp(_board.normalize().dot(_vel.normalize()), -1, 1);
-      offDeg = (Math.acos(cos) * 180) / Math.PI;
-      // 보드는 축이라 앞/뒤 구분이 없다 → 180°(스위치) 착지는 정렬로 친다
-      offDeg = Math.min(offDeg, 180 - offDeg);
+      yawOff = (Math.acos(cos) * 180) / Math.PI;
+      // 보드는 축이라 앞/뒤 구분 없음 → 180°(스위치) 착지는 정렬로 친다
+      yawOff = Math.min(yawOff, 180 - yawOff);
     }
+    // 플립은 한 바퀴(360°)에서 얼마나 벗어났나 — 180°(거꾸로) 착지는 낙상
+    const flipFull = Math.round(phy.flip / (Math.PI * 2)) * (Math.PI * 2);
+    const flipOff = (Math.abs(phy.flip - flipFull) * 180) / Math.PI;
+    const offDeg = Math.max(yawOff, flipOff);
+
     let landing: TrickEvent['landing'];
     if (offDeg <= t.cleanAngleDeg) landing = 'clean';
     else if (offDeg <= t.wobbleAngleDeg) landing = 'wobble';
     else landing = 'crash';
 
-    // 스타일 점수 (낙상이면 0)
+    // 스타일 점수 (낙상이면 0). 플립도 회전으로 가산
     let style = 0;
     if (landing !== 'crash') {
-      style = this.airtime * t.airtimeStyle + rotationDeg * t.rotationStyle;
+      style = this.airtime * t.airtimeStyle + (rotationDeg + flipDeg) * t.rotationStyle;
       if (this.grabbed) style += t.grabBonus;
       if (landing === 'wobble') style *= 0.4;
     }
@@ -89,19 +95,29 @@ export class TrickDetector {
       rotationDeg,
       grabbed: this.grabbed,
       landing,
-      label: trickLabel(rotationDeg, this.grabbed, landing),
+      label: trickLabel(rotationDeg, flipDeg, phy.flip, this.grabbed, landing),
       styleScore: style,
     };
   }
 }
 
-function trickLabel(rotationDeg: number, grabbed: boolean, landing: TrickEvent['landing']): string {
+function trickLabel(
+  yawDeg: number,
+  flipDeg: number,
+  flipSign: number,
+  grabbed: boolean,
+  landing: TrickEvent['landing'],
+): string {
   if (landing === 'crash') return '낙상!';
-  // 가장 가까운 회전 단위로 표기
-  const spin = Math.round(rotationDeg / 180) * 180;
-  let base: string;
-  if (spin >= 180) base = `${spin}`;
-  else base = '에어';
+  const parts: string[] = [];
+  const spin = Math.round(yawDeg / 180) * 180;
+  if (spin >= 180) parts.push(`${spin}`);
+  const flips = Math.round(flipDeg / 360);
+  if (flips >= 1) {
+    const name = flipSign > 0 ? '프론트플립' : '백플립';
+    parts.push(flips > 1 ? `${flips}x ${name}` : name);
+  }
+  let base = parts.length > 0 ? parts.join(' ') : '에어';
   if (grabbed) base += ' 그랩';
   if (landing === 'wobble') base += ' (휘청)';
   return base;
