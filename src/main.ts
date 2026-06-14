@@ -154,7 +154,9 @@ async function main(): Promise<void> {
   });
 
   // ── 디버그 튜닝 ─────────────────────────────────────────
-  const gui = new GUI({ title: '튜닝' });
+  const gui = new GUI({ title: '튜닝 / Tuning' });
+  // 우측에서 펼쳐지고 접히는 슬라이드 패널 (스마트폰 배려). 터치 기기는 기본 접힘.
+  setupGuiSlide(gui.domElement);
   // 캐릭터 선택 (4종 전환)
   const charFolder = gui.addFolder('캐릭터');
   const charOptions: Record<string, CharacterId> = {};
@@ -419,6 +421,47 @@ async function main(): Promise<void> {
     renderer.render(scene, cameraSystem.camera);
     input.endFrame();
   });
+}
+
+// lil-gui 패널을 우측에서 슬라이드로 펼치고 접는다 (스마트폰 배려).
+function setupGuiSlide(panel: HTMLElement): void {
+  panel.style.transition = 'transform 0.28s ease';
+  panel.style.zIndex = '9';
+  panel.style.maxHeight = '100vh';
+  panel.style.overflowY = 'auto';
+
+  const tab = document.createElement('button');
+  tab.style.cssText = [
+    'position:fixed',
+    'top:64px',
+    'z-index:10',
+    'padding:8px 11px',
+    'border:1px solid rgba(255,255,255,0.25)',
+    'border-right:0',
+    'border-radius:8px 0 0 8px',
+    'background:rgba(20,24,30,0.85)',
+    'color:#eef3f8',
+    'font-size:13px',
+    'cursor:pointer',
+    'transition:right 0.28s ease',
+    '-webkit-tap-highlight-color:transparent',
+  ].join(';');
+  document.body.appendChild(tab);
+
+  // 터치/좁은 화면은 기본 접힘
+  let open = !window.matchMedia('(pointer: coarse), (max-width: 820px)').matches;
+  const width = (): number => panel.getBoundingClientRect().width || 245;
+  const apply = (): void => {
+    panel.style.transform = open ? 'translateX(0)' : 'translateX(100%)';
+    tab.style.right = open ? `${width()}px` : '0';
+    tab.textContent = open ? '✕ 튜닝' : '⚙ 튜닝 / Tuning';
+  };
+  tab.addEventListener('click', () => {
+    open = !open;
+    apply();
+  });
+  requestAnimationFrame(apply); // 레이아웃 후 폭 측정
+  window.addEventListener('resize', apply);
 }
 
 main().catch((err) => {
