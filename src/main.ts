@@ -17,12 +17,16 @@ import { Run } from './scoring/run';
 import { ResultScreen } from './ui/resultScreen';
 import { StartScreen, type Selection } from './ui/startScreen';
 import { HorsePrompt } from './ui/horsePrompt';
+import { AdminEvent } from './ui/adminEvent';
 import { applyEnvironment, LIGHT_PRESETS } from './world/environment';
 import { Sky } from './world/sky';
 import { Minimap } from './ui/minimap';
 import { Flags } from './world/flags';
 
 async function main(): Promise<void> {
+  // ── 관리자 이벤트 공지 (배너 + ?admin=1 패널) ──
+  new AdminEvent();
+
   // ── 렌더러 ──────────────────────────────────────────────
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
