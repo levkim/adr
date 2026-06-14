@@ -29,7 +29,7 @@ export class Minimap {
     this.root.style.cssText = [
       'position:fixed',
       'left:16px',
-      'top:46px',
+      'top:61px',
       'z-index:6',
       'user-select:none',
       'pointer-events:none',
