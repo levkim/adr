@@ -493,6 +493,7 @@ async function main(): Promise<void> {
           dt,
           rider.physics.position,
           rider.physics.heading,
+          rider.physics.speed,
           distToFin,
           totalRunDist,
           terrain,
