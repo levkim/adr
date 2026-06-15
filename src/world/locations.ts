@@ -141,17 +141,17 @@ export const LOCATIONS: Record<string, LocationDef> = {
     id: 'karakol',
     name: '카라콜 스키베이스',
     nameEn: 'Karakol Ski Base',
-    // 사용자 지정 좌표(카라콜 스키베이스, 키르기스스탄). DEM 검증: 시작 3591m → 도착 2408m,
-    // 전 구간 하강(5~26°), 북서향. 낙차 1183m, 수평 5.9km.
+    // 사용자 지정 좌표(카라콜 스키베이스, 키르기스스탄). DEM 검증: 시작 3479m → 도착 2405m,
+    // 전 구간 하강(상승 2/24, 최대 +36m), 북서향. 낙차 1074m, 수평 5.6km.
     bbox: { west: 78.452, south: 42.356, east: 78.53, north: 42.42 },
-    start: { lat: 42.370119, lon: 78.517217 }, // 42°22'12.43"N 78°31'01.98"E
+    start: { lat: 42.373, lon: 78.515403 }, // 42°22'22.80"N 78°30'55.45"E
     finish: { lat: 42.408133, lon: 78.466408 }, // 42°24'29.28"N 78°27'59.07"E
     zoom: 13,
     treeline: 3000, // 톈샨 가문비 트리런으로 유명
     country: '키르기스스탄 · 카라콜',
-    summit: 3591,
-    vertical: 1183,
-    desc: '키르기스스탄 카라콜의 톈샨 가문비 트리런. 3591m에서 1.2km 북서 사면 강하.',
+    summit: 3479,
+    vertical: 1074,
+    desc: '키르기스스탄 카라콜의 톈샨 가문비 트리런. 3479m에서 1.1km 북서 사면 강하.',
   },
   'hakkaisan': {
     id: 'hakkaisan',
@@ -168,5 +168,53 @@ export const LOCATIONS: Record<string, LocationDef> = {
     summit: 1157,
     vertical: 775,
     desc: '일본 니가타 핫카이산 로프웨이. 정상역 1157m에서 베이스로 775m 트리런.',
+  },
+  'tuyuksu-pogrebetskogo-1': {
+    id: 'tuyuksu-pogrebetskogo-1',
+    name: '투육수 빙하 1코스 — 포그레베츠코고봉',
+    nameEn: 'Tuyuksu Glacier 1 — Peak Pogrebetskogo',
+    // 사용자 지정 좌표(투육수 빙하, 자일리스키 알라타우). DEM 검증: 시작 4202m → 도착 3372m,
+    // 전 구간 하강(상승 4/24, 최대 +34m), 빙하 보울. 낙차 830m, 수평 3.8km.
+    bbox: { west: 77.052, south: 43.022, east: 77.098, north: 43.08 },
+    start: { lat: 43.034125, lon: 77.071703 }, // 43°02'02.85"N 77°04'18.13"E
+    finish: { lat: 43.067197, lon: 77.081722 }, // 43°04'01.91"N 77°04'54.20"E
+    zoom: 13,
+    treeline: 2700, // 자일리스키 알라타우 톈샨 가문비 한계선 — 런 전 구간 빙하·알파인
+    country: '카자흐스탄 · 알마티 자일리스키 알라타우',
+    summit: 4202,
+    vertical: 830,
+    desc: '카자흐스탄 투육수 빙하 상부. 포그레베츠코고봉 4202m에서 빙하 보울로 0.8km 강하.',
+  },
+  'tuyuksu-pogrebetskogo-2': {
+    id: 'tuyuksu-pogrebetskogo-2',
+    name: '투육수 빙하 2코스 — 포그레베츠코고봉',
+    nameEn: 'Tuyuksu Glacier 2 — Peak Pogrebetskogo',
+    // 사용자 지정 좌표(투육수 빙하, 자일리스키 알라타우). DEM 검증: 시작 4138m → 도착 3372m,
+    // 전 구간 하강(상승 4/24, 최대 +4m), 빙하 사면. 낙차 766m, 수평 2.4km.
+    bbox: { west: 77.048, south: 43.043, east: 77.092, north: 43.077 },
+    start: { lat: 43.053361, lon: 77.059875 }, // 43°03'12.10"N 77°03'35.55"E
+    finish: { lat: 43.067197, lon: 77.081722 }, // 43°04'01.91"N 77°04'54.20"E
+    zoom: 13,
+    treeline: 2700, // 런 전 구간 빙하·알파인
+    country: '카자흐스탄 · 알마티 자일리스키 알라타우',
+    summit: 4138,
+    vertical: 766,
+    desc: '카자흐스탄 투육수 빙하. 포그레베츠코고봉 서릉 4138m에서 빙하 사면으로 0.8km 강하.',
+  },
+  'tuyuksu-shymbulak': {
+    id: 'tuyuksu-shymbulak',
+    name: '투육수 빙하 3코스 — 침불락 퇴근길',
+    nameEn: 'Tuyuksu Glacier 3 — Shymbulak Commute',
+    // 사용자 지정 좌표(투육수→침불락, 자일리스키 알라타우). DEM 검증: 시작 3372m → 도착 2513m,
+    // 전 구간 하강(상승 1/24, 최대 +3m), 침불락 방향. 낙차 859m, 수평 4.7km.
+    bbox: { west: 77.062, south: 43.057, east: 77.098, north: 43.119 },
+    start: { lat: 43.067197, lon: 77.081722 }, // 43°04'01.91"N 77°04'54.20"E
+    finish: { lat: 43.108997, lon: 77.075947 }, // 43°06'32.39"N 77°04'33.41"E
+    zoom: 13,
+    treeline: 2700, // 하단부 침불락 일대에서 톈샨 가문비 트리런
+    country: '카자흐스탄 · 알마티 자일리스키 알라타우',
+    summit: 3372,
+    vertical: 859,
+    desc: '카자흐스탄 투육수 빙하에서 침불락으로 내려오는 퇴근길. 3372m에서 0.9km 강하.',
   },
 };

@@ -1,0 +1,30 @@
+{
+  "id": "tuyuksu-shymbulak",
+  "name": "투육수 빙하 3코스 — 침불락 퇴근길",
+  "nameEn": "Tuyuksu Glacier 3 — Shymbulak Commute",
+  "width": 211,
+  "height": 495,
+  "zoom": 13,
+  "originPx": {
+    "x": 1497494,
+    "y": 769648
+  },
+  "bbox": {
+    "west": 77.062,
+    "south": 43.057,
+    "east": 77.098,
+    "north": 43.119
+  },
+  "start": {
+    "lat": 43.067197,
+    "lon": 77.081722
+  },
+  "finish": {
+    "lat": 43.108997,
+    "lon": 77.075947
+  },
+  "metersPerPx": 13.95559296281396,
+  "minElevation": 2293,
+  "maxElevation": 3953,
+  "encoding": "float32-le-row-major-north-first"
+}

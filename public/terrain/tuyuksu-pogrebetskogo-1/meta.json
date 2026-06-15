@@ -1,0 +1,30 @@
+{
+  "id": "tuyuksu-pogrebetskogo-1",
+  "name": "투육수 빙하 1코스 — 포그레베츠코고봉",
+  "nameEn": "Tuyuksu Glacier 1 — Peak Pogrebetskogo",
+  "width": 269,
+  "height": 463,
+  "zoom": 13,
+  "originPx": {
+    "x": 1497436,
+    "y": 769959
+  },
+  "bbox": {
+    "west": 77.052,
+    "south": 43.022,
+    "east": 77.098,
+    "north": 43.08
+  },
+  "start": {
+    "lat": 43.034125,
+    "lon": 77.071703
+  },
+  "finish": {
+    "lat": 43.067197,
+    "lon": 77.081722
+  },
+  "metersPerPx": 13.96401991356473,
+  "minElevation": 3053,
+  "maxElevation": 4207,
+  "encoding": "float32-le-row-major-north-first"
+}
