@@ -13,6 +13,7 @@ import { Hud } from './ui/hud';
 import { GoggleOverlay } from './ui/goggleOverlay';
 import { help } from './ui/guiHelp';
 import { PowderFx } from './fx/powderFx';
+import { BackgroundMusic } from './fx/bgm';
 import { Run } from './scoring/run';
 import { ResultScreen } from './ui/resultScreen';
 import { StartScreen, type Selection } from './ui/startScreen';
@@ -232,6 +233,21 @@ async function main(): Promise<void> {
     updateHorseBtn();
   });
 
+  // 배경 음악 + 음소거 토글 버튼 (말타기 버튼 오른편)
+  const bgm = new BackgroundMusic();
+  const musicBtn = document.createElement('button');
+  musicBtn.title = 'BGM on/off';
+  musicBtn.style.cssText = resetBtn.style.cssText;
+  const updateMusicBtn = (): void => {
+    musicBtn.textContent = CONFIG.fx.music.enabled ? '🎵 음악' : '🔇 음악';
+  };
+  updateMusicBtn();
+  document.body.appendChild(musicBtn);
+  musicBtn.addEventListener('click', () => {
+    bgm.toggle();
+    updateMusicBtn();
+  });
+
   // 상단 버튼들을 📷 시점 표시 오른쪽에 차례로 배치 (라벨 길이 변동 시 재배치)
   const camElForReset = document.getElementById('hud-camera');
   const placeTopBtns = (): void => {
@@ -242,6 +258,9 @@ async function main(): Promise<void> {
     const rr = resetBtn.getBoundingClientRect();
     horseBtn.style.left = `${rr.right + 8}px`;
     horseBtn.style.top = `${r.top}px`;
+    const hr = horseBtn.getBoundingClientRect();
+    musicBtn.style.left = `${hr.right + 8}px`;
+    musicBtn.style.top = `${r.top}px`;
   };
   placeTopBtns();
   if (camElForReset) new ResizeObserver(placeTopBtns).observe(camElForReset); // 라벨 변경 시 재배치
@@ -446,6 +465,17 @@ async function main(): Promise<void> {
   help(
     fxFolder.add(CONFIG.fx.audio, 'master', 0, 1).name('볼륨 / Volume'),
     '전체 사운드 볼륨(0=무음). EN: Master volume.',
+  );
+  help(
+    fxFolder.add(CONFIG.fx.music, 'enabled').name('배경음악 / BGM').onChange(() => {
+      bgm.apply();
+      updateMusicBtn();
+    }),
+    'BGM 켜기/끄기. public/audio/bgm.mp3 있으면 그 곡, 없으면 합성 앰비언트. EN: Toggle BGM.',
+  );
+  help(
+    fxFolder.add(CONFIG.fx.music, 'volume', 0, 1).name('BGM 볼륨 / BGM Vol').onChange(() => bgm.apply()),
+    '배경음악 볼륨. EN: Background music volume.',
   );
   fxFolder.close();
 

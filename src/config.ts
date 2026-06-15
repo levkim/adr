@@ -219,6 +219,12 @@ export const CONFIG = {
       impact: 0.9, // 착지 임팩트
       breath: 0.4, // 1인칭 호흡
     },
+    // ── 배경 음악 (BGM) ──
+    // public/audio/bgm.mp3 가 있으면 그 트랙을 루프 재생, 없으면 절차적 앰비언트 합성.
+    music: {
+      enabled: true,
+      volume: 0.4, // SFX 위로 깔리도록 기본은 낮게
+    },
   },
   // ── 말 타기 (평지 탈출) ──
   horse: {
