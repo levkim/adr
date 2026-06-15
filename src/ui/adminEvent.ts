@@ -63,8 +63,9 @@ export class AdminEvent {
       };
       this.render();
       this.refreshPanel?.();
-    } catch {
-      /* 공지 파일 없거나 네트워크 오류 → 배너 없음 */
+    } catch (err) {
+      // 공지 파일 없거나 JSON 형식 오류(수동 편집 실수 등) → 배너 없음. 원인 추적용 로그.
+      console.warn('[공지] announcements.json 로드/파싱 실패 — JSON 형식을 확인하세요.', err);
     }
   }
 
