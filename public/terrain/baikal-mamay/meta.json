@@ -1,0 +1,30 @@
+{
+  "id": "baikal-mamay",
+  "name": "바이칼 마마이",
+  "nameEn": "Baikal Mamay",
+  "width": 188,
+  "height": 337,
+  "zoom": 13,
+  "originPx": {
+    "x": 1659196,
+    "y": 698304
+  },
+  "bbox": {
+    "west": 104.82,
+    "south": 51.37,
+    "east": 104.852,
+    "north": 51.406
+  },
+  "start": {
+    "lat": 51.381144,
+    "lon": 104.838228
+  },
+  "finish": {
+    "lat": 51.396453,
+    "lon": 104.833633
+  },
+  "metersPerPx": 11.925003160926432,
+  "minElevation": 768,
+  "maxElevation": 1645,
+  "encoding": "float32-le-row-major-north-first"
+}

@@ -217,4 +217,20 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 859,
     desc: '카자흐스탄 투육수 빙하에서 침불락으로 내려오는 퇴근길. 3372m에서 0.9km 강하.',
   },
+  'baikal-mamay': {
+    id: 'baikal-mamay',
+    name: '바이칼 마마이',
+    nameEn: 'Baikal Mamay',
+    // 사용자 지정 좌표(러시아 바이칼 마마이, 하마르다반 산맥). DEM 검증: 시작 1588m → 도착 842m,
+    // 전 구간 하강(상승 0/24), 평균 ~23°. 낙차 746m, 수평 1.7km.
+    bbox: { west: 104.82, south: 51.37, east: 104.852, north: 51.406 },
+    start: { lat: 51.381144, lon: 104.838228 }, // 51°22'52.12"N 104°50'17.62"E
+    finish: { lat: 51.396453, lon: 104.833633 }, // 51°23'47.23"N 104°50'01.08"E
+    zoom: 13,
+    treeline: 1700, // 시베리아 타이가 — 런 전 구간이 침엽수 트리런
+    country: '러시아 · 바이칼 마마이',
+    summit: 1588,
+    vertical: 746,
+    desc: '바이칼 하마르다반 산맥의 마마이. 시베리아 파우더 트리런, 1588m에서 746m 강하.',
+  },
 };

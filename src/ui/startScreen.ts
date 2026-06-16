@@ -101,6 +101,10 @@ const LOC_EN: Record<string, { country: string; desc: string }> = {
     country: 'Kazakhstan · Almaty, Zailiysky Alatau',
     desc: 'Tuyuksu-to-Shymbulak commute. 0.9km descent from 3372m.',
   },
+  'baikal-mamay': {
+    country: 'Russia · Baikal, Mamay',
+    desc: 'Mamay in the Khamar-Daban range by Lake Baikal. Siberian powder tree run, 746m drop.',
+  },
 };
 
 export class StartScreen {
