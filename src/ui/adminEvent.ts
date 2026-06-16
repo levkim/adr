@@ -28,7 +28,7 @@ export class AdminEvent {
       'top:46px', // 좌상단 시점(📷) 버튼 바로 아래
       'left:16px',
       'max-width:72vw',
-      'z-index:9',
+      'z-index:30', // 미니맵·HUD 위로 확실히 노출 (관리자 패널 40보다는 아래)
       'display:none',
       'padding:6px 12px',
       'border-radius:12px',
@@ -52,10 +52,12 @@ export class AdminEvent {
     this.render();
   }
 
-  private async fetchData(): Promise<void> {
+  private async fetchData(attempt = 0): Promise<void> {
     try {
-      const res = await fetch(`${import.meta.env.BASE_URL}announcements.json?t=${Date.now()}`);
-      if (!res.ok) return;
+      const res = await fetch(`${import.meta.env.BASE_URL}announcements.json?t=${Date.now()}`, {
+        cache: 'no-store',
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const j = (await res.json()) as Partial<Announcements>;
       this.data = {
         global: { ...EMPTY, ...(j.global ?? {}) },
@@ -64,8 +66,11 @@ export class AdminEvent {
       this.render();
       this.refreshPanel?.();
     } catch (err) {
-      // 공지 파일 없거나 JSON 형식 오류(수동 편집 실수 등) → 배너 없음. 원인 추적용 로그.
-      console.warn('[공지] announcements.json 로드/파싱 실패 — JSON 형식을 확인하세요.', err);
+      // 네트워크/일시 오류면 잠시 후 재시도(최대 3회). JSON 형식 오류면 콘솔로 원인 추적.
+      console.warn('[공지] announcements.json 로드/파싱 실패', err);
+      if (attempt < 3) {
+        window.setTimeout(() => void this.fetchData(attempt + 1), 1500 * (attempt + 1));
+      }
     }
   }
 
