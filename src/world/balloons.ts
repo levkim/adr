@@ -4,8 +4,8 @@ import { CONFIG } from '../config';
 // 장소명(한글/영문) 프랑카드를 매단 열기구 4개. 캐릭터 기준 동·서·남·북 방향,
 // 일정한 고각(angleDeg)·거리(distance)·고도를 유지하며 따라다닌다. 천은 CPU 정점 웨이브로 펄럭임.
 
-const BANNER_W = 7.0; // m, 프랑카드 가로
-const BANNER_H = 2.0; // m, 세로
+const BANNER_W = 8.5; // m, 프랑카드 가로
+const BANNER_H = 2.4; // m, 세로
 const ENVELOPE_R = 2.6; // m, 풍선 반지름
 
 // 동·서·남·북 수평 단위벡터 (월드축 고정). N=-z, S=+z, E=+x, W=-x.
@@ -20,7 +20,7 @@ interface BalloonUnit {
   group: THREE.Group;
   banner: THREE.Mesh;
   bannerBase: Float32Array;
-  offset: THREE.Vector3; // 캐릭터 기준 목표 오프셋 (수평*horiz + y=height)
+  dir: THREE.Vector3; // 수평 단위방향 (동·서·남·북)
   phase: number; // 부유 위상
 }
 
@@ -28,20 +28,16 @@ export class LocationBalloons {
   readonly group = new THREE.Group();
   private readonly units: BalloonUnit[] = [];
   private readonly _target = new THREE.Vector3();
+  private primed = false; // 첫 프레임은 원점에서 날아오지 않게 즉시 스냅
 
   constructor(nameKr: string, nameEn: string) {
     const tex = new THREE.CanvasTexture(bannerCanvas(nameKr, nameEn));
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 8;
 
-    const rad = THREE.MathUtils.degToRad(CONFIG.balloons.angleDeg);
-    const horiz = CONFIG.balloons.distance * Math.cos(rad);
-    const height = CONFIG.balloons.distance * Math.sin(rad);
-
     DIRS.forEach((d, i) => {
       const unit = this.buildBalloon(tex, d.color);
-      unit.offset = d.dir.clone().multiplyScalar(horiz);
-      unit.offset.y = height;
+      unit.dir = d.dir.clone();
       unit.phase = (i / DIRS.length) * Math.PI * 2;
       this.units.push(unit);
       this.group.add(unit.group);
@@ -102,27 +98,34 @@ export class LocationBalloons {
       group: g,
       banner,
       bannerBase: Float32Array.from(geo.getAttribute('position').array as Float32Array),
-      offset: new THREE.Vector3(),
+      dir: new THREE.Vector3(),
       phase: 0,
     };
   }
 
-  /** @param riderPos 캐릭터 위치, @param t 누적 시간(초) */
-  update(dt: number, riderPos: THREE.Vector3, t: number): void {
+  /**
+   * @param center 4개가 둘러싸는 중심 (캐릭터 추종 세트=캐릭터 위치, 도착지 세트=피니시 위치)
+   * @param faceTarget 프랑카드가 향할 대상 (글자 가독: 보통 캐릭터 위치)
+   * @param t 누적 시간(초)
+   */
+  update(dt: number, center: THREE.Vector3, faceTarget: THREE.Vector3, t: number): void {
     this.group.visible = CONFIG.balloons.enabled;
     if (!CONFIG.balloons.enabled) return;
 
-    const k = 1 - Math.exp(-CONFIG.balloons.followLerp * dt);
+    const rad = THREE.MathUtils.degToRad(CONFIG.balloons.angleDeg);
+    const horiz = CONFIG.balloons.distance * Math.cos(rad);
+    const k = this.primed ? 1 - Math.exp(-CONFIG.balloons.followLerp * dt) : 1;
+    this.primed = true;
     for (const u of this.units) {
-      // 목표: 캐릭터 + 오프셋, 거기에 상하 부유
+      // 목표: 중심 + 수평오프셋 + 고도 + 상하 부유
       const bob = Math.sin(t * CONFIG.balloons.bobSpeed + u.phase) * CONFIG.balloons.bob;
-      this._target.copy(riderPos).add(u.offset);
-      this._target.y += bob;
+      this._target.copy(center).addScaledVector(u.dir, horiz);
+      this._target.y += CONFIG.balloons.height + bob;
       u.group.position.lerp(this._target, k);
 
-      // 프랑카드가 캐릭터를 향하도록 Y축 빌보드 (글자가 항상 읽히게)
-      const dx = riderPos.x - u.group.position.x;
-      const dz = riderPos.z - u.group.position.z;
+      // 프랑카드가 대상(캐릭터)을 향하도록 Y축 빌보드 (글자가 항상 읽히게)
+      const dx = faceTarget.x - u.group.position.x;
+      const dz = faceTarget.z - u.group.position.z;
       u.group.rotation.y = Math.atan2(dx, dz);
 
       // 천 펄럭임 (정점 웨이브 + 약한 흔들림)
@@ -144,8 +147,8 @@ export class LocationBalloons {
 
 // 한글명(위, 큰 글씨) + 영문명(아래)을 담은 프랑카드 텍스처.
 function bannerCanvas(kr: string, en: string): HTMLCanvasElement {
-  const w = 1024;
-  const h = 288;
+  const w = 1280;
+  const h = 360;
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
@@ -155,19 +158,19 @@ function bannerCanvas(kr: string, en: string): HTMLCanvasElement {
   ctx.fillStyle = '#f7f4ec';
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = '#2f6fb0';
-  ctx.lineWidth = 14;
-  ctx.strokeRect(7, 7, w - 14, h - 14);
+  ctx.lineWidth = 16;
+  ctx.strokeRect(8, 8, w - 16, h - 16);
   // 상단 액센트 띠
   ctx.fillStyle = '#2f6fb0';
-  ctx.fillRect(14, 14, w - 28, 10);
+  ctx.fillRect(16, 16, w - 32, 12);
 
   ctx.textAlign = 'center';
   ctx.fillStyle = '#16202b';
-  ctx.font = '700 92px system-ui, -apple-system, sans-serif';
-  ctx.fillText(kr, w / 2, 138, w - 70);
-  ctx.fillStyle = '#3a5066';
-  ctx.font = '600 56px system-ui, -apple-system, sans-serif';
-  ctx.fillText(en, w / 2, 218, w - 70);
+  ctx.font = '800 168px system-ui, -apple-system, sans-serif';
+  ctx.fillText(kr, w / 2, 200, w - 64);
+  ctx.fillStyle = '#33495e';
+  ctx.font = '700 96px system-ui, -apple-system, sans-serif';
+  ctx.fillText(en, w / 2, 312, w - 64);
 
   return c;
 }

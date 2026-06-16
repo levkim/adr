@@ -164,6 +164,14 @@ async function main(): Promise<void> {
   // 장소명 프랑카드를 매단 열기구 4개 (동·서·남·북, 캐릭터 추종)
   const balloons = new LocationBalloons(LOCATIONS[locId].name, LOCATIONS[locId].nameEn);
   scene.add(balloons.group);
+  // 같은 열기구 세트를 도착지(피니시)에도 고정 배치
+  const finishBalloons = new LocationBalloons(LOCATIONS[locId].name, LOCATIONS[locId].nameEn);
+  scene.add(finishBalloons.group);
+  const finishBalloonCenter = new THREE.Vector3(
+    finishPos.x,
+    terrain.getHeight(finishPos.x, finishPos.z),
+    finishPos.z,
+  );
 
   // 곰 추격 이벤트 (50% 등장 → 30% 옆으로 이탈)
   const bearEvent = new BearEvent(scene);
@@ -596,7 +604,8 @@ async function main(): Promise<void> {
     }
 
     cameraSystem.update(dt, input, rider, terrain);
-    balloons.update(dt, rider.physics.position, elapsed);
+    balloons.update(dt, rider.physics.position, rider.physics.position, elapsed);
+    finishBalloons.update(dt, finishBalloonCenter, rider.physics.position, elapsed);
     fx.update(dt, rider, cameraSystem);
 
     // 1인칭에서는 라이더 본체 숨김 + 고글 오버레이
