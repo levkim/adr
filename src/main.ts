@@ -1,5 +1,10 @@
 import * as THREE from 'three';
 import GUI from 'lil-gui';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { CONFIG, type CharacterId } from './config';
 import { Input } from './core/input';
 import { Joystick } from './ui/joystick';
@@ -477,13 +482,47 @@ async function main(): Promise<void> {
     fxFolder.add(CONFIG.fx.music, 'volume', 0, 1).name('BGM 볼륨 / BGM Vol').onChange(() => bgm.apply()),
     '배경음악 볼륨. EN: Background music volume.',
   );
+  help(
+    fxFolder.add(CONFIG.fx.post, 'enabled').name('화질 향상 / Post FX'),
+    '블룸+안티에일리어싱 켜기/끄기. 느리면 끄세요. EN: Bloom + SMAA post-processing.',
+  );
+  help(
+    fxFolder
+      .add(CONFIG.fx.post, 'bloomStrength', 0, 1)
+      .name('블룸 세기 / Bloom')
+      .onChange((v: number) => (bloomPass.strength = v)),
+    '밝은 설면·태양 번짐 세기. EN: Bloom strength.',
+  );
+  help(
+    fxFolder
+      .add(CONFIG.fx.post, 'bloomThreshold', 0, 1)
+      .name('블룸 임계 / Threshold')
+      .onChange((v: number) => (bloomPass.threshold = v)),
+    '이 밝기 이상만 번짐(높을수록 밝은 곳만). EN: Bloom luminance threshold.',
+  );
   fxFolder.close();
+
+  // ── 포스트프로세싱 (블룸 + SMAA) ────────────────────────
+  // RenderPass → 블룸(밝은 설면/태양 번짐) → OutputPass(ACES 톤매핑·색공간) → SMAA(에지 AA)
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, cameraSystem.camera));
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    CONFIG.fx.post.bloomStrength,
+    CONFIG.fx.post.bloomRadius,
+    CONFIG.fx.post.bloomThreshold,
+  );
+  composer.addPass(bloomPass);
+  composer.addPass(new OutputPass());
+  const smaaPass = new SMAAPass(window.innerWidth, window.innerHeight);
+  composer.addPass(smaaPass);
 
   // ── 리사이즈 ────────────────────────────────────────────
   window.addEventListener('resize', () => {
     cameraSystem.camera.aspect = window.innerWidth / window.innerHeight;
     cameraSystem.camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
   });
 
   // ── 게임 루프 ───────────────────────────────────────────
@@ -563,7 +602,8 @@ async function main(): Promise<void> {
     sun.target.position.copy(rider.object.position);
     sun.target.updateMatrixWorld();
 
-    renderer.render(scene, cameraSystem.camera);
+    if (CONFIG.fx.post.enabled) composer.render();
+    else renderer.render(scene, cameraSystem.camera);
     input.endFrame();
   });
 }

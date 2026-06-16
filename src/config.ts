@@ -169,6 +169,7 @@ export const CONFIG = {
       expand: 2.2, // 수명 동안 크기 팽창 배율
       life: 0.85, // s
       lifeJitter: 0.5,
+      turbulence: 1.6, // m/s, 수명 동안 좌우/상하로 흔들리는 난류 폭
       upVel: 2.4, // m/s, 위로 차오르는 속도
       sideVel: 3.0, // m/s, 턴 바깥쪽 분사
       inheritVel: 0.4, // 라이더 속도 계승 비율
@@ -224,6 +225,13 @@ export const CONFIG = {
     music: {
       enabled: true,
       volume: 0.4, // SFX 위로 깔리도록 기본은 낮게
+    },
+    // ── 포스트프로세싱 (블룸 + SMAA 안티에일리어싱) ──
+    post: {
+      enabled: true,
+      bloomStrength: 0.3, // 설면 하이라이트 번짐 세기 (과하면 날아감)
+      bloomThreshold: 0.85, // 이 밝기 이상만 블룸 (밝은 눈·태양·하이라이트만)
+      bloomRadius: 0.5,
     },
   },
   // ── 말 타기 (평지 탈출) ──

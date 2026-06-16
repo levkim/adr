@@ -89,11 +89,17 @@ export function createSurfaceMaterial(): THREE.MeshStandardMaterial {
         `#include <emissivemap_fragment>
         {
           float snowMask = smoothstep(0.6, 0.85, clamp(vWNrm.y, 0.0, 1.0));
-          // 설면 스파클: 고주파 셀이 임계 넘으면 반짝 (시간으로 깜빡임)
+          // 시점 기준 프레넬 (그레이징 각에서 강함) — 뷰공간 normal·vViewPosition 사용
+          vec3 vdir = normalize(vViewPosition);
+          float fres = pow(clamp(1.0 - dot(vdir, normal), 0.0, 1.0), 3.5);
+          // 대기 림: 설면 가장자리에 옅은 하늘빛을 더해 입체감/공기감
+          totalEmissiveRadiance += vec3(0.62, 0.74, 0.92) * fres * snowMask * 0.14;
+          // 설면 스파클: 고주파 셀이 임계 넘으면 반짝 (시간 깜빡임 + 시점 글린트로 더 또렷)
           vec3 cell = floor(vWPos * 7.0);
           float s = h13(cell + floor(uTime * 2.5));
-          float spark = step(0.992, s) * snowMask;
-          totalEmissiveRadiance += vec3(spark) * 1.6;
+          float glint = 0.4 + fres * 1.4;
+          float spark = step(0.992, s) * snowMask * glint;
+          totalEmissiveRadiance += vec3(spark) * 1.7;
         }`,
       );
   };

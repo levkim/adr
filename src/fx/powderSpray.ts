@@ -8,11 +8,13 @@ const VERT = /* glsl */ `
   uniform float uTime;
   uniform float uGravity;
   uniform float uExpand;
+  uniform float uTurb;
   attribute vec3 aVel;
   attribute float aBirth;
   attribute float aLife;
   attribute float aSize;
   varying float vAlpha;
+  varying float vSeed;
   void main() {
     float age = uTime - aBirth;
     float t = age / aLife;
@@ -22,11 +24,23 @@ const VERT = /* glsl */ `
       vAlpha = 0.0;
       return;
     }
+    // 입자별 고유 시드 (방출 시각 기반) → 난류 위상 분산
+    float seed = fract(aBirth * 13.17 + aSize * 7.31);
+    vSeed = seed;
+    float ph = seed * 6.2831;
     vec3 pos = position + aVel * age;
     pos.y -= 0.5 * uGravity * age * age;
+    // 난류: 나이가 들수록 좌우/상하로 부드럽게 흔들려 파우더가 흩어지는 느낌
+    float drift = uTurb * t;
+    pos.x += sin(ph + age * 3.1) * drift;
+    pos.z += cos(ph * 1.7 + age * 2.6) * drift;
+    pos.y += sin(ph * 2.3 + age * 4.0) * drift * 0.4;
     vec4 mv = modelViewMatrix * vec4(pos, 1.0);
     gl_PointSize = aSize * (1.0 + uExpand * t) * 320.0 / max(-mv.z, 0.5);
-    vAlpha = (1.0 - t) * (1.0 - t);
+    // 페이드: 태어날 때 살짝 부풀어 오르고(0→0.15 구간 인) 이후 서서히 사라짐
+    float fadeIn = smoothstep(0.0, 0.12, t);
+    float fadeOut = (1.0 - t) * (1.0 - t);
+    vAlpha = fadeIn * fadeOut;
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -34,11 +48,19 @@ const VERT = /* glsl */ `
 const FRAG = /* glsl */ `
   uniform float uOpacity;
   varying float vAlpha;
+  varying float vSeed;
   void main() {
     vec2 d = gl_PointCoord - 0.5;
-    float a = smoothstep(0.5, 0.1, length(d)) * vAlpha * uOpacity;
-    if (a < 0.012) discard;
-    gl_FragColor = vec4(0.95, 0.97, 1.0, a);
+    float r = length(d);
+    // 푹신한 가우시안형 falloff + 은은한 코어 → 솜털 같은 파우더
+    float soft = smoothstep(0.5, 0.0, r);
+    float fluff = pow(soft, 1.6);
+    float core = smoothstep(0.32, 0.0, r) * 0.35;
+    float a = (fluff + core) * vAlpha * uOpacity;
+    if (a < 0.01) discard;
+    // 입자마다 미세한 청백 색조 변이 (그늘진 눈가루 느낌)
+    vec3 tint = mix(vec3(0.92, 0.95, 1.0), vec3(1.0, 1.0, 1.0), vSeed);
+    gl_FragColor = vec4(tint, clamp(a, 0.0, 1.0));
   }
 `;
 
@@ -77,6 +99,7 @@ export class PowderSpray {
         uTime: { value: 0 },
         uGravity: { value: CONFIG.fx.spray.gravity },
         uExpand: { value: CONFIG.fx.spray.expand },
+        uTurb: { value: CONFIG.fx.spray.turbulence },
         uOpacity: { value: CONFIG.fx.spray.opacity },
       },
       transparent: true,
@@ -144,6 +167,7 @@ export class PowderSpray {
     this.material.uniforms.uTime.value = this.time;
     this.material.uniforms.uGravity.value = CONFIG.fx.spray.gravity;
     this.material.uniforms.uExpand.value = CONFIG.fx.spray.expand;
+    this.material.uniforms.uTurb.value = CONFIG.fx.spray.turbulence;
     this.material.uniforms.uOpacity.value = CONFIG.fx.spray.opacity;
   }
 }
