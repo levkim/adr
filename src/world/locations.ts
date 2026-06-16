@@ -28,28 +28,6 @@ export interface LocationDef {
 }
 
 export const LOCATIONS: Record<string, LocationDef> = {
-  'bec-des-rosses': {
-    id: 'bec-des-rosses',
-    name: '벡 데 로스',
-    nameEn: 'Bec des Rosses',
-    // 좌표 검증: DEM 국소 최고점 분석으로 확정 (2026-06).
-    // 벡 데 로스(DEM 3144) ─ 젠티안 콜 안부(DEM 2844 @ 46.0753,7.3049)
-    // ─ 프티 몽포르(DEM 3128 @ 46.0788,7.3101) ─ 몽포르(DEM 3272 @ 46.0803,7.3186)
-    // 체인과 북쪽 토르탱 빙하 보울(~2700m 플랫)이 실제 지형 관계와 일치.
-    // 실표고 대비 -50~-80m은 DEM 평활화에 의한 일관 오프셋.
-    bbox: { west: 7.272, south: 46.052, east: 7.332, north: 46.096 },
-    // 드랍 인: 정상(46.0718, 실제 3222m/DEM 3144m) 바로 아래 북면 상단.
-    // 정점 셀은 평평해서 출발이 안 되므로 페이스 쪽으로 ~100m 내림
-    start: { lat: 46.0727, lon: 7.2998 },
-    // 북면 직하 토르탱 빙하 플랫 (FWT 피니시 일대, ~2705m)
-    finish: { lat: 46.0778, lon: 7.2995 },
-    zoom: 13,
-    treeline: 2200, // 발레 알프스 수목한계선 — 런 구간은 전부 알파인
-    country: '스위스 · 베르비에',
-    summit: 3222,
-    vertical: 400,
-    desc: 'FWT 결승 무대. 급사면 노스페이스에 클리프와 슈트가 깔린 알파인 빅 라인.',
-  },
   'hakuba-happo': {
     id: 'hakuba-happo',
     name: '하쿠바 핫포 북사면',
@@ -69,24 +47,6 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 870,
     desc: '우시로타테야마 능선의 북동 사면. 깊은 일본 파우더와 하단 트리런.',
   },
-  'valdez-thompson-pass': {
-    id: 'valdez-thompson-pass',
-    name: '발데즈 톰슨 패스',
-    nameEn: 'Valdez Thompson Pass',
-    // 좌표 검증: 톰슨 패스 안부 DEM 808m(실제 816m) @ (61.127,-145.73) 확인.
-    // 패스 북서쪽 추가치 산군에서 낙차 스캔으로 선정한 무명봉 런:
-    // 1963m → 로우 리버 협곡 431m, 수평 2.6km, 낙차 1532m 연속 사면(16~41°, 벤치 없음).
-    bbox: { west: -145.886, south: 61.131, east: -145.795, north: 61.175 },
-    start: { lat: 61.162, lon: -145.826 },
-    finish: { lat: 61.1444, lon: -145.8578 },
-    zoom: 13,
-    treeline: 750, // 추가치 연안 수목한계선 — 런 최하단 협곡부만 수림
-    country: '미국 · 알래스카 발데즈',
-    summit: 1963,
-    vertical: 1530,
-    desc: '추가치 산군의 빅마운틴 헬리스키 라인. 벤치 없는 1.5km 연속 사면.',
-  },
-  // 4번째: 지르갈란 알라투
   'jyrgalan-alatoo': {
     id: 'jyrgalan-alatoo',
     name: '지르갈란 알라투',
@@ -185,22 +145,6 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 830,
     desc: '카자흐스탄 투육수 빙하 상부. 포그레베츠코고봉 4202m에서 빙하 보울로 0.8km 강하.',
   },
-  'tuyuksu-pogrebetskogo-2': {
-    id: 'tuyuksu-pogrebetskogo-2',
-    name: '투육수 빙하 2코스 — 포그레베츠코고봉',
-    nameEn: 'Tuyuksu Glacier 2 — Peak Pogrebetskogo',
-    // 사용자 지정 좌표(투육수 빙하, 자일리스키 알라타우). DEM 검증: 시작 4138m → 도착 3372m,
-    // 전 구간 하강(상승 4/24, 최대 +4m), 빙하 사면. 낙차 766m, 수평 2.4km.
-    bbox: { west: 77.048, south: 43.043, east: 77.092, north: 43.077 },
-    start: { lat: 43.053361, lon: 77.059875 }, // 43°03'12.10"N 77°03'35.55"E
-    finish: { lat: 43.067197, lon: 77.081722 }, // 43°04'01.91"N 77°04'54.20"E
-    zoom: 13,
-    treeline: 2700, // 런 전 구간 빙하·알파인
-    country: '카자흐스탄 · 알마티 자일리스키 알라타우',
-    summit: 4138,
-    vertical: 766,
-    desc: '카자흐스탄 투육수 빙하. 포그레베츠코고봉 서릉 4138m에서 빙하 사면으로 0.8km 강하.',
-  },
   'tuyuksu-shymbulak': {
     id: 'tuyuksu-shymbulak',
     name: '투육수 빙하 3코스 — 침불락 퇴근길',
@@ -232,5 +176,44 @@ export const LOCATIONS: Record<string, LocationDef> = {
     summit: 1588,
     vertical: 746,
     desc: '바이칼 하마르다반 산맥의 마마이. 시베리아 파우더 트리런, 1588m에서 746m 강하.',
+  },
+  'bec-des-rosses': {
+    id: 'bec-des-rosses',
+    name: '벡 데 로스',
+    nameEn: 'Bec des Rosses',
+    // 좌표 검증: DEM 국소 최고점 분석으로 확정 (2026-06).
+    // 벡 데 로스(DEM 3144) ─ 젠티안 콜 안부(DEM 2844 @ 46.0753,7.3049)
+    // ─ 프티 몽포르(DEM 3128 @ 46.0788,7.3101) ─ 몽포르(DEM 3272 @ 46.0803,7.3186)
+    // 체인과 북쪽 토르탱 빙하 보울(~2700m 플랫)이 실제 지형 관계와 일치.
+    // 실표고 대비 -50~-80m은 DEM 평활화에 의한 일관 오프셋.
+    bbox: { west: 7.272, south: 46.052, east: 7.332, north: 46.096 },
+    // 드랍 인: 정상(46.0718, 실제 3222m/DEM 3144m) 바로 아래 북면 상단.
+    // 정점 셀은 평평해서 출발이 안 되므로 페이스 쪽으로 ~100m 내림
+    start: { lat: 46.0727, lon: 7.2998 },
+    // 북면 직하 토르탱 빙하 플랫 (FWT 피니시 일대, ~2705m)
+    finish: { lat: 46.0778, lon: 7.2995 },
+    zoom: 13,
+    treeline: 2200, // 발레 알프스 수목한계선 — 런 구간은 전부 알파인
+    country: '스위스 · 베르비에',
+    summit: 3222,
+    vertical: 400,
+    desc: 'FWT 결승 무대. 급사면 노스페이스에 클리프와 슈트가 깔린 알파인 빅 라인.',
+  },
+  'valdez-thompson-pass': {
+    id: 'valdez-thompson-pass',
+    name: '발데즈 톰슨 패스',
+    nameEn: 'Valdez Thompson Pass',
+    // 좌표 검증: 톰슨 패스 안부 DEM 808m(실제 816m) @ (61.127,-145.73) 확인.
+    // 패스 북서쪽 추가치 산군에서 낙차 스캔으로 선정한 무명봉 런:
+    // 1963m → 로우 리버 협곡 431m, 수평 2.6km, 낙차 1532m 연속 사면(16~41°, 벤치 없음).
+    bbox: { west: -145.886, south: 61.131, east: -145.795, north: 61.175 },
+    start: { lat: 61.162, lon: -145.826 },
+    finish: { lat: 61.1444, lon: -145.8578 },
+    zoom: 13,
+    treeline: 750, // 추가치 연안 수목한계선 — 런 최하단 협곡부만 수림
+    country: '미국 · 알래스카 발데즈',
+    summit: 1963,
+    vertical: 1530,
+    desc: '추가치 산군의 빅마운틴 헬리스키 라인. 벤치 없는 1.5km 연속 사면.',
   },
 };

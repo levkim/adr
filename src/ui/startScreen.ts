@@ -93,10 +93,6 @@ const LOC_EN: Record<string, { country: string; desc: string }> = {
     country: 'Kazakhstan · Almaty, Zailiysky Alatau',
     desc: 'Upper Tuyuksu Glacier. 0.8km from Peak Pogrebetskogo (4202m) into the bowl.',
   },
-  'tuyuksu-pogrebetskogo-2': {
-    country: 'Kazakhstan · Almaty, Zailiysky Alatau',
-    desc: 'Tuyuksu Glacier. 0.8km from the 4138m west ridge down the glacier face.',
-  },
   'tuyuksu-shymbulak': {
     country: 'Kazakhstan · Almaty, Zailiysky Alatau',
     desc: 'Tuyuksu-to-Shymbulak commute. 0.9km descent from 3372m.',
