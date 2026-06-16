@@ -262,6 +262,15 @@ export const CONFIG = {
     rockDensity: 0.045,
     maxRocks: 4000,
   },
+  // ── 장소명 열기구 프랑카드 (동·서·남·북 4개) ──
+  balloons: {
+    enabled: true,
+    distance: 30, // m, 캐릭터로부터 직선 거리
+    angleDeg: 35, // 캐릭터 기준 고각 (수평선 위 각도)
+    bob: 0.6, // m, 상하 부유 진폭
+    bobSpeed: 0.7, // rad/s, 부유 속도
+    followLerp: 2.2, // 1/s, 캐릭터 추종 부드러움 (클수록 단단히 붙음)
+  },
   // ── 낙상 ──
   crash: {
     duration: 3, // s, 낙상 후 이 시간이 지나면 자동으로 일어나 정상 복귀

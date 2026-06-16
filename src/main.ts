@@ -29,6 +29,7 @@ import { Sky } from './world/sky';
 import { BearEvent } from './world/bearEvent';
 import { Minimap } from './ui/minimap';
 import { Flags } from './world/flags';
+import { LocationBalloons } from './world/balloons';
 
 async function main(): Promise<void> {
   // ── 관리자 이벤트 공지 (장소별, announcements.json + ?admin=1 패널) ──
@@ -159,6 +160,10 @@ async function main(): Promise<void> {
   // 시작·베이스에 펄럭이는 tournski 깃발
   const flags = new Flags(terrain, startPos, finishPos);
   scene.add(flags.group);
+
+  // 장소명 프랑카드를 매단 열기구 4개 (동·서·남·북, 캐릭터 추종)
+  const balloons = new LocationBalloons(LOCATIONS[locId].name, LOCATIONS[locId].nameEn);
+  scene.add(balloons.group);
 
   // 곰 추격 이벤트 (50% 등장 → 30% 옆으로 이탈)
   const bearEvent = new BearEvent(scene);
@@ -500,6 +505,10 @@ async function main(): Promise<void> {
       .onChange((v: number) => (bloomPass.threshold = v)),
     '이 밝기 이상만 번짐(높을수록 밝은 곳만). EN: Bloom luminance threshold.',
   );
+  help(
+    fxFolder.add(CONFIG.balloons, 'enabled').name('장소명 열기구 / Balloons'),
+    '장소명 프랑카드 열기구(동·서·남·북) 표시. EN: Place-name balloons.',
+  );
   fxFolder.close();
 
   // ── 포스트프로세싱 (블룸 + SMAA) ────────────────────────
@@ -587,6 +596,7 @@ async function main(): Promise<void> {
     }
 
     cameraSystem.update(dt, input, rider, terrain);
+    balloons.update(dt, rider.physics.position, elapsed);
     fx.update(dt, rider, cameraSystem);
 
     // 1인칭에서는 라이더 본체 숨김 + 고글 오버레이
