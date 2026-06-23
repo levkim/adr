@@ -216,4 +216,20 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 1530,
     desc: '추가치 산군의 빅마운틴 헬리스키 라인. 벤치 없는 1.5km 연속 사면.',
   },
+  'baekdu-cheonji': {
+    id: 'baekdu-cheonji',
+    name: '백두산 천지',
+    nameEn: 'Baekdu Cheonji (Tianchi)',
+    // 사용자 지정 좌표(백두산 천지, 북·중 국경 칼데라). DEM 검증: 시작 2734m → 도착 2194m,
+    // 전 구간 하강(상승 0/24), 평균 ~20°. 낙차 540m, 수평 1.5km. 외륜→천지 호수면.
+    bbox: { west: 128.058, south: 41.98, east: 128.095, north: 42.02 },
+    start: { lat: 41.993181, lon: 128.077272 }, // 41°59'35.45"N 128°04'38.18"E
+    finish: { lat: 42.006433, lon: 128.075147 }, // 42°00'23.16"N 128°04'30.53"E
+    zoom: 13,
+    treeline: 2000, // 창바이산 수목한계선 — 런 전 구간 알파인 툰드라
+    country: '북한·중국 · 백두산 천지',
+    summit: 2734,
+    vertical: 540,
+    desc: '백두산 칼데라 외륜에서 천지 호수면으로 내리꽂는 알파인 라인. 2734m에서 540m 강하.',
+  },
 };

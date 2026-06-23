@@ -1,0 +1,30 @@
+{
+  "id": "baekdu-cheonji",
+  "name": "백두산 천지",
+  "nameEn": "Baekdu Cheonji (Tianchi)",
+  "width": 217,
+  "height": 315,
+  "zoom": 13,
+  "originPx": {
+    "x": 1794567,
+    "y": 778341
+  },
+  "bbox": {
+    "west": 128.058,
+    "south": 41.98,
+    "east": 128.095,
+    "north": 42.02
+  },
+  "start": {
+    "lat": 41.993181,
+    "lon": 128.077272
+  },
+  "finish": {
+    "lat": 42.006433,
+    "lon": 128.075147
+  },
+  "metersPerPx": 14.200945511249488,
+  "minElevation": 2181,
+  "maxElevation": 2747,
+  "encoding": "float32-le-row-major-north-first"
+}

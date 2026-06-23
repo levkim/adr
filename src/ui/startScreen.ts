@@ -101,6 +101,10 @@ const LOC_EN: Record<string, { country: string; desc: string }> = {
     country: 'Russia · Baikal, Mamay',
     desc: 'Mamay in the Khamar-Daban range by Lake Baikal. Siberian powder tree run, 746m drop.',
   },
+  'baekdu-cheonji': {
+    country: 'DPRK·China · Mt. Baekdu',
+    desc: 'Alpine line from the Baekdu caldera rim down to Cheonji crater lake. 540m drop from 2734m.',
+  },
 };
 
 export class StartScreen {
