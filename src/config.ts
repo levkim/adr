@@ -265,9 +265,8 @@ export const CONFIG = {
   // ── 장소명 열기구 프랑카드 (동·서·남·북 4개) ──
   balloons: {
     enabled: true,
-    distance: 30, // m, 수평 반경 계산용 사거리
-    angleDeg: 35, // 수평 반경 = distance*cos(angleDeg)
-    height: 20, // m, 캐릭터/도착지 기준 고도 (고정)
+    distance: 40, // m, 캐릭터 기준 직선 거리
+    angleDeg: 18, // 고각(수평선 위). 수평반경=distance·cos, 고도=distance·sin
     bob: 0.6, // m, 상하 부유 진폭
     bobSpeed: 0.7, // rad/s, 부유 속도
     followLerp: 2.2, // 1/s, 캐릭터 추종 부드러움 (클수록 단단히 붙음)

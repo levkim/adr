@@ -113,14 +113,15 @@ export class LocationBalloons {
     if (!CONFIG.balloons.enabled) return;
 
     const rad = THREE.MathUtils.degToRad(CONFIG.balloons.angleDeg);
-    const horiz = CONFIG.balloons.distance * Math.cos(rad);
+    const horiz = CONFIG.balloons.distance * Math.cos(rad); // 수평 반경
+    const height = CONFIG.balloons.distance * Math.sin(rad); // 고도
     const k = this.primed ? 1 - Math.exp(-CONFIG.balloons.followLerp * dt) : 1;
     this.primed = true;
     for (const u of this.units) {
       // 목표: 중심 + 수평오프셋 + 고도 + 상하 부유
       const bob = Math.sin(t * CONFIG.balloons.bobSpeed + u.phase) * CONFIG.balloons.bob;
       this._target.copy(center).addScaledVector(u.dir, horiz);
-      this._target.y += CONFIG.balloons.height + bob;
+      this._target.y += height + bob;
       u.group.position.lerp(this._target, k);
 
       // 프랑카드가 대상(캐릭터)을 향하도록 Y축 빌보드 (글자가 항상 읽히게)
