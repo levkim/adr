@@ -242,7 +242,7 @@ export const LOCATIONS: Record<string, LocationDef> = {
     start: { lat: 36.990153, lon: 138.134492 }, // 36°59'24.55"N 138°08'04.17"E
     finish: { lat: 36.994489, lon: 138.148725 }, // 36°59'40.16"N 138°08'55.41"E
     zoom: 13,
-    treeline: 1500, // 묘코 파우더 — 런 전 구간이 트리런
+    treeline: 0, // 나무 제거 (대회 코스 — 지형 최저 표고보다 낮춰 나무 0)
     country: '일본 · 니가타 묘코',
     summit: 1375,
     vertical: 406,
