@@ -280,7 +280,7 @@ export const CONFIG = {
   // ── 대회 모드 (자유 연습과 분리) ──
   competition: {
     locationId: 'bec-des-rosses', // 대회 고정 코스 (LOCATIONS의 id)
-    maxAttempts: 3, // 참가자 1인당 시도 횟수 (최고 점수 1개만 기록)
+    maxAttempts: 5, // 참가자 1인당 시도 횟수 (최고 점수 1개만 기록)
   },
   // ── 점수 (FWT 채점 모방) ──
   scoring: {
