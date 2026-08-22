@@ -66,19 +66,21 @@ async function main(): Promise<void> {
   const sky = new Sky();
   scene.add(sky.mesh);
 
-  // ── 선택: 딥링크(?loc=) 또는 시작 화면 ──────────────────
+  // ── 선택: 딥링크(?mode=competition / ?loc=) 또는 시작 화면 ──
   const params = new URLSearchParams(window.location.search);
+  const deepMode = params.get('mode');
   const deepLoc = params.get('loc');
+  const c = params.get('char');
+  const l = params.get('light');
+  const pickChar = (): CharacterId =>
+    c && c in CONFIG.characters ? (c as CharacterId) : CONFIG.rider.character;
+  const pickLight = (): string => (l && LIGHT_PRESETS[l] ? l : 'bluebird');
   let sel: Selection;
-  if (deepLoc && LOCATIONS[deepLoc]) {
-    const c = params.get('char');
-    const l = params.get('light');
-    sel = {
-      mode: 'free', // 딥링크(?loc=)는 항상 자유 연습
-      loc: deepLoc,
-      char: c && c in CONFIG.characters ? (c as CharacterId) : CONFIG.rider.character,
-      light: l && LIGHT_PRESETS[l] ? l : 'bluebird',
-    };
+  if (deepMode === 'competition' || deepMode === 'comp') {
+    // 대회 참가용 딥링크 → 고정 코스로 대회 모드 진입 (시작 화면 건너뜀)
+    sel = { mode: 'competition', loc: CONFIG.competition.locationId, char: pickChar(), light: pickLight() };
+  } else if (deepLoc && LOCATIONS[deepLoc]) {
+    sel = { mode: 'free', loc: deepLoc, char: pickChar(), light: pickLight() }; // ?loc=는 자유 연습
   } else {
     sel = await new StartScreen().choose();
   }
