@@ -288,7 +288,7 @@ export const CONFIG = {
     height: 1920,
     pad: 72, // 좌우 여백
     competitionName: 'TOURNSKI CUP', // 대회명
-    instagram: '@tournski', // 인스타 핸들
+    instagram: '@tournski_official', // 인스타 핸들
     qrImageUrl: '', // public 기준 QR 이미지 경로(예: 'qr.png'). 비우면 플레이스홀더 박스
     // 색: 설산 화이트/아이스블루 배경 + 딥네이비 텍스트
     colors: {
