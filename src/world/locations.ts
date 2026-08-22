@@ -232,4 +232,20 @@ export const LOCATIONS: Record<string, LocationDef> = {
     vertical: 540,
     desc: '백두산 칼데라 외륜에서 천지 호수면으로 내리꽂는 알파인 라인. 2734m에서 540m 강하.',
   },
+  'lotte-arai': {
+    id: 'lotte-arai',
+    name: '롯데 아라이 리조트',
+    nameEn: 'Lotte Arai Resort',
+    // 사용자 지정 좌표(롯데 아라이, 일본 니가타 묘코). DEM 검증: 시작 1375m → 도착 969m,
+    // 전 구간 하강(상승 0/24), 평균 ~17°. 낙차 406m, 수평 1.35km.
+    bbox: { west: 138.12, south: 36.978, east: 138.163, north: 37.006 },
+    start: { lat: 36.990153, lon: 138.134492 }, // 36°59'24.55"N 138°08'04.17"E
+    finish: { lat: 36.994489, lon: 138.148725 }, // 36°59'40.16"N 138°08'55.41"E
+    zoom: 13,
+    treeline: 1500, // 묘코 파우더 — 런 전 구간이 트리런
+    country: '일본 · 니가타 묘코',
+    summit: 1375,
+    vertical: 406,
+    desc: '일본 묘코 롯데 아라이. 깊은 파우더와 트리런으로 유명한 사면, 1375m에서 406m 강하.',
+  },
 };

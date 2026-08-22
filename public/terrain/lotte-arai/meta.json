@@ -1,0 +1,30 @@
+{
+  "id": "lotte-arai",
+  "name": "롯데 아라이 리조트",
+  "nameEn": "Lotte Arai Resort",
+  "width": 251,
+  "height": 206,
+  "zoom": 13,
+  "originPx": {
+    "x": 1853183,
+    "y": 816230
+  },
+  "bbox": {
+    "west": 138.12,
+    "south": 36.978,
+    "east": 138.163,
+    "north": 37.006
+  },
+  "start": {
+    "lat": 36.990153,
+    "lon": 138.134492
+  },
+  "finish": {
+    "lat": 36.994489,
+    "lon": 138.148725
+  },
+  "metersPerPx": 15.262936855129857,
+  "minElevation": 475,
+  "maxElevation": 1415,
+  "encoding": "float32-le-row-major-north-first"
+}

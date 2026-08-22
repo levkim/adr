@@ -122,6 +122,10 @@ const LOC_EN: Record<string, { country: string; desc: string }> = {
     country: 'DPRK·China · Mt. Baekdu',
     desc: 'Alpine line from the Baekdu caldera rim down to Cheonji crater lake. 540m drop from 2734m.',
   },
+  'lotte-arai': {
+    country: 'Japan · Myoko, Niigata',
+    desc: 'Lotte Arai in Myoko, Niigata. Deep-powder tree-run terrain, 406m drop from 1375m.',
+  },
 };
 
 export class StartScreen {
