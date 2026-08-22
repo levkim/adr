@@ -120,7 +120,7 @@ const LOC_EN: Record<string, { country: string; desc: string }> = {
   },
   'baekdu-cheonji': {
     country: 'DPRK·China · Mt. Baekdu',
-    desc: 'Alpine line from the Baekdu caldera rim down to Cheonji crater lake. 540m drop from 2734m.',
+    desc: 'Alpine line from the Baekdu caldera rim down to Cheonji crater lake. 547m drop from 2741m.',
   },
   'lotte-arai': {
     country: 'Japan · Myoko, Niigata',
