@@ -1,6 +1,14 @@
 import type { Terrain } from '../world/terrain';
 import type { Run, ScoreCard } from '../scoring/run';
+import type { CompetitionSession } from '../scoring/competition';
 import { renderHillshade, worldToMapPx } from './terrainMap';
+
+// 대회 모드 결과 컨텍스트 (자유 연습이면 undefined)
+export interface CompContext {
+  session: CompetitionSession;
+  isBest: boolean;
+  attemptNo: number;
+}
 
 // 결과 화면: 항목별 저지 점수 + 라인 궤적을 산 위(탑다운 힐셰이드)에 표시 + 다시 하기.
 // 캔버스 2D + HTML 오버레이로 구성.
@@ -44,7 +52,7 @@ export class ResultScreen {
     this.root.style.display = 'none';
   }
 
-  show(card: ScoreCard, run: Run, terrain: Terrain): void {
+  show(card: ScoreCard, run: Run, terrain: Terrain, comp?: CompContext): void {
     this.renderMap(run, terrain);
     this.root.innerHTML = '';
 
@@ -61,12 +69,26 @@ export class ResultScreen {
       'min-width:320px;max-width:380px;background:rgba(18,22,28,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:24px 26px';
 
     const grade = gradeOf(card.overall);
+    const canRetry = !comp || comp.session.canAttempt();
+    const retryLabel = !comp
+      ? '다시 하기 (R)'
+      : canRetry
+        ? `다음 시도 (R) · 남은 ${comp.session.attemptsLeft()}회`
+        : '대회 종료 · 시도 소진';
+    const compBlock = comp
+      ? `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:rgba(224,165,47,0.14);border:1px solid rgba(224,165,47,0.4);margin-bottom:14px;font-size:13px">
+          <span>🏆 시도 <b>${comp.attemptNo}/${comp.session.maxAttempts}</b></span>
+          <span>최고 <b style="color:#f5c542">${(comp.session.bestCard?.overall ?? card.overall).toFixed(1)}</b></span>
+          ${comp.isBest ? '<span style="color:#46c98b;font-weight:700">🎉 신기록</span>' : ''}
+        </div>`
+      : '';
     card$.innerHTML = `
       <div style="font-size:13px;letter-spacing:2px;opacity:0.7">저지 스코어</div>
       <div style="display:flex;align-items:baseline;gap:12px;margin:2px 0 16px">
         <div style="font-size:58px;font-weight:800;line-height:1">${card.overall.toFixed(1)}</div>
         <div style="font-size:22px;font-weight:700;color:${grade.color}">${grade.label}</div>
       </div>
+      ${compBlock}
       ${bar('라인 난이도', card.line, '#e0773a')}
       ${bar('에어 & 스타일', card.air, '#3a9ae0')}
       ${bar('유려함', card.fluidity, '#46c98b')}
@@ -78,7 +100,7 @@ export class ResultScreen {
         <div>트릭</div><div style="text-align:right">${card.tricks}회 (최고 ${card.bestRotation}°·${card.bestAir.toFixed(1)}s)</div>
         <div>낙상</div><div style="text-align:right">${card.crashes}회</div>
       </div>
-      <button id="retry-btn" style="width:100%;margin-top:20px;padding:12px;border:0;border-radius:8px;background:#3a9ae0;color:#fff;font-size:15px;font-weight:700;cursor:pointer">다시 하기 (R)</button>
+      <button id="retry-btn" ${canRetry ? '' : 'disabled'} style="width:100%;margin-top:20px;padding:12px;border:0;border-radius:8px;background:${canRetry ? '#3a9ae0' : 'rgba(255,255,255,0.12)'};color:${canRetry ? '#fff' : '#8a939c'};font-size:15px;font-weight:700;cursor:${canRetry ? 'pointer' : 'default'}">${retryLabel}</button>
       <button id="home-btn" style="width:100%;margin-top:8px;padding:10px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:transparent;color:#cdd6df;font-size:13px;cursor:pointer">장소·캐릭터 변경</button>
     `;
 
@@ -86,9 +108,11 @@ export class ResultScreen {
     this.root.appendChild(card$);
     this.root.style.display = 'flex';
 
-    (card$.querySelector('#retry-btn') as HTMLButtonElement).addEventListener('click', () =>
-      this.onRetry(),
-    );
+    if (canRetry) {
+      (card$.querySelector('#retry-btn') as HTMLButtonElement).addEventListener('click', () =>
+        this.onRetry(),
+      );
+    }
     const homeBtn = card$.querySelector('#home-btn') as HTMLButtonElement;
     if (this.onHome) homeBtn.addEventListener('click', () => this.onHome!());
     else homeBtn.style.display = 'none';

@@ -277,6 +277,11 @@ export const CONFIG = {
     friction: 0.5, // 낙상 슬라이딩 마찰계수 (빠르게 멈춤)
     invulnTime: 1.5, // s, 회복 직후 충돌 무시 (같은 장애물 연속 낙상 방지)
   },
+  // ── 대회 모드 (자유 연습과 분리) ──
+  competition: {
+    locationId: 'bec-des-rosses', // 대회 고정 코스 (LOCATIONS의 id)
+    maxAttempts: 3, // 참가자 1인당 시도 횟수 (최고 점수 1개만 기록)
+  },
   // ── 점수 (FWT 채점 모방) ──
   scoring: {
     startSpeed: 1.5, // m/s, 이 속도를 넘으면 런 시작(타이머 가동)

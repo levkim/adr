@@ -20,7 +20,9 @@ import { help } from './ui/guiHelp';
 import { PowderFx } from './fx/powderFx';
 import { BackgroundMusic } from './fx/bgm';
 import { Run } from './scoring/run';
+import { CompetitionSession } from './scoring/competition';
 import { ResultScreen } from './ui/resultScreen';
+import { CompetitionRules } from './ui/competitionRules';
 import { StartScreen, type Selection } from './ui/startScreen';
 import { HorsePrompt } from './ui/horsePrompt';
 import { AdminEvent } from './ui/adminEvent';
@@ -72,6 +74,7 @@ async function main(): Promise<void> {
     const c = params.get('char');
     const l = params.get('light');
     sel = {
+      mode: 'free', // 딥링크(?loc=)는 항상 자유 연습
       loc: deepLoc,
       char: c && c in CONFIG.characters ? (c as CharacterId) : CONFIG.rider.character,
       light: l && LIGHT_PRESETS[l] ? l : 'bluebird',
@@ -80,7 +83,10 @@ async function main(): Promise<void> {
     sel = await new StartScreen().choose();
   }
   CONFIG.rider.character = sel.char;
-  const locId = sel.loc;
+  // 대회 모드는 고정 코스로 강제, 세션 생성. 자유 연습은 competition = null.
+  const isComp = sel.mode === 'competition';
+  const locId = isComp ? CONFIG.competition.locationId : sel.loc;
+  const competition = isComp ? new CompetitionSession() : null;
   admin.setLocation(locId); // 장소별 공지 배너
 
   // ── 실측 지형 ───────────────────────────────────────────
@@ -180,6 +186,7 @@ async function main(): Promise<void> {
   // ── 런 / 채점 / 결과 화면 ───────────────────────────────
   let run = new Run(finishPos, startAlt, finishAlt);
   const startRun = (): void => {
+    if (competition && !competition.canAttempt()) return; // 대회 시도 소진 → 재시작 불가
     rider.spawnAt(startPos.x, startPos.z, startHeading, terrain);
     cameraSystem.snapTo(rider, terrain);
     run = new Run(finishPos, startAlt, finishAlt);
@@ -542,6 +549,9 @@ async function main(): Promise<void> {
     composer.setSize(window.innerWidth, window.innerHeight);
   });
 
+  // 대회 모드: 시작 전 규칙 안내를 1회 노출 (자유 연습은 건너뜀)
+  if (competition) await new CompetitionRules().show(competition);
+
   // ── 게임 루프 ───────────────────────────────────────────
   const _hn = new THREE.Vector3();
   let elapsed = 0;
@@ -567,7 +577,18 @@ async function main(): Promise<void> {
       }
       // 이번 프레임에 피니시했다면 결과 카드 표시 (run.result는 피니시 시에만 세팅)
       const card = run.result;
-      if (card) result.show(card, run, terrain);
+      if (card) {
+        if (competition) {
+          const outcome = competition.recordAttempt(card);
+          result.show(card, run, terrain, {
+            session: competition,
+            isBest: outcome.isBest,
+            attemptNo: outcome.attemptNo,
+          });
+        } else {
+          result.show(card, run, terrain);
+        }
+      }
 
       // 곰 추격 이벤트 (런 시작 후부터 도착지 거리 기준)
       if (run.state !== 'idle') {
