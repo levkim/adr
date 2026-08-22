@@ -1,7 +1,9 @@
+import { CONFIG } from '../config';
 import type { Terrain } from '../world/terrain';
 import type { Run, ScoreCard } from '../scoring/run';
 import type { CompetitionSession } from '../scoring/competition';
 import { renderHillshade, worldToMapPx } from './terrainMap';
+import { renderShareCard, shareOrDownloadCard } from './shareCard';
 
 // 대회 모드 결과 컨텍스트 (자유 연습이면 undefined)
 export interface CompContext {
@@ -102,6 +104,16 @@ export class ResultScreen {
       </div>
       <button id="retry-btn" ${canRetry ? '' : 'disabled'} style="width:100%;margin-top:20px;padding:12px;border:0;border-radius:8px;background:${canRetry ? '#3a9ae0' : 'rgba(255,255,255,0.12)'};color:${canRetry ? '#fff' : '#8a939c'};font-size:15px;font-weight:700;cursor:${canRetry ? 'pointer' : 'default'}">${retryLabel}</button>
       <button id="home-btn" style="width:100%;margin-top:8px;padding:10px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:transparent;color:#cdd6df;font-size:13px;cursor:pointer">장소·캐릭터 변경</button>
+      ${
+        comp
+          ? `<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,0.12);padding-top:14px;display:flex;flex-direction:column;gap:8px">
+              <input id="sc-nick" maxlength="20" placeholder="닉네임 / Nickname" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
+              <input id="sc-email" maxlength="60" placeholder="이메일(선택) / Email" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
+              <button id="sc-share" style="width:100%;padding:12px;border:0;border-radius:8px;background:#e0a52f;color:#1a1204;font-size:15px;font-weight:800;cursor:pointer">📸 결과 카드 공유</button>
+              <div id="sc-msg" style="font-size:12px;opacity:0.7;text-align:center;min-height:16px"></div>
+            </div>`
+          : ''
+      }
     `;
 
     this.root.appendChild(left);
@@ -116,6 +128,64 @@ export class ResultScreen {
     const homeBtn = card$.querySelector('#home-btn') as HTMLButtonElement;
     if (this.onHome) homeBtn.addEventListener('click', () => this.onHome!());
     else homeBtn.style.display = 'none';
+
+    if (comp) this.wireShare(card$, card, run, terrain);
+  }
+
+  /** 대회 결과 카드 공유 버튼 + 닉네임/이메일 입력 (localStorage 유지) */
+  private wireShare(card$: HTMLElement, card: ScoreCard, run: Run, terrain: Terrain): void {
+    const nick = card$.querySelector('#sc-nick') as HTMLInputElement;
+    const email = card$.querySelector('#sc-email') as HTMLInputElement;
+    const shareBtn = card$.querySelector('#sc-share') as HTMLButtonElement;
+    const msg = card$.querySelector('#sc-msg') as HTMLDivElement;
+    const get = (k: string): string => {
+      try {
+        return localStorage.getItem(k) ?? '';
+      } catch {
+        return '';
+      }
+    };
+    const set = (k: string, v: string): void => {
+      try {
+        localStorage.setItem(k, v);
+      } catch {
+        /* ignore */
+      }
+    };
+    nick.value = get('tournski_nick');
+    email.value = get('tournski_email');
+    nick.addEventListener('input', () => set('tournski_nick', nick.value.trim()));
+    email.addEventListener('input', () => set('tournski_email', email.value.trim()));
+
+    shareBtn.addEventListener('click', async () => {
+      shareBtn.disabled = true;
+      const label = shareBtn.textContent;
+      shareBtn.textContent = '카드 생성 중…';
+      msg.textContent = '';
+      try {
+        const canvas = await renderShareCard({
+          card,
+          run,
+          terrain,
+          resortName: terrain.meta.name,
+          nickname: nick.value.trim(),
+          email: email.value.trim() || undefined,
+          // 랭킹 백엔드가 붙기 전 → rank/total 미전달 시 카드에 '랭킹 집계 예정' 표시
+        });
+        const score = card.overall.toFixed(1);
+        const how = await shareOrDownloadCard(
+          canvas,
+          `tournski-${terrain.meta.id}-${score}.png`,
+          `${CONFIG.shareCard.competitionName} · ${terrain.meta.name} — ${score}점!`,
+        );
+        msg.textContent = how === 'shared' ? '공유했습니다 ✓' : 'PNG로 저장했습니다 ✓';
+      } catch {
+        msg.textContent = '카드 생성 실패 — 다시 시도해 주세요';
+      } finally {
+        shareBtn.disabled = false;
+        shareBtn.textContent = label;
+      }
+    });
   }
 
   /** 탑다운 힐셰이드 + 궤적 */

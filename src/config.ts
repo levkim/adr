@@ -279,8 +279,43 @@ export const CONFIG = {
   },
   // ── 대회 모드 (자유 연습과 분리) ──
   competition: {
-    locationId: 'lotte-arai', // 대회 고정 코스 (LOCATIONS의 id)
+    locationId: 'baekdu-cheonji', // 대회 고정 코스 (LOCATIONS의 id)
     maxAttempts: 5, // 참가자 1인당 시도 횟수 (최고 점수 1개만 기록)
+  },
+  // ── 공유용 결과 카드 (9:16 세로 PNG) ──
+  shareCard: {
+    width: 1080, // px (9:16)
+    height: 1920,
+    pad: 72, // 좌우 여백
+    competitionName: 'TOURNSKI CUP', // 대회명
+    instagram: '@tournski', // 인스타 핸들
+    qrImageUrl: '', // public 기준 QR 이미지 경로(예: 'qr.png'). 비우면 플레이스홀더 박스
+    // 색: 설산 화이트/아이스블루 배경 + 딥네이비 텍스트
+    colors: {
+      bgTop: '#eef6fc',
+      bgBottom: '#c6e0f2',
+      ink: '#0e2841', // 딥네이비 (주 텍스트)
+      inkSoft: '#41607d',
+      accent: '#2f8fe0', // 아이스블루 포인트
+      panel: 'rgba(255,255,255,0.74)',
+      panelLine: 'rgba(14,40,65,0.14)',
+      good: '#2f9e6f',
+      mountain: '#dcecf8', // 하단 산 실루엣
+    },
+    // 폰트 크기(px)
+    scoreSize: 260, // 총점 (가장 크게)
+    titleSize: 44, // 대회명
+    resortSize: 40, // 리조트명
+    labelSize: 28,
+    barLabelSize: 32,
+    rankSize: 46,
+    nameSize: 40,
+    footSize: 34,
+    // 섹션 크기
+    minimapSize: 460, // 궤적 미니맵 한 변(px)
+    qrSize: 200, // QR 슬롯 한 변(px)
+    barGap: 22, // 항목 바 간격
+    barHeight: 20, // 항목 바 두께
   },
   // ── 점수 (FWT 채점 모방) ──
   scoring: {
