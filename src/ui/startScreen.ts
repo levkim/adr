@@ -124,7 +124,7 @@ const LOC_EN: Record<string, { country: string; desc: string }> = {
   },
   'lotte-arai': {
     country: 'Japan · Myoko, Niigata',
-    desc: 'Lotte Arai in Myoko, Niigata. Competition course, 309m drop from 1278m.',
+    desc: 'Lotte Arai in Myoko, Niigata. Competition course, 708m drop from 1359m.',
   },
 };
 
