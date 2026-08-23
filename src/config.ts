@@ -282,6 +282,18 @@ export const CONFIG = {
     locationId: 'baekdu-cheonji', // 대회 고정 코스 (LOCATIONS의 id)
     maxAttempts: 5, // 참가자 1인당 시도 횟수 (최고 점수 1개만 기록)
   },
+  // ── 랭킹보드 (Supabase 백엔드) ──
+  // 백엔드 배포 전에는 enabled:false 로 두어 게임에 영향 없음.
+  // supabaseUrl/anonKey 는 공개돼도 되는 값(RLS로 보호). 배포 후 채운다.
+  leaderboard: {
+    enabled: false, // 백엔드 준비되면 true
+    supabaseUrl: '', // 예: https://xxxx.supabase.co
+    anonKey: '', // Supabase anon public key (공개 가능)
+    topLimit: 100, // 상위 N위까지 전체 노출
+    aroundMe: 3, // 100위 밖이면 내 위/아래로 표시할 개수
+    // 서버가 강제하는 계정당 시도 횟수(어뷰징 방지). 클라 표시용 참고값 — 진짜 강제는 Edge Function.
+    maxAccountAttempts: 5,
+  },
   // ── 공유용 결과 카드 (9:16 세로 PNG) ──
   shareCard: {
     width: 1080, // px (9:16)

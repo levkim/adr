@@ -28,12 +28,33 @@ export interface RunFrame {
   trick: TrickEvent | null;
 }
 
+// 서버 검증/리플레이용 주행 로그 (클라 → Edge Function 전송, 클라 값은 신뢰하지 않고 서버가 재검사)
+export interface RunLogTrick {
+  t: number; // 착지 시각(s)
+  airtime: number;
+  rotationDeg: number;
+  landing: TrickEvent['landing'];
+  style: number;
+}
+export interface RunLog {
+  timeSec: number;
+  startAlt: number;
+  finishAlt: number;
+  topSpeed: number; // m/s
+  crashes: number;
+  sampleDt: number; // s, 궤적 샘플 간격 (서버 구간속도 검증용)
+  trajectory: { x: number; z: number }[];
+  tricks: RunLogTrick[];
+}
+
 export class Run {
   state: RunState = 'idle';
   time = 0;
   readonly trajectory: THREE.Vector2[] = []; // 월드 (x, z)
   result: ScoreCard | null = null;
   lastTrick: TrickEvent | null = null;
+  // 서버 검증/리플레이용 트릭 이벤트 로그 (착지 시각·체공·회전·판정)
+  readonly trickLog: RunLogTrick[] = [];
 
   private readonly tricks = new TrickDetector();
   private trajTimer = 0;
@@ -116,6 +137,13 @@ export class Run {
     if (trick) {
       frame.trick = trick;
       this.lastTrick = trick;
+      this.trickLog.push({
+        t: this.time,
+        airtime: trick.airtime,
+        rotationDeg: trick.rotationDeg,
+        landing: trick.landing,
+        style: trick.styleScore,
+      });
       if (trick.landing === 'crash') {
         // 착지 실패 → 물리 낙상 트리거 (아래 crashedThisFrame 블록이 감점 처리)
         phy.triggerCrash();
@@ -145,6 +173,20 @@ export class Run {
       this.finish(alt);
     }
     return frame;
+  }
+
+  /** 서버 제출용 주행 로그 (검증·리플레이). 클라 값은 서버가 재검사한다. */
+  runLog(): RunLog {
+    return {
+      timeSec: this.time,
+      startAlt: this.startAlt,
+      finishAlt: this.finishAlt,
+      topSpeed: this.topSpeed,
+      crashes: this.crashCount,
+      sampleDt: CONFIG.scoring.trajSampleInterval,
+      trajectory: this.trajectory.map((v) => ({ x: v.x, z: v.y })),
+      tricks: this.trickLog,
+    };
   }
 
   private recordTraj(x: number, z: number, force: boolean, dt = 0): void {

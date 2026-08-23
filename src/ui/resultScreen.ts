@@ -4,6 +4,8 @@ import type { Run, ScoreCard } from '../scoring/run';
 import type { CompetitionSession } from '../scoring/competition';
 import { renderHillshade, worldToMapPx } from './terrainMap';
 import { renderShareCard, shareOrDownloadCard } from './shareCard';
+import { LeaderboardScreen } from './leaderboardScreen';
+import { isEnabled as leaderboardEnabled } from '../net/leaderboard';
 
 // 대회 모드 결과 컨텍스트 (자유 연습이면 undefined)
 export interface CompContext {
@@ -110,6 +112,11 @@ export class ResultScreen {
               <input id="sc-nick" maxlength="20" placeholder="닉네임 / Nickname" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               <input id="sc-email" maxlength="60" placeholder="이메일(선택) / Email" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               <button id="sc-share" style="width:100%;padding:12px;border:0;border-radius:8px;background:#e0a52f;color:#1a1204;font-size:15px;font-weight:800;cursor:pointer">📸 결과 카드 공유</button>
+              ${
+                leaderboardEnabled()
+                  ? '<button id="sc-rank" style="width:100%;padding:12px;border:0;border-radius:8px;background:#2f8fe0;color:#fff;font-size:15px;font-weight:800;cursor:pointer">🏆 랭킹 등록·보기</button>'
+                  : ''
+              }
               <div id="sc-msg" style="font-size:12px;opacity:0.7;text-align:center;min-height:16px"></div>
             </div>`
           : ''
@@ -186,6 +193,25 @@ export class ResultScreen {
         shareBtn.textContent = label;
       }
     });
+
+    // 랭킹 등록·보기 (백엔드 enabled 시에만 버튼 존재)
+    const rankBtn = card$.querySelector('#sc-rank') as HTMLButtonElement | null;
+    if (rankBtn) {
+      rankBtn.addEventListener('click', () => {
+        if (!nick.value.trim()) {
+          msg.textContent = '랭킹 등록엔 닉네임이 필요합니다';
+          nick.focus();
+          return;
+        }
+        void new LeaderboardScreen().submitAndShow({
+          locationId: terrain.meta.id,
+          courseName: terrain.meta.name,
+          nickname: nick.value.trim(),
+          card,
+          log: run.runLog(),
+        });
+      });
+    }
   }
 
   /** 탑다운 힐셰이드 + 궤적 */
