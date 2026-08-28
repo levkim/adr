@@ -105,6 +105,8 @@ alter table public.courses     enable row level security;
 -- (정책을 하나도 만들지 않으면 anon/authenticated 는 전부 거부. service_role 은 RLS 우회.)
 
 -- courses 는 클라가 읽어도 무방(민감정보 없음): 읽기만 허용
+-- (재실행 가능하도록 drop 후 create — create policy 는 IF NOT EXISTS 미지원)
+drop policy if exists courses_read on public.courses;
 create policy courses_read on public.courses for select using (true);
 
 -- ============================================================================
