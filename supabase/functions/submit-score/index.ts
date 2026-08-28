@@ -1,18 +1,140 @@
-// Supabase Edge Function (Deno) — 대회 점수 제출 + 서버측 검증.
-// 배포: `supabase functions deploy submit-score`  (로컬 tsc 대상 아님 — Deno 런타임 전용)
+// Supabase Edge Function (Deno) — 대회 점수 제출 + 서버측 검증. (자체 완결 단일 파일)
+// 배포: 대시보드 Edge Functions 에 이 파일 하나만 붙여넣거나 `supabase functions deploy submit-score`.
+// (로컬 tsc 대상 아님 — Deno 런타임 전용)
 //
 // 이 함수만 service_role 로 scores 에 쓸 수 있다(RLS). 클라는 직접 못 쓴다.
 // 하는 일: 인증 확인 → 계정당 시도횟수 강제 → 동일IP 대량계정 감지 → 개연성 검증
 //          → 리플레이 보관 → 최고점 upsert → 순위 반환.
 //
-// 필요한 함수 시크릿(supabase secrets set):
+// 필요한 함수 시크릿(supabase secrets set 또는 대시보드 Secrets):
 //   SB_URL, SB_SERVICE_ROLE_KEY, SB_ANON_KEY, IP_SALT,
 //   MAX_ATTEMPTS(기본5), IP_ACCOUNT_LIMIT(기본8)
 
 // @ts-nocheck  (Deno + 원격 import — 로컬 TypeScript 검사 비대상)
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { validateSubmission } from './validate.ts';
 
+// ============================================================================
+// 개연성(plausibility) 검증 — 클라 점수를 믿지 않고 주행 로그로 서버가 재검사.
+// "불가능"이면 reject, "의심"이면 flag(수동검토). 완전 재시뮬 아님 → 상위는 리플레이 검토.
+// ============================================================================
+interface Course {
+  location_id: string;
+  vertical_m: number;
+  min_time_sec: number;
+  max_time_sec: number;
+  max_speed_ms: number;
+}
+interface RunLogTrick {
+  t: number;
+  airtime: number;
+  rotationDeg: number;
+  landing: 'clean' | 'wobble' | 'crash';
+  style: number;
+}
+interface RunLog {
+  timeSec: number;
+  startAlt: number;
+  finishAlt: number;
+  topSpeed: number;
+  crashes: number;
+  sampleDt: number;
+  trajectory: { x: number; z: number }[];
+  tricks: RunLogTrick[];
+}
+interface ClaimCard {
+  overall: number;
+  line: number;
+  air: number;
+  fluidity: number;
+  control: number;
+  timeSec: number;
+  vertical: number;
+  topSpeed: number;
+  tricks: number;
+  crashes: number;
+  bestAir: number;
+  bestRotation: number;
+}
+interface VerifyResult {
+  ok: boolean;
+  reason?: string;
+  flags: string[];
+}
+
+const num = (v: unknown): boolean => typeof v === 'number' && Number.isFinite(v);
+
+function validateSubmission(card: ClaimCard, log: RunLog, course: Course): VerifyResult {
+  const flags: string[] = [];
+  const bad = (reason: string): VerifyResult => ({ ok: false, reason, flags });
+
+  if (!log || !Array.isArray(log.trajectory)) return bad('malformed_log');
+  if (!num(log.timeSec) || !num(log.startAlt) || !num(log.finishAlt) || !num(log.sampleDt))
+    return bad('malformed_log');
+  if (![card.overall, card.line, card.air, card.fluidity, card.control].every(num))
+    return bad('malformed_card');
+  if (card.overall < 0 || card.overall > 100) return bad('score_out_of_range');
+  for (const v of [card.line, card.air, card.fluidity, card.control]) {
+    if (v < 0 || v > 100) return bad('subscore_out_of_range');
+  }
+
+  // 카드 vs 로그 일치 (조작 탐지)
+  if (Math.abs(card.timeSec - log.timeSec) > 0.5) return bad('time_mismatch');
+  if (Math.abs(card.crashes - log.crashes) > 0) flags.push('crash_count_mismatch');
+
+  // 시간 개연성
+  if (log.timeSec < course.min_time_sec) return bad('time_too_fast');
+  if (log.timeSec > course.max_time_sec) return bad('time_too_slow');
+  if (log.sampleDt <= 0 || log.sampleDt > 2) return bad('bad_sample_dt');
+
+  // 하강 개연성
+  const drop = log.startAlt - log.finishAlt;
+  if (drop <= 0) return bad('not_descending');
+  if (drop > course.vertical_m * 1.25) return bad('vertical_exceeds_course');
+  if (card.vertical > course.vertical_m * 1.25) return bad('claim_vertical_exceeds_course');
+
+  // 속도 개연성 (구간 순간이동/초과속도 차단)
+  const traj = log.trajectory;
+  if (traj.length < 3) return bad('trajectory_too_short');
+  let pathLen = 0;
+  let maxSeg = 0;
+  for (let i = 1; i < traj.length; i++) {
+    const a = traj[i - 1];
+    const b = traj[i];
+    if (!num(a?.x) || !num(a?.z) || !num(b?.x) || !num(b?.z)) return bad('malformed_trajectory');
+    const d = Math.hypot(b.x - a.x, b.z - a.z);
+    pathLen += d;
+    if (d > maxSeg) maxSeg = d;
+  }
+  const maxSegSpeed = maxSeg / log.sampleDt;
+  if (maxSegSpeed > course.max_speed_ms * 1.2) return bad('teleport_or_overspeed');
+  if (log.topSpeed > course.max_speed_ms * 1.2) return bad('top_speed_impossible');
+  if (card.topSpeed / 3.6 > course.max_speed_ms * 1.25) return bad('claim_top_speed_impossible');
+
+  const trajSeconds = (traj.length - 1) * log.sampleDt;
+  if (trajSeconds > log.timeSec * 1.6 + 3) return bad('trajectory_time_mismatch');
+  if (trajSeconds < log.timeSec * 0.3) flags.push('sparse_trajectory');
+
+  const straight = Math.hypot(
+    traj[traj.length - 1].x - traj[0].x,
+    traj[traj.length - 1].z - traj[0].z,
+  );
+  if (straight > 1 && pathLen > straight * 6) flags.push('path_too_winding');
+
+  // 트릭/스타일 일관성
+  const tricks = Array.isArray(log.tricks) ? log.tricks : [];
+  const landedTricks = tricks.filter((t) => t.landing !== 'crash').length;
+  if (card.air > 15 && landedTricks === 0) return bad('air_score_without_tricks');
+  if (card.tricks > landedTricks + 1) flags.push('trick_count_mismatch');
+  const maxAir = tricks.reduce((m, t) => Math.max(m, t.airtime), 0);
+  if (maxAir > 12) return bad('airtime_impossible');
+  if (card.bestAir > maxAir + 0.5 && card.air > 0) flags.push('best_air_mismatch');
+
+  return { ok: true, flags };
+}
+
+// ============================================================================
+// HTTP 핸들러
+// ============================================================================
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, content-type',
@@ -42,7 +164,7 @@ Deno.serve(async (req: Request) => {
   const IP_ACCOUNT_LIMIT = Number(env('IP_ACCOUNT_LIMIT', '8'));
   if (!SB_URL || !SERVICE || !ANON) return json({ error: 'server_misconfigured' }, 500);
 
-  // ── 인증: 전달된 유저 JWT 로 본인 확인 ──
+  // 인증: 전달된 유저 JWT 로 본인 확인
   const authHeader = req.headers.get('Authorization') ?? '';
   const userClient = createClient(SB_URL, ANON, {
     global: { headers: { Authorization: authHeader } },
@@ -51,7 +173,6 @@ Deno.serve(async (req: Request) => {
   if (userErr || !userData?.user) return json({ error: 'unauthorized' }, 401);
   const user = userData.user;
 
-  // ── 입력 ──
   let body: any;
   try {
     body = await req.json();
@@ -67,7 +188,6 @@ Deno.serve(async (req: Request) => {
 
   const admin = createClient(SB_URL, SERVICE, { auth: { persistSession: false } });
 
-  // ── 코스(서버측 검증 기준) 로드 ──
   const { data: course } = await admin
     .from('courses')
     .select('*')
@@ -76,7 +196,6 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
   if (!course) return json({ error: 'course_inactive' }, 400);
 
-  // ── IP 해시 + 이벤트 기록 ──
   const ipRaw = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown';
   const ipHash = await sha256(ipRaw + '|' + env('IP_SALT', 'salt'));
   await admin.from('ip_events').insert({ ip_hash: ipHash, user_id: user.id, event: 'submit' });
@@ -91,7 +210,7 @@ Deno.serve(async (req: Request) => {
       ip_hash: ipHash,
     });
 
-  // ── 계정당 시도 횟수 강제 (accepted 기준) ──
+  // 계정당 시도 횟수 강제 (accepted 기준)
   const { count: acceptedCount } = await admin
     .from('submissions')
     .select('id', { count: 'exact', head: true })
@@ -103,11 +222,10 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'attempt_limit', maxAttempts: MAX_ATTEMPTS }, 429);
   }
 
-  // ── 개연성 검증 ──
   const verdict = validateSubmission(card, log, course);
   const flags = [...verdict.flags];
 
-  // ── 동일 IP 대량 계정 감지 → flag (오탐 방지 위해 하드거부 대신 수동검토) ──
+  // 동일 IP 대량 계정 감지 → flag (오탐 방지 위해 하드거부 대신 수동검토)
   const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const { data: ipUsers } = await admin
     .from('ip_events')
@@ -124,14 +242,12 @@ Deno.serve(async (req: Request) => {
 
   const flagged = flags.length > 0;
 
-  // ── 리플레이 보관 (수동 검토용) ──
   const { data: replay } = await admin
     .from('replays')
     .insert({ user_id: user.id, location_id: locationId, overall: card.overall, log })
     .select('id')
     .single();
 
-  // ── 최고점 upsert (개선됐을 때만 갱신, created_at=달성시각) ──
   const { data: existing } = await admin
     .from('scores')
     .select('id, overall')
@@ -183,14 +299,12 @@ Deno.serve(async (req: Request) => {
     ip_hash: ipHash,
   });
 
-  // ── 순위 계산 (verified 기준, 동점은 먼저 기록 우선) ──
   const bestOverall = improved ? card.overall : (existing?.overall ?? card.overall);
   const { count: total } = await admin
     .from('scores')
     .select('id', { count: 'exact', head: true })
     .eq('location_id', locationId)
     .eq('verified', true);
-  // 내 최고점보다 높은 사람 수 + 1 = 순위 (동점 tie-break 는 대략치, 정확 순위는 RPC 로)
   const { count: above } = await admin
     .from('scores')
     .select('id', { count: 'exact', head: true })

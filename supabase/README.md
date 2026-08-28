@@ -5,29 +5,29 @@
 
 ## 구성
 - `schema.sql` — 테이블·RLS·랭킹 RPC (`courses`, `scores`, `submissions`, `replays`, `ip_events`)
-- `functions/submit-score/` — 점수 제출 Edge Function + 개연성 검증(`validate.ts`)
+- `functions/submit-score/index.ts` — 점수 제출 Edge Function (개연성 검증 포함, **자체 완결 단일 파일**)
 
 ## 배포 순서
 
 1. **Supabase 프로젝트 생성** (무료). Project URL 과 anon public key 확보.
-2. **Auth 설정**: Authentication → Providers → **Email** 활성화. 이메일 OTP 로그인 사용.
-   (Authentication → URL Configuration 에 게임 도메인 `https://levkim.github.io` 추가)
+2. **Auth 설정**: Authentication → (Sign In / Providers) → **Email** 활성화(보통 기본 ON).
+   - 이메일 **OTP 6자리 코드**를 쓰므로, Authentication → Emails → **Magic Link** 템플릿에
+     `인증코드: {{ .Token }}` 한 줄을 추가해야 코드가 메일로 온다.
+   - URL Configuration 에 게임 도메인 `https://levkim.github.io` 추가.
 3. **스키마 적용**: SQL Editor 에 `schema.sql` 붙여넣고 실행. (대회 코스는 `courses` 시드 확인/조정)
-4. **함수 시크릿 설정**:
-   ```bash
-   supabase secrets set \
-     SB_URL=https://<ref>.supabase.co \
-     SB_SERVICE_ROLE_KEY=<service_role_key> \
-     SB_ANON_KEY=<anon_key> \
-     IP_SALT=<임의의 긴 랜덤 문자열> \
-     MAX_ATTEMPTS=5 IP_ACCOUNT_LIMIT=8
-   ```
+4. **함수 배포 + 시크릿** — 둘 중 하나:
+   - **(쉬움) 대시보드**: Edge Functions → Create function, 이름 `submit-score`,
+     `functions/submit-score/index.ts` **한 파일**을 붙여넣고 Deploy.
+     그다음 Edge Functions → Secrets 에서 아래 값들을 추가.
+   - **(CLI)**:
+     ```bash
+     supabase functions deploy submit-score
+     supabase secrets set SB_URL=https://<ref>.supabase.co SB_SERVICE_ROLE_KEY=<service_role> \
+       SB_ANON_KEY=<anon> IP_SALT=<랜덤문자열> MAX_ATTEMPTS=5 IP_ACCOUNT_LIMIT=8
+     ```
+   시크릿: `SB_URL`, `SB_SERVICE_ROLE_KEY`, `SB_ANON_KEY`, `IP_SALT`, `MAX_ATTEMPTS`, `IP_ACCOUNT_LIMIT`.
    > service_role 키는 **절대 클라이언트에 넣지 말 것**. 함수 시크릿에만.
-5. **함수 배포**:
-   ```bash
-   supabase functions deploy submit-score
-   ```
-6. **게임 연결**: `src/config.ts` 의 `CONFIG.leaderboard` 에
+5. **게임 연결**: `src/config.ts` 의 `CONFIG.leaderboard` 에
    `enabled: true`, `supabaseUrl`, `anonKey` 를 채우고 커밋. (anon 키는 공개돼도 안전)
 
 ## 보안 모델 (실물 경품 대비)
