@@ -286,9 +286,10 @@ export const CONFIG = {
   // 백엔드 배포 전에는 enabled:false 로 두어 게임에 영향 없음.
   // supabaseUrl/anonKey 는 공개돼도 되는 값(RLS로 보호). 배포 후 채운다.
   leaderboard: {
-    enabled: false, // 백엔드 준비되면 true
-    supabaseUrl: '', // 예: https://xxxx.supabase.co
-    anonKey: '', // Supabase anon public key (공개 가능)
+    enabled: false, // 백엔드(SQL+함수) 배포 끝나면 true 로
+    supabaseUrl: 'https://xthqqljmfqwwtfjpzltx.supabase.co',
+    anonKey:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0aHFxbGptZnF3d3RmanB6bHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MDA1OTMsImV4cCI6MjEwMzQ3NjU5M30.MhZKBdi06pFNuN_QqxkevbtfXgeKXHSPcb7CqfN7J6g', // anon public key (공개 가능, RLS로 보호)
     topLimit: 100, // 상위 N위까지 전체 노출
     aroundMe: 3, // 100위 밖이면 내 위/아래로 표시할 개수
     // 서버가 강제하는 계정당 시도 횟수(어뷰징 방지). 클라 표시용 참고값 — 진짜 강제는 Edge Function.
