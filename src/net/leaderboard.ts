@@ -18,6 +18,7 @@ interface Session {
 export interface LeaderRow {
   rank: number;
   nickname: string;
+  email_masked: string; // 서버에서 마스킹된 이메일 (예: j***@gmail.com)
   overall: number;
   created_at: string;
   is_me: boolean;

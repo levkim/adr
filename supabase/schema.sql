@@ -113,28 +113,42 @@ create policy courses_read on public.courses for select using (true);
 -- 랭킹 RPC (SECURITY DEFINER — scores 를 안전한 컬럼만 집계해 반환)
 -- 정렬: overall DESC, created_at ASC  → 동점자는 먼저 기록한 사람이 상위.
 -- ============================================================================
-create or replace function public.get_leaderboard(p_location text, p_limit int default 100)
-returns table(rank bigint, nickname text, overall real, created_at timestamptz, is_me boolean)
+-- 이메일 마스킹: 아이디(로컬파트) 첫 글자만 + ***@도메인 (전체 이메일은 클라로 안 나감).
+-- 반환 컬럼이 바뀌므로 재실행 위해 drop 후 create.
+create or replace function public.mask_email(p_email text)
+returns text language sql immutable as $$
+  select case
+    when p_email is null or position('@' in p_email) = 0 then ''
+    else left(split_part(p_email, '@', 1), 1) || '***@' || split_part(p_email, '@', 2)
+  end;
+$$;
+
+drop function if exists public.get_leaderboard(text, int);
+create function public.get_leaderboard(p_location text, p_limit int default 100)
+returns table(rank bigint, nickname text, email_masked text, overall real, created_at timestamptz, is_me boolean)
 language sql stable security definer set search_path = public as $$
   select row_number() over (order by s.overall desc, s.created_at asc) as rank,
-         s.nickname, s.overall, s.created_at,
+         s.nickname, public.mask_email(u.email) as email_masked, s.overall, s.created_at,
          (s.user_id = auth.uid()) as is_me
   from public.scores s
+  join auth.users u on u.id = s.user_id
   where s.location_id = p_location and s.verified = true
   order by s.overall desc, s.created_at asc
   limit greatest(1, least(p_limit, 500));
 $$;
 
-create or replace function public.get_my_rank(p_location text, p_around int default 3)
-returns table(rank bigint, nickname text, overall real, created_at timestamptz, is_me boolean)
+drop function if exists public.get_my_rank(text, int);
+create function public.get_my_rank(p_location text, p_around int default 3)
+returns table(rank bigint, nickname text, email_masked text, overall real, created_at timestamptz, is_me boolean)
 language sql stable security definer set search_path = public as $$
   with ranked as (
-    select s.user_id, s.nickname, s.overall, s.created_at,
+    select s.user_id, s.nickname, u.email, s.overall, s.created_at,
            row_number() over (order by s.overall desc, s.created_at asc) as rank
     from public.scores s
+    join auth.users u on u.id = s.user_id
     where s.location_id = p_location and s.verified = true
   ), me as (select rank from ranked where user_id = auth.uid())
-  select r.rank, r.nickname, r.overall, r.created_at, (r.user_id = auth.uid())
+  select r.rank, r.nickname, public.mask_email(r.email), r.overall, r.created_at, (r.user_id = auth.uid())
   from ranked r, me
   where r.rank between me.rank - p_around and me.rank + p_around
   order by r.rank;

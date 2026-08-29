@@ -289,7 +289,10 @@ export class StartScreen {
           const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : '';
           return `<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:8px;background:rgba(255,255,255,0.04)">
             <span style="width:34px;font-weight:800;color:#cdd6df">${medal || r.rank}</span>
-            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.nickname)}</span>
+            <span style="flex:1;min-width:0">
+              <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.nickname)}</span>
+              <span style="display:block;font-size:11px;opacity:0.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.email_masked ?? '')}</span>
+            </span>
             <span style="font-weight:800">${r.overall.toFixed(1)}</span></div>`;
         })
         .join('');
