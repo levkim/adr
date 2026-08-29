@@ -2,6 +2,7 @@ import { LOCATIONS } from '../world/locations';
 import { LIGHT_PRESETS } from '../world/environment';
 import { CONFIG, type CharacterId } from '../config';
 import { tournskiLogoImg } from './brand';
+import { getTop, isEnabled as leaderboardEnabled, type LeaderRow } from '../net/leaderboard';
 
 // 시작 화면: 실제 산 카드(장소) + 라이더(4종) + 컨디션(광원) 선택 → 출발.
 // 한국어/영어 다국어 (우상단 토글, localStorage 기억).
@@ -132,6 +133,8 @@ export class StartScreen {
   private readonly root: HTMLDivElement;
   private lang: Lang;
   private resolve: ((s: Selection) => void) | null = null;
+  private compLeaders: LeaderRow[] | null = null; // 대회 랭킹 캐시 (첫 화면 상시 노출)
+  private compLeadersLoading = false;
   private sel: Selection = {
     mode: 'free',
     loc: Object.keys(LOCATIONS)[0],
@@ -204,6 +207,8 @@ export class StartScreen {
         <div style="font-size:14px;opacity:0.7;margin-bottom:10px">${this.sel.mode === 'competition' ? t.compCourse : t.loc}</div>
         <div id="ss-locs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:26px"></div>
 
+        <div id="ss-leaderboard"></div>
+
         <div style="font-size:14px;opacity:0.7;margin-bottom:10px">${t.rider}</div>
         <div id="ss-chars" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px"></div>
 
@@ -222,6 +227,8 @@ export class StartScreen {
     this.renderLang();
     this.renderModes();
     this.renderLocs();
+    this.renderCompLeaderboard();
+    void this.loadLeaders();
     this.renderChars();
     this.renderLights();
     this.renderBrand();
@@ -245,6 +252,51 @@ export class StartScreen {
       b.addEventListener('click', () => this.setLang(code));
       host.appendChild(b);
     }
+  }
+
+  // 대회 랭킹을 한 번 불러와 캐시 (첫 화면 상시 노출)
+  private async loadLeaders(): Promise<void> {
+    if (this.sel.mode !== 'competition' || !leaderboardEnabled()) return;
+    if (this.compLeaders || this.compLeadersLoading) return;
+    this.compLeadersLoading = true;
+    try {
+      this.compLeaders = await getTop(CONFIG.competition.locationId, 10);
+    } catch {
+      this.compLeaders = null;
+    } finally {
+      this.compLeadersLoading = false;
+      this.renderCompLeaderboard();
+    }
+  }
+
+  private renderCompLeaderboard(): void {
+    const host = this.root.querySelector('#ss-leaderboard') as HTMLElement | null;
+    if (!host) return;
+    if (this.sel.mode !== 'competition' || !leaderboardEnabled()) {
+      host.innerHTML = '';
+      return;
+    }
+    const title = this.lang === 'en' ? '🏆 Leaderboard' : '🏆 현재 랭킹';
+    const rows = this.compLeaders;
+    let body: string;
+    if (rows === null && this.compLeadersLoading) {
+      body = `<div style="opacity:0.6;font-size:13px;padding:10px 2px">${this.lang === 'en' ? 'Loading…' : '불러오는 중…'}</div>`;
+    } else if (!rows || rows.length === 0) {
+      body = `<div style="opacity:0.6;font-size:13px;padding:10px 2px">${this.lang === 'en' ? 'No records yet — be the first!' : '아직 기록이 없어요 — 첫 주자가 되어보세요!'}</div>`;
+    } else {
+      body = rows
+        .map((r) => {
+          const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : '';
+          return `<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:8px;background:rgba(255,255,255,0.04)">
+            <span style="width:34px;font-weight:800;color:#cdd6df">${medal || r.rank}</span>
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.nickname)}</span>
+            <span style="font-weight:800">${r.overall.toFixed(1)}</span></div>`;
+        })
+        .join('');
+    }
+    host.innerHTML = `
+      <div style="font-size:14px;opacity:0.7;margin-bottom:10px">${title}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:26px">${body}</div>`;
   }
 
   private renderModes(): void {
@@ -352,6 +404,13 @@ export class StartScreen {
     brand.appendChild(link);
     brand.appendChild(caption);
   }
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
+  );
 }
 
 function cardStyle(on: boolean): string {
