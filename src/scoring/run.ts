@@ -87,11 +87,15 @@ export class Run {
     const phy = rider.physics;
     const sc = CONFIG.scoring;
 
-    // 런 시작: 처음으로 충분히 움직이면 타이머 가동
+    // 런 시작: 처음으로 충분히 움직이면 타이머 가동.
+    // 대기 중엔 궤적/시간을 기록하지 않는다(대기 프레임이 궤적을 부풀려 서버 검증을 깨뜨림).
     if (this.state === 'idle') {
-      this.recordTraj(phy.position.x, phy.position.z, true);
-      if (phy.speed > sc.startSpeed) this.state = 'riding';
-      else return frame;
+      if (phy.speed > sc.startSpeed) {
+        this.state = 'riding';
+        this.recordTraj(phy.position.x, phy.position.z, true); // 드랍인 시작점 1회
+      } else {
+        return frame;
+      }
     }
 
     this.time += dt;
