@@ -51,8 +51,13 @@ export class LeaderboardScreen {
   private open(): void {
     if (!this.root.parentElement) document.body.appendChild(this.root);
   }
+  private closeResolve: (() => void) | null = null;
+
   private close(): void {
     this.root.remove();
+    const r = this.closeResolve;
+    this.closeResolve = null;
+    r?.();
   }
 
   /** 점수 제출 후 랭킹 표시 (필요 시 로그인 먼저) */
@@ -74,14 +79,17 @@ export class LeaderboardScreen {
     }
   }
 
-  /** 랭킹만 보기 */
-  async show(locationId: string, courseName: string): Promise<void> {
-    this.open();
-    try {
-      await this.renderBoard(locationId, courseName);
-    } catch (err) {
-      this.renderError(err, () => void this.show(locationId, courseName));
-    }
+  /** 랭킹만 보기 (닫기 누를 때까지 대기). limit=표시할 상위 인원수 */
+  show(locationId: string, courseName: string, limit?: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.closeResolve = resolve;
+      this.open();
+      this.renderBoard(locationId, courseName, undefined, limit).catch((err) =>
+        this.renderError(err, () =>
+          void this.renderBoard(locationId, courseName, undefined, limit),
+        ),
+      );
+    });
   }
 
   // ── 로그인 (이메일 OTP) ──
@@ -144,10 +152,11 @@ export class LeaderboardScreen {
     locationId: string,
     courseName: string,
     myResult?: lb.SubmitResult,
+    limit?: number,
   ): Promise<void> {
     this.renderStatus('랭킹 불러오는 중…');
     const [top, mine] = await Promise.all([
-      lb.getTop(locationId),
+      lb.getTop(locationId, limit),
       lb.isLoggedIn() ? lb.getMyRank(locationId).catch(() => []) : Promise.resolve([]),
     ]);
     const myRow = mine.find((r) => r.is_me);
@@ -194,7 +203,7 @@ export class LeaderboardScreen {
         </div>
       </div>`;
     (this.root.querySelector('#lb-refresh') as HTMLButtonElement).addEventListener('click', () =>
-      this.renderBoard(locationId, courseName, myResult),
+      this.renderBoard(locationId, courseName, myResult, limit),
     );
     (this.root.querySelector('#lb-close') as HTMLButtonElement).addEventListener('click', () =>
       this.close(),

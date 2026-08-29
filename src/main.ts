@@ -23,6 +23,8 @@ import { Run } from './scoring/run';
 import { CompetitionSession } from './scoring/competition';
 import { ResultScreen } from './ui/resultScreen';
 import { CompetitionRules } from './ui/competitionRules';
+import { LeaderboardScreen } from './ui/leaderboardScreen';
+import { isEnabled as leaderboardEnabled } from './net/leaderboard';
 import { StartScreen, type Selection } from './ui/startScreen';
 import { HorsePrompt } from './ui/horsePrompt';
 import { AdminEvent } from './ui/adminEvent';
@@ -551,6 +553,11 @@ async function main(): Promise<void> {
     composer.setSize(window.innerWidth, window.innerHeight);
   });
 
+  // 대회 참가 딥링크(?mode=competition): 시작 전 현재 랭킹(상위 20위) 먼저 노출
+  const compDeepLink = deepMode === 'competition' || deepMode === 'comp';
+  if (competition && compDeepLink && leaderboardEnabled()) {
+    await new LeaderboardScreen().show(locId, LOCATIONS[locId].name, 20);
+  }
   // 대회 모드: 시작 전 규칙 안내를 1회 노출 (자유 연습은 건너뜀)
   if (competition) await new CompetitionRules().show(competition);
 
