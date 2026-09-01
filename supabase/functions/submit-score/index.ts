@@ -181,6 +181,8 @@ Deno.serve(async (req: Request) => {
   }
   const locationId = String(body.locationId ?? '');
   const nickname = String(body.nickname ?? '').trim().slice(0, 20);
+  const name = String(body.name ?? '').trim().slice(0, 30); // 경품 연락용(비공개)
+  const phone = String(body.phone ?? '').trim().slice(0, 20); // 경품 연락용(비공개)
   const card = body.card;
   const log = body.log;
   const clientVersion = String(body.clientVersion ?? '').slice(0, 40);
@@ -262,6 +264,8 @@ Deno.serve(async (req: Request) => {
       user_id: user.id,
       location_id: locationId,
       nickname,
+      name,
+      phone,
       overall: card.overall,
       line: card.line,
       air: card.air,
@@ -285,6 +289,12 @@ Deno.serve(async (req: Request) => {
       .select('id')
       .single();
     scoreId = up?.id ?? scoreId;
+  } else if (existing) {
+    // 최고점 갱신이 아니어도 최신 연락처는 반영
+    await admin
+      .from('scores')
+      .update({ nickname, name, phone })
+      .eq('id', existing.id);
   }
   if (replay?.id && scoreId) {
     await admin.from('replays').update({ score_id: scoreId }).eq('id', replay.id);

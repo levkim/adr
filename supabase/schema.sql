@@ -38,6 +38,8 @@ create table if not exists public.scores (
   user_id       uuid not null references auth.users(id) on delete cascade,
   location_id   text not null references public.courses(location_id),
   nickname      text not null,
+  name          text, -- 경품 연락용(비공개, 랭킹 RPC로 노출 안 함)
+  phone         text, -- 경품 연락용(비공개)
   overall       real not null,
   line          real not null default 0,
   air           real not null default 0,
@@ -57,6 +59,9 @@ create table if not exists public.scores (
   unique (user_id, location_id)
 );
 create index if not exists scores_board_idx on public.scores (location_id, overall desc, created_at asc);
+-- 기존 DB용: 이름·연락처 컬럼 보강 (비공개)
+alter table public.scores add column if not exists name text;
+alter table public.scores add column if not exists phone text;
 
 -- ── 모든 제출 시도 로그 (시도횟수 제한 + 감사) ──
 create table if not exists public.submissions (

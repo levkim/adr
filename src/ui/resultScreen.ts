@@ -113,7 +113,10 @@ export class ResultScreen {
       ${
         comp
           ? `<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,0.12);padding-top:14px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:11px;opacity:0.55;line-height:1.4">이름·연락처는 경품 안내용으로만 쓰이며 공개 랭킹엔 표시되지 않습니다.</div>
               <input id="sc-nick" maxlength="20" placeholder="닉네임 / Nickname" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
+              <input id="sc-name" maxlength="30" placeholder="이름 / Name" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
+              <input id="sc-phone" maxlength="20" inputmode="tel" placeholder="핸드폰번호 / Phone" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               <input id="sc-email" maxlength="60" placeholder="이메일(선택) / Email" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               <button id="sc-share" style="width:100%;padding:12px;border:0;border-radius:8px;background:#e0a52f;color:#1a1204;font-size:15px;font-weight:800;cursor:pointer">📸 결과 카드 공유</button>
               ${
@@ -151,6 +154,8 @@ export class ResultScreen {
   /** 대회 결과 카드 공유 버튼 + 닉네임/이메일 입력 (localStorage 유지) */
   private wireShare(card$: HTMLElement, card: ScoreCard, run: Run, terrain: Terrain): void {
     const nick = card$.querySelector('#sc-nick') as HTMLInputElement;
+    const name = card$.querySelector('#sc-name') as HTMLInputElement;
+    const phone = card$.querySelector('#sc-phone') as HTMLInputElement;
     const email = card$.querySelector('#sc-email') as HTMLInputElement;
     const shareBtn = card$.querySelector('#sc-share') as HTMLButtonElement;
     const msg = card$.querySelector('#sc-msg') as HTMLDivElement;
@@ -169,8 +174,12 @@ export class ResultScreen {
       }
     };
     nick.value = get('tournski_nick');
+    name.value = get('tournski_name');
+    phone.value = get('tournski_phone');
     email.value = get('tournski_email');
     nick.addEventListener('input', () => set('tournski_nick', nick.value.trim()));
+    name.addEventListener('input', () => set('tournski_name', name.value.trim()));
+    phone.addEventListener('input', () => set('tournski_phone', phone.value.trim()));
     email.addEventListener('input', () => set('tournski_email', email.value.trim()));
 
     shareBtn.addEventListener('click', async () => {
@@ -212,10 +221,22 @@ export class ResultScreen {
           nick.focus();
           return;
         }
+        if (!name.value.trim()) {
+          msg.textContent = '경품 안내를 위해 이름을 입력해 주세요';
+          name.focus();
+          return;
+        }
+        if (!phone.value.trim()) {
+          msg.textContent = '경품 안내를 위해 핸드폰번호를 입력해 주세요';
+          phone.focus();
+          return;
+        }
         void new LeaderboardScreen().submitAndShow({
           locationId: terrain.meta.id,
           courseName: terrain.meta.name,
           nickname: nick.value.trim(),
+          name: name.value.trim(),
+          phone: phone.value.trim(),
           card,
           log: run.runLog(),
         });

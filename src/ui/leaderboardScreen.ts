@@ -10,6 +10,8 @@ interface SubmitPayload {
   locationId: string;
   courseName: string;
   nickname: string;
+  name?: string; // 경품 연락용(비공개)
+  phone?: string; // 경품 연락용(비공개)
   card: ScoreCard;
   log: RunLog;
 }
@@ -71,6 +73,8 @@ export class LeaderboardScreen {
       const result = await lb.submitScore({
         locationId: p.locationId,
         nickname: p.nickname,
+        name: p.name,
+        phone: p.phone,
         card: p.card,
         log: p.log,
         clientVersion: 'web',

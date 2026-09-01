@@ -137,6 +137,8 @@ async function ensureToken(): Promise<string | null> {
 export async function submitScore(payload: {
   locationId: string;
   nickname: string;
+  name?: string; // 경품 연락용(비공개)
+  phone?: string; // 경품 연락용(비공개)
   card: ScoreCard;
   log: RunLog;
   clientVersion?: string;
