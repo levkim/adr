@@ -53,6 +53,7 @@ export class LeaderboardScreen {
   }
   private closeResolve: (() => void) | null = null;
   private posterUrl = ''; // 대회 페이지 상단 포스터 (있을 때만)
+  private showPromo = false; // 대회 랜딩(딥링크)에서만 '입상 치트키' 노출
 
   private close(): void {
     this.root.remove();
@@ -83,6 +84,7 @@ export class LeaderboardScreen {
   /** 랭킹만 보기 (닫기 누를 때까지 대기). limit=상위 인원수, poster=상단 포스터 경로 */
   show(locationId: string, courseName: string, limit?: number, poster?: string): Promise<void> {
     this.posterUrl = poster ?? '';
+    this.showPromo = true;
     return new Promise((resolve) => {
       this.closeResolve = resolve;
       this.open();
@@ -203,6 +205,15 @@ export class LeaderboardScreen {
         ${poster}
         <div style="font-size:20px;font-weight:800">🏆 ${CONFIG.shareCard.competitionName}</div>
         <div style="font-size:13px;opacity:0.7;margin-bottom:14px">${escapeHtml(courseName)} · ${totalN}명 참가</div>
+        ${
+          this.showPromo
+            ? `<div style="margin-bottom:14px;padding:12px 14px;border-radius:10px;background:rgba(224,165,47,0.12);border:1px solid rgba(224,165,47,0.4);font-size:13px;line-height:1.7">
+                <div style="font-weight:800;margin-bottom:6px">🎯 입상 치트키</div>
+                <div>· 본인 결과 <b>SNS 공유 시 +3점</b> — 태그 필수: 인스타 <a href="https://instagram.com/tournski_official" target="_blank" rel="noopener" style="color:#7fc4ff;text-decoration:none">@tournski_official</a> / 페이스북 <a href="https://facebook.com/tournski" target="_blank" rel="noopener" style="color:#7fc4ff;text-decoration:none">@tournski</a></div>
+                <div>· <a href="https://www.tournski.com" target="_blank" rel="noopener" style="color:#7fc4ff;text-decoration:none">투어앤스키(www.tournski.com)</a> <b>회원가입 시 +3점</b></div>
+              </div>`
+            : ''
+        }
         ${myResult ? `<div style="font-size:13px;color:${myResult.improved ? '#46c98b' : '#9fb0bf'};margin-bottom:10px">${myResult.improved ? '🎉 최고 기록 갱신!' : '이번 기록은 최고점보다 낮습니다'}${myResult.flagged ? ' · ⚠︎ 검토 대상' : ''}</div>` : ''}
         ${pinned}
         <div style="display:flex;flex-direction:column;gap:4px">${list || '<div style="opacity:0.6;padding:20px;text-align:center">아직 기록이 없습니다</div>'}</div>
