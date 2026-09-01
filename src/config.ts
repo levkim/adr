@@ -281,6 +281,7 @@ export const CONFIG = {
   competition: {
     locationId: 'baekdu-cheonji', // 대회 고정 코스 (LOCATIONS의 id)
     maxAttempts: 5, // 참가자 1인당 시도 횟수 (최고 점수 1개만 기록)
+    posterUrl: 'competition-poster.jpg', // public/ 기준 포스터 이미지 (없으면 자동 숨김)
   },
   // ── 랭킹보드 (Supabase 백엔드) ──
   // 백엔드 배포 전에는 enabled:false 로 두어 게임에 영향 없음.

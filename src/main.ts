@@ -556,7 +556,7 @@ async function main(): Promise<void> {
   // 대회 참가 딥링크(?mode=competition): 시작 전 현재 랭킹(상위 20위) 먼저 노출
   const compDeepLink = deepMode === 'competition' || deepMode === 'comp';
   if (competition && compDeepLink && leaderboardEnabled()) {
-    await new LeaderboardScreen().show(locId, LOCATIONS[locId].name, 20);
+    await new LeaderboardScreen().show(locId, LOCATIONS[locId].name, 20, CONFIG.competition.posterUrl);
   }
   // 대회 모드: 시작 전 규칙 안내를 1회 노출 (자유 연습은 건너뜀)
   if (competition) await new CompetitionRules().show(competition);

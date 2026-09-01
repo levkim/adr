@@ -52,6 +52,7 @@ export class LeaderboardScreen {
     if (!this.root.parentElement) document.body.appendChild(this.root);
   }
   private closeResolve: (() => void) | null = null;
+  private posterUrl = ''; // 대회 페이지 상단 포스터 (있을 때만)
 
   private close(): void {
     this.root.remove();
@@ -79,8 +80,9 @@ export class LeaderboardScreen {
     }
   }
 
-  /** 랭킹만 보기 (닫기 누를 때까지 대기). limit=표시할 상위 인원수 */
-  show(locationId: string, courseName: string, limit?: number): Promise<void> {
+  /** 랭킹만 보기 (닫기 누를 때까지 대기). limit=상위 인원수, poster=상단 포스터 경로 */
+  show(locationId: string, courseName: string, limit?: number, poster?: string): Promise<void> {
+    this.posterUrl = poster ?? '';
     return new Promise((resolve) => {
       this.closeResolve = resolve;
       this.open();
@@ -193,8 +195,12 @@ export class LeaderboardScreen {
       list += `<div style="text-align:center;opacity:0.5;padding:6px">⋯</div>` + mine.map(rowHtml).join('');
     }
 
+    const poster = this.posterUrl
+      ? `<img src="${import.meta.env.BASE_URL}${this.posterUrl}" alt="대회 포스터" style="width:100%;border-radius:10px;margin-bottom:14px;display:block" onerror="this.style.display='none'" />`
+      : '';
     this.root.innerHTML = `
       <div style="${panelCss}">
+        ${poster}
         <div style="font-size:20px;font-weight:800">🏆 ${CONFIG.shareCard.competitionName}</div>
         <div style="font-size:13px;opacity:0.7;margin-bottom:14px">${escapeHtml(courseName)} · ${totalN}명 참가</div>
         ${myResult ? `<div style="font-size:13px;color:${myResult.improved ? '#46c98b' : '#9fb0bf'};margin-bottom:10px">${myResult.improved ? '🎉 최고 기록 갱신!' : '이번 기록은 최고점보다 낮습니다'}${myResult.flagged ? ' · ⚠︎ 검토 대상' : ''}</div>` : ''}
