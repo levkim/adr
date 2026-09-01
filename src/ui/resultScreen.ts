@@ -122,6 +122,11 @@ export class ResultScreen {
                   : ''
               }
               <div id="sc-msg" style="font-size:12px;opacity:0.7;text-align:center;min-height:16px"></div>
+              <div style="margin-top:6px;padding:11px 13px;border-radius:9px;background:rgba(224,165,47,0.12);border:1px solid rgba(224,165,47,0.4);font-size:12px;line-height:1.7;text-align:left">
+                <div style="font-weight:800;margin-bottom:5px">🎯 입상 치트키</div>
+                <div>· 본인 결과 <b>SNS 공유 시 +3점</b> — 태그 필수: 인스타 <a href="https://instagram.com/tournski_official" target="_blank" rel="noopener" style="color:#7fc4ff;text-decoration:none">@tournski_official</a> / 페이스북 <a href="https://facebook.com/tournski" target="_blank" rel="noopener" style="color:#7fc4ff;text-decoration:none">@tournski</a></div>
+                <div>· <a href="https://www.tournski.com" target="_blank" rel="noopener" style="color:#7fc4ff;text-decoration:none">투어앤스키(www.tournski.com)</a> <b>회원가입 시 +3점</b></div>
+              </div>
             </div>`
           : ''
       }
