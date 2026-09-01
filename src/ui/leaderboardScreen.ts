@@ -219,7 +219,7 @@ export class LeaderboardScreen {
         <div style="display:flex;flex-direction:column;gap:4px">${list || '<div style="opacity:0.6;padding:20px;text-align:center">아직 기록이 없습니다</div>'}</div>
         <div style="display:flex;gap:8px;margin-top:16px">
           <button id="lb-refresh" style="flex:1;padding:11px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:transparent;color:#cdd6df;font-size:14px;cursor:pointer">↻ 새로고침</button>
-          <button id="lb-close" style="flex:1;padding:11px;border:0;border-radius:8px;background:#2f8fe0;color:#fff;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+          <button id="lb-close" style="flex:1;padding:11px;border:0;border-radius:8px;background:${this.showPromo ? '#e0a52f' : '#2f8fe0'};color:${this.showPromo ? '#1a1204' : '#fff'};font-size:14px;font-weight:800;cursor:pointer">${this.showPromo ? '대회 참가 GO ▸' : '닫기'}</button>
         </div>
       </div>`;
     (this.root.querySelector('#lb-refresh') as HTMLButtonElement).addEventListener('click', () =>
