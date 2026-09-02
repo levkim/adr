@@ -128,13 +128,23 @@ returns text language sql immutable as $$
   end;
 $$;
 
+-- 이름 마스킹: 첫 글자만 + 나머지는 * (예: 홍길동 → 홍**)
+create or replace function public.mask_name(p_name text)
+returns text language sql immutable as $$
+  select case
+    when p_name is null or char_length(p_name) = 0 then ''
+    when char_length(p_name) = 1 then p_name || '*'
+    else left(p_name, 1) || repeat('*', char_length(p_name) - 1)
+  end;
+$$;
+
 drop function if exists public.get_leaderboard(text, int);
 create function public.get_leaderboard(p_location text, p_limit int default 100)
-returns table(rank bigint, nickname text, email_masked text, overall real, created_at timestamptz, is_me boolean)
+returns table(rank bigint, nickname text, name_masked text, email_masked text, overall real, created_at timestamptz, is_me boolean)
 language sql stable security definer set search_path = public as $$
   select row_number() over (order by s.overall desc, s.created_at asc) as rank,
-         s.nickname, public.mask_email(u.email) as email_masked, s.overall, s.created_at,
-         (s.user_id = auth.uid()) as is_me
+         s.nickname, public.mask_name(s.name) as name_masked, public.mask_email(u.email) as email_masked,
+         s.overall, s.created_at, (s.user_id = auth.uid()) as is_me
   from public.scores s
   join auth.users u on u.id = s.user_id
   where s.location_id = p_location and s.verified = true
@@ -144,16 +154,16 @@ $$;
 
 drop function if exists public.get_my_rank(text, int);
 create function public.get_my_rank(p_location text, p_around int default 3)
-returns table(rank bigint, nickname text, email_masked text, overall real, created_at timestamptz, is_me boolean)
+returns table(rank bigint, nickname text, name_masked text, email_masked text, overall real, created_at timestamptz, is_me boolean)
 language sql stable security definer set search_path = public as $$
   with ranked as (
-    select s.user_id, s.nickname, u.email, s.overall, s.created_at,
+    select s.user_id, s.nickname, s.name, u.email, s.overall, s.created_at,
            row_number() over (order by s.overall desc, s.created_at asc) as rank
     from public.scores s
     join auth.users u on u.id = s.user_id
     where s.location_id = p_location and s.verified = true
   ), me as (select rank from ranked where user_id = auth.uid())
-  select r.rank, r.nickname, public.mask_email(r.email), r.overall, r.created_at, (r.user_id = auth.uid())
+  select r.rank, r.nickname, public.mask_name(r.name), public.mask_email(r.email), r.overall, r.created_at, (r.user_id = auth.uid())
   from ranked r, me
   where r.rank between me.rank - p_around and me.rank + p_around
   order by r.rank;

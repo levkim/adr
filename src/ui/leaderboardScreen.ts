@@ -189,7 +189,7 @@ export class LeaderboardScreen {
       return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;${me ? 'background:rgba(47,143,224,0.20);border:1px solid rgba(47,143,224,0.5)' : ''}">
         <span style="width:42px;font-weight:800;color:${me ? '#7fc4ff' : '#cdd6df'}">${medal || r.rank}</span>
         <span style="flex:1;min-width:0">
-          <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.nickname)}</span>
+          <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.nickname)}${r.name_masked ? ` <span style="opacity:0.6;font-weight:400">(${escapeHtml(r.name_masked)})</span>` : ''}</span>
           <span style="display:block;font-size:11px;opacity:0.55;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.email_masked ?? '')}</span>
         </span>
         <span style="font-weight:800">${r.overall.toFixed(1)}</span></div>`;
