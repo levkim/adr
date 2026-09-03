@@ -6,6 +6,7 @@ import { renderHillshade, worldToMapPx } from './terrainMap';
 import { renderShareCard, shareOrDownloadCard } from './shareCard';
 import { LeaderboardScreen } from './leaderboardScreen';
 import { isEnabled as leaderboardEnabled } from '../net/leaderboard';
+import { consentBlockHtml, consentGiven, setConsent } from './consent';
 
 // 대회 모드 결과 컨텍스트 (자유 연습이면 undefined)
 export interface CompContext {
@@ -118,6 +119,7 @@ export class ResultScreen {
               <input id="sc-name" maxlength="30" placeholder="이름 / Name" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               <input id="sc-phone" maxlength="20" inputmode="tel" placeholder="핸드폰번호 / Phone" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               <input id="sc-email" maxlength="60" placeholder="이메일(선택) / Email" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
+              ${leaderboardEnabled() ? consentBlockHtml('sc-consent') : ''}
               <button id="sc-share" style="width:100%;padding:12px;border:0;border-radius:8px;background:#e0a52f;color:#1a1204;font-size:15px;font-weight:800;cursor:pointer">📸 결과 카드 공유</button>
               ${
                 leaderboardEnabled()
@@ -212,6 +214,10 @@ export class ResultScreen {
       }
     });
 
+    // 개인정보 동의 체크박스 (백엔드 enabled 시 존재)
+    const consentEl = card$.querySelector('#sc-consent') as HTMLInputElement | null;
+    consentEl?.addEventListener('change', () => setConsent(consentEl.checked));
+
     // 랭킹 등록·보기 (백엔드 enabled 시에만 버튼 존재)
     const rankBtn = card$.querySelector('#sc-rank') as HTMLButtonElement | null;
     if (rankBtn) {
@@ -219,6 +225,11 @@ export class ResultScreen {
         if (!nick.value.trim()) {
           msg.textContent = '랭킹 등록엔 닉네임이 필요합니다';
           nick.focus();
+          return;
+        }
+        if (consentEl && !consentEl.checked && !consentGiven()) {
+          msg.textContent = '개인정보 수집·이용에 동의해 주세요';
+          consentEl.focus();
           return;
         }
         if (!name.value.trim()) {

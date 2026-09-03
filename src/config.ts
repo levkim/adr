@@ -282,6 +282,13 @@ export const CONFIG = {
     locationId: 'baekdu-cheonji', // 대회 고정 코스 (LOCATIONS의 id)
     maxAttempts: 5, // 참가자 1인당 시도 횟수 (최고 점수 1개만 기록)
     posterUrl: 'competition-poster.jpg', // public/ 기준 포스터 이미지 (없으면 자동 숨김)
+    // 개인정보 수집·이용 동의 안내 (법적 문구 — 운영 정책에 맞게 조정)
+    privacy: {
+      items: '이메일, 이름, 핸드폰번호, 닉네임, 게임 기록',
+      purpose: '대회 참가자 확인 · 순위 산정 · 경품 안내 및 발송',
+      retention: '대회 종료 및 경품 지급 완료 후 3개월 이내 파기',
+      controller: '투어앤월드 (주)더투어샵',
+    },
   },
   // ── 랭킹보드 (Supabase 백엔드) ──
   // 백엔드 배포 전에는 enabled:false 로 두어 게임에 영향 없음.

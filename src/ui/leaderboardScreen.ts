@@ -1,6 +1,7 @@
 import { CONFIG } from '../config';
 import type { ScoreCard, RunLog } from '../scoring/run';
 import * as lb from '../net/leaderboard';
+import { consentBlockHtml, setConsent } from './consent';
 
 // 대회 랭킹보드 화면 (모달). 이메일 OTP 로그인 → 점수 제출 → 순위 표시.
 // 내 순위는 항상 상단 고정. 상위 topLimit 노출, 그 밖이면 내 주변 순위만.
@@ -108,8 +109,9 @@ export class LeaderboardScreen {
         <div style="${panelCss}">
           <div style="font-size:20px;font-weight:800;margin-bottom:6px">🏆 대회 랭킹 등록</div>
           <div style="font-size:13px;opacity:0.75;margin-bottom:16px;line-height:1.5">경품 응모·순위 등록을 위해 이메일 인증이 필요합니다.</div>
-          <input id="lb-email" type="email" placeholder="이메일 / Email" value="${saved}" style="width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:15px;margin-bottom:8px" />
-          <button id="lb-send" style="width:100%;padding:12px;border:0;border-radius:8px;background:#2f8fe0;color:#fff;font-size:15px;font-weight:700;cursor:pointer">인증코드 받기</button>
+          <input id="lb-email" type="email" placeholder="이메일 / Email" value="${saved}" style="width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:15px;margin-bottom:10px" />
+          ${consentBlockHtml('lb-consent')}
+          <button id="lb-send" style="width:100%;margin-top:10px;padding:12px;border:0;border-radius:8px;background:#2f8fe0;color:#fff;font-size:15px;font-weight:700;cursor:pointer">인증코드 받기</button>
           <div id="lb-code-wrap" style="display:none;margin-top:12px">
             <input id="lb-code" inputmode="numeric" placeholder="이메일로 받은 코드" style="width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:15px;margin-bottom:8px" />
             <button id="lb-verify" style="width:100%;padding:12px;border:0;border-radius:8px;background:#46c98b;color:#07130d;font-size:15px;font-weight:800;cursor:pointer">확인하고 등록</button>
@@ -121,11 +123,17 @@ export class LeaderboardScreen {
       const emailEl = $('#lb-email') as HTMLInputElement;
       const codeWrap = $('#lb-code-wrap');
       const msg = $('#lb-msg');
+      const consentEl = $('#lb-consent') as HTMLInputElement;
+      consentEl.addEventListener('change', () => setConsent(consentEl.checked));
 
       ($('#lb-send') as HTMLButtonElement).addEventListener('click', async () => {
         const email = emailEl.value.trim();
         if (!email || !email.includes('@')) {
           msg.textContent = '올바른 이메일을 입력하세요';
+          return;
+        }
+        if (!consentEl.checked) {
+          msg.textContent = '개인정보 수집·이용에 동의해 주세요';
           return;
         }
         msg.textContent = '전송 중…';
