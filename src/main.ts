@@ -65,7 +65,7 @@ async function main(): Promise<void> {
 
   const sun = new THREE.DirectionalLight(0xffffff, 2.2);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(isMobile ? 1024 : 2048, isMobile ? 1024 : 2048); // 모바일 그림자 메모리 절감
   sun.shadow.camera.left = -60;
   sun.shadow.camera.right = 60;
   sun.shadow.camera.top = 60;
@@ -557,14 +557,30 @@ async function main(): Promise<void> {
     composer.addPass(new SMAAPass(window.innerWidth, window.innerHeight));
   }
 
-  // ── 리사이즈 ────────────────────────────────────────────
-  window.addEventListener('resize', () => {
+  // ── 리사이즈 + 키보드 대응 ──────────────────────────────
+  // iOS Safari는 메모리 부족 시 탭을 새로고침한다. 텍스트 입력칸에 포커스(키보드)면
+  // 드로잉버퍼를 최소로 줄여 프레임버퍼 메모리를 반납 → 입력 중 튕김 방지. 입력이 끝나면 복원.
+  const isTyping = (): boolean => {
+    const a = document.activeElement;
+    return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
+  };
+  const applyRenderSize = (): void => {
     cameraSystem.camera.aspect = window.innerWidth / window.innerHeight;
     cameraSystem.camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
-    composer?.setSize(window.innerWidth, window.innerHeight);
+    if (isTyping()) {
+      renderer.setSize(8, 8, false); // 캔버스 CSS 크기는 유지, 드로잉버퍼만 최소화
+    } else {
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer?.setSize(window.innerWidth, window.innerHeight);
+    }
+  };
+  window.addEventListener('resize', applyRenderSize);
+  window.addEventListener('focusin', (e) => {
+    const t = e.target as HTMLElement | null;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) applyRenderSize();
   });
+  window.addEventListener('focusout', () => setTimeout(applyRenderSize, 60));
 
   // 대회 참가 딥링크(?mode=competition): 시작 전 현재 랭킹(상위 20위) 먼저 노출
   const compDeepLink = deepMode === 'competition' || deepMode === 'comp';
