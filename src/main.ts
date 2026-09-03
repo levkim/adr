@@ -39,10 +39,18 @@ async function main(): Promise<void> {
   // ── 관리자 이벤트 공지 (장소별, announcements.json + ?admin=1 패널) ──
   const admin = new AdminEvent();
 
+  // 모바일(터치·저메모리) 판별 — 후처리·해상도를 낮춰 탭 리로딩(메모리 부족) 방지
+  const isMobile =
+    (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches) ||
+    'ontouchstart' in window ||
+    (navigator.maxTouchPoints ?? 0) > 0;
+  if (isMobile) CONFIG.fx.post.enabled = false; // 모바일은 블룸·SMAA 후처리 비활성(메모리 절감)
+
   // ── 렌더러 ──────────────────────────────────────────────
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // 모바일은 DPR을 낮춰 프레임버퍼 메모리를 크게 줄인다 (레티나 3x → 1.5x)
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   // 필름 톤매핑 — 밝은 설면이 날아가지 않고 자연스러운 대비 (노출은 프리셋별)
@@ -466,6 +474,9 @@ async function main(): Promise<void> {
     '시선이 진행 방향을 따라가는 비율(높으면 멀미↓). EN: Gaze leads travel direction.',
   );
   fpFolder.close();
+  // 포스트프로세싱 핸들 (모바일은 생성하지 않음 → 메모리 절감). GUI 콜백이 참조하므로 미리 선언.
+  let composer: EffectComposer | null = null;
+  let bloomPass: UnrealBloomPass | null = null;
   const fxFolder = gui.addFolder('연출 / FX');
   help(
     fxFolder.add(CONFIG.fx, 'screenIntensity', 0, 1).name('화면 효과 / Screen FX'),
@@ -514,14 +525,14 @@ async function main(): Promise<void> {
     fxFolder
       .add(CONFIG.fx.post, 'bloomStrength', 0, 1)
       .name('블룸 세기 / Bloom')
-      .onChange((v: number) => (bloomPass.strength = v)),
+      .onChange((v: number) => bloomPass && (bloomPass.strength = v)),
     '밝은 설면·태양 번짐 세기. EN: Bloom strength.',
   );
   help(
     fxFolder
       .add(CONFIG.fx.post, 'bloomThreshold', 0, 1)
       .name('블룸 임계 / Threshold')
-      .onChange((v: number) => (bloomPass.threshold = v)),
+      .onChange((v: number) => bloomPass && (bloomPass.threshold = v)),
     '이 밝기 이상만 번짐(높을수록 밝은 곳만). EN: Bloom luminance threshold.',
   );
   help(
@@ -530,27 +541,29 @@ async function main(): Promise<void> {
   );
   fxFolder.close();
 
-  // ── 포스트프로세싱 (블룸 + SMAA) ────────────────────────
+  // ── 포스트프로세싱 (블룸 + SMAA) — 데스크톱만. 모바일은 메모리 절감 위해 생략 ──
   // RenderPass → 블룸(밝은 설면/태양 번짐) → OutputPass(ACES 톤매핑·색공간) → SMAA(에지 AA)
-  const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, cameraSystem.camera));
-  const bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    CONFIG.fx.post.bloomStrength,
-    CONFIG.fx.post.bloomRadius,
-    CONFIG.fx.post.bloomThreshold,
-  );
-  composer.addPass(bloomPass);
-  composer.addPass(new OutputPass());
-  const smaaPass = new SMAAPass(window.innerWidth, window.innerHeight);
-  composer.addPass(smaaPass);
+  if (!isMobile) {
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, cameraSystem.camera));
+    bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      CONFIG.fx.post.bloomStrength,
+      CONFIG.fx.post.bloomRadius,
+      CONFIG.fx.post.bloomThreshold,
+    );
+    composer.addPass(bloomPass);
+    composer.addPass(new OutputPass());
+    composer.addPass(new SMAAPass(window.innerWidth, window.innerHeight));
+  }
 
   // ── 리사이즈 ────────────────────────────────────────────
   window.addEventListener('resize', () => {
     cameraSystem.camera.aspect = window.innerWidth / window.innerHeight;
     cameraSystem.camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+    composer?.setSize(window.innerWidth, window.innerHeight);
   });
 
   // 대회 참가 딥링크(?mode=competition): 시작 전 현재 랭킹(상위 20위) 먼저 노출
@@ -654,13 +667,15 @@ async function main(): Promise<void> {
 
     // 결과 화면(피니시) 중엔 무거운 3D 렌더를 멈춰 모바일 메모리·GPU 부담을 줄인다
     // (입력 중 탭 리로딩 방지). 마무리 프레임만 1회 렌더 후 정지, 새 런 시작 시 재개.
-    if (run.state !== 'finished') {
-      if (CONFIG.fx.post.enabled) composer.render();
+    const draw = (): void => {
+      if (CONFIG.fx.post.enabled && composer) composer.render();
       else renderer.render(scene, cameraSystem.camera);
+    };
+    if (run.state !== 'finished') {
+      draw();
       finishedRendered = false;
     } else if (!finishedRendered) {
-      if (CONFIG.fx.post.enabled) composer.render();
-      else renderer.render(scene, cameraSystem.camera);
+      draw();
       finishedRendered = true;
     }
     input.endFrame();
