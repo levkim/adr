@@ -42,8 +42,7 @@ export class ResultScreen {
       '-webkit-overflow-scrolling:touch',
       'padding:24px 16px',
       'box-sizing:border-box',
-      'background:rgba(10,14,20,0.72)',
-      'backdrop-filter:blur(3px)',
+      'background:rgba(10,14,20,0.9)',
       'font-family:system-ui,-apple-system,sans-serif',
       'color:#eef3f8',
     ].join(';');

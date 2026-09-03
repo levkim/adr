@@ -26,8 +26,7 @@ const overlayCss = [
   'justify-content:center',
   'padding:16px',
   'box-sizing:border-box',
-  'background:rgba(8,12,18,0.86)',
-  'backdrop-filter:blur(4px)',
+  'background:rgba(8,12,18,0.94)',
   'font-family:system-ui,-apple-system,sans-serif',
   'color:#eef3f8',
 ].join(';');

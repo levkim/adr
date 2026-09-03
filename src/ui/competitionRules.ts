@@ -31,8 +31,7 @@ export class CompetitionRules {
         'justify-content:center',
         'padding:20px',
         'box-sizing:border-box',
-        'background:rgba(8,12,18,0.82)',
-        'backdrop-filter:blur(4px)',
+        'background:rgba(8,12,18,0.94)',
         'font-family:system-ui,-apple-system,sans-serif',
         'color:#eef3f8',
       ].join(';');
