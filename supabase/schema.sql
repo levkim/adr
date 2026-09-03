@@ -128,13 +128,13 @@ returns text language sql immutable as $$
   end;
 $$;
 
--- 이름 마스킹: 첫 글자만 + 나머지는 * (예: 홍길동 → 홍**)
+-- 이름 마스킹: 성+끝 글자만 노출, 가운데는 * (예: 홍길동 → 홍*동)
 create or replace function public.mask_name(p_name text)
 returns text language sql immutable as $$
   select case
     when p_name is null or char_length(p_name) = 0 then ''
-    when char_length(p_name) = 1 then p_name || '*'
-    else left(p_name, 1) || repeat('*', char_length(p_name) - 1)
+    when char_length(p_name) <= 2 then p_name
+    else left(p_name, 1) || repeat('*', char_length(p_name) - 2) || right(p_name, 1)
   end;
 $$;
 

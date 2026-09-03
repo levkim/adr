@@ -114,8 +114,7 @@ export class ResultScreen {
       ${
         comp
           ? `<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,0.12);padding-top:14px;display:flex;flex-direction:column;gap:8px">
-              <div style="font-size:11px;opacity:0.55;line-height:1.4">이름·연락처는 경품 안내용으로만 쓰이며 공개 랭킹엔 표시되지 않습니다.</div>
-              <input id="sc-nick" maxlength="20" placeholder="닉네임 / Nickname" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
+              <div style="font-size:11px;opacity:0.55;line-height:1.4">연락처는 경품 안내용이며 비공개입니다. 공개 랭킹엔 이름이 <b>성·끝 글자만</b>(예: 홍*동) 표시됩니다.</div>
               <input id="sc-name" maxlength="30" placeholder="이름 / Name" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               <input id="sc-phone" maxlength="20" inputmode="tel" placeholder="핸드폰번호 / Phone" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               <input id="sc-email" maxlength="60" placeholder="이메일(선택) / Email" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
@@ -155,7 +154,6 @@ export class ResultScreen {
 
   /** 대회 결과 카드 공유 버튼 + 닉네임/이메일 입력 (localStorage 유지) */
   private wireShare(card$: HTMLElement, card: ScoreCard, run: Run, terrain: Terrain): void {
-    const nick = card$.querySelector('#sc-nick') as HTMLInputElement;
     const name = card$.querySelector('#sc-name') as HTMLInputElement;
     const phone = card$.querySelector('#sc-phone') as HTMLInputElement;
     const email = card$.querySelector('#sc-email') as HTMLInputElement;
@@ -175,11 +173,9 @@ export class ResultScreen {
         /* ignore */
       }
     };
-    nick.value = get('tournski_nick');
     name.value = get('tournski_name');
     phone.value = get('tournski_phone');
     email.value = get('tournski_email');
-    nick.addEventListener('input', () => set('tournski_nick', nick.value.trim()));
     name.addEventListener('input', () => set('tournski_name', name.value.trim()));
     phone.addEventListener('input', () => set('tournski_phone', phone.value.trim()));
     email.addEventListener('input', () => set('tournski_email', email.value.trim()));
@@ -195,7 +191,7 @@ export class ResultScreen {
           run,
           terrain,
           resortName: terrain.meta.name,
-          nickname: nick.value.trim(),
+          nickname: name.value.trim() || 'RIDER',
           email: email.value.trim() || undefined,
           // 랭킹 백엔드가 붙기 전 → rank/total 미전달 시 카드에 '랭킹 집계 예정' 표시
         });
@@ -222,16 +218,6 @@ export class ResultScreen {
     const rankBtn = card$.querySelector('#sc-rank') as HTMLButtonElement | null;
     if (rankBtn) {
       rankBtn.addEventListener('click', () => {
-        if (!nick.value.trim()) {
-          msg.textContent = '랭킹 등록엔 닉네임이 필요합니다';
-          nick.focus();
-          return;
-        }
-        if (consentEl && !consentEl.checked && !consentGiven()) {
-          msg.textContent = '개인정보 수집·이용에 동의해 주세요';
-          consentEl.focus();
-          return;
-        }
         if (!name.value.trim()) {
           msg.textContent = '경품 안내를 위해 이름을 입력해 주세요';
           name.focus();
@@ -242,10 +228,15 @@ export class ResultScreen {
           phone.focus();
           return;
         }
+        if (consentEl && !consentEl.checked && !consentGiven()) {
+          msg.textContent = '개인정보 수집·이용에 동의해 주세요';
+          consentEl.focus();
+          return;
+        }
         void new LeaderboardScreen().submitAndShow({
           locationId: terrain.meta.id,
           courseName: terrain.meta.name,
-          nickname: nick.value.trim(),
+          nickname: maskName(name.value.trim()), // 공개 랭킹 표시명 = 마스킹 이름(홍**)
           name: name.value.trim(),
           phone: phone.value.trim(),
           card,
@@ -289,6 +280,14 @@ export class ResultScreen {
       marker(ctx, pn.x, pn.y, '#3a9ae0'); // 피니시
     }
   }
+}
+
+// 공개 랭킹용 이름 마스킹: 성 + 끝 글자만 노출, 가운데는 * (예: 홍길동 → 홍*동, 남궁민수 → 남**수).
+function maskName(name: string): string {
+  const n = name.trim();
+  if (!n) return 'RIDER';
+  if (n.length <= 2) return n; // 1~2글자는 성+끝자 = 전체
+  return n[0] + '*'.repeat(n.length - 2) + n[n.length - 1];
 }
 
 function bar(label: string, value: number, color: string): string {

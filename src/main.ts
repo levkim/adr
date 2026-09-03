@@ -564,6 +564,7 @@ async function main(): Promise<void> {
   // ── 게임 루프 ───────────────────────────────────────────
   const _hn = new THREE.Vector3();
   let elapsed = 0;
+  let finishedRendered = false; // 피니시 후 마무리 프레임 1회 렌더 여부
   startLoop((dt) => {
     elapsed += dt;
     flags.update(elapsed);
@@ -651,8 +652,17 @@ async function main(): Promise<void> {
     sun.target.position.copy(rider.object.position);
     sun.target.updateMatrixWorld();
 
-    if (CONFIG.fx.post.enabled) composer.render();
-    else renderer.render(scene, cameraSystem.camera);
+    // 결과 화면(피니시) 중엔 무거운 3D 렌더를 멈춰 모바일 메모리·GPU 부담을 줄인다
+    // (입력 중 탭 리로딩 방지). 마무리 프레임만 1회 렌더 후 정지, 새 런 시작 시 재개.
+    if (run.state !== 'finished') {
+      if (CONFIG.fx.post.enabled) composer.render();
+      else renderer.render(scene, cameraSystem.camera);
+      finishedRendered = false;
+    } else if (!finishedRendered) {
+      if (CONFIG.fx.post.enabled) composer.render();
+      else renderer.render(scene, cameraSystem.camera);
+      finishedRendered = true;
+    }
     input.endFrame();
   });
 }
