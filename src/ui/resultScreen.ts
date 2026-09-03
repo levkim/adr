@@ -5,7 +5,13 @@ import type { CompetitionSession } from '../scoring/competition';
 import { renderHillshade, worldToMapPx } from './terrainMap';
 import { renderShareCard, shareOrDownloadCard } from './shareCard';
 import { LeaderboardScreen } from './leaderboardScreen';
-import { isEnabled as leaderboardEnabled } from '../net/leaderboard';
+import {
+  isEnabled as leaderboardEnabled,
+  isLoggedIn,
+  sendOtp,
+  verifyOtp,
+  submitScore,
+} from '../net/leaderboard';
 import { consentBlockHtml, consentGiven, setConsent } from './consent';
 
 // 대회 모드 결과 컨텍스트 (자유 연습이면 undefined)
@@ -116,12 +122,17 @@ export class ResultScreen {
               <div style="font-size:11px;opacity:0.55;line-height:1.4">연락처는 경품 안내용이며 비공개입니다. 공개 랭킹엔 이름이 <b>성·끝 글자만</b>(예: 홍*동) 표시됩니다.</div>
               <input id="sc-name" maxlength="30" placeholder="이름 / Name" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               <input id="sc-phone" maxlength="20" inputmode="tel" placeholder="핸드폰번호 / Phone" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
-              <input id="sc-email" maxlength="60" type="text" inputmode="email" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="이메일(선택) / Email" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
+              <input id="sc-email" maxlength="60" type="text" inputmode="email" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="이메일 / Email" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
               ${leaderboardEnabled() ? consentBlockHtml('sc-consent') : ''}
               <button id="sc-share" style="width:100%;padding:12px;border:0;border-radius:8px;background:#e0a52f;color:#1a1204;font-size:15px;font-weight:800;cursor:pointer">📸 결과 카드 공유</button>
               ${
                 leaderboardEnabled()
-                  ? '<button id="sc-rank" style="width:100%;padding:12px;border:0;border-radius:8px;background:#2f8fe0;color:#fff;font-size:15px;font-weight:800;cursor:pointer">🏆 랭킹 등록·보기</button>'
+                  ? `<button id="sc-rank" style="width:100%;padding:12px;border:0;border-radius:8px;background:#2f8fe0;color:#fff;font-size:15px;font-weight:800;cursor:pointer">🏆 랭킹 등록 (이메일 인증)</button>
+                     <div id="sc-code-wrap" style="display:none;flex-direction:column;gap:8px">
+                       <input id="sc-code" inputmode="numeric" autocomplete="off" placeholder="이메일로 받은 인증코드" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:14px" />
+                       <button id="sc-verify" style="width:100%;padding:12px;border:0;border-radius:8px;background:#46c98b;color:#07130d;font-size:15px;font-weight:800;cursor:pointer">인증하고 등록</button>
+                     </div>
+                     <button id="sc-board" style="width:100%;padding:10px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:transparent;color:#cdd6df;font-size:13px;cursor:pointer">🏅 랭킹 보기</button>`
                   : ''
               }
               <div id="sc-msg" style="font-size:12px;opacity:0.7;text-align:center;min-height:16px"></div>
@@ -213,36 +224,100 @@ export class ResultScreen {
     const consentEl = card$.querySelector('#sc-consent') as HTMLInputElement | null;
     consentEl?.addEventListener('change', () => setConsent(consentEl.checked));
 
-    // 랭킹 등록·보기 (백엔드 enabled 시에만 버튼 존재)
+    // ── 랭킹 등록: 결과 화면에서 이메일 인증코드 받기 → 코드 확인 → 제출 (별도 로그인 화면 없음) ──
     const rankBtn = card$.querySelector('#sc-rank') as HTMLButtonElement | null;
-    if (rankBtn) {
-      rankBtn.addEventListener('click', () => {
-        if (!name.value.trim()) {
-          msg.textContent = '경품 안내를 위해 이름을 입력해 주세요';
-          name.focus();
-          return;
-        }
-        if (!phone.value.trim()) {
-          msg.textContent = '경품 안내를 위해 핸드폰번호를 입력해 주세요';
-          phone.focus();
-          return;
-        }
-        if (consentEl && !consentEl.checked && !consentGiven()) {
-          msg.textContent = '개인정보 수집·이용에 동의해 주세요';
-          consentEl.focus();
-          return;
-        }
-        void new LeaderboardScreen().submitAndShow({
+    const codeWrap = card$.querySelector('#sc-code-wrap') as HTMLDivElement | null;
+    const codeEl = card$.querySelector('#sc-code') as HTMLInputElement | null;
+    const verifyBtn = card$.querySelector('#sc-verify') as HTMLButtonElement | null;
+    const boardBtn = card$.querySelector('#sc-board') as HTMLButtonElement | null;
+
+    boardBtn?.addEventListener('click', () => {
+      void new LeaderboardScreen().show(terrain.meta.id, terrain.meta.name);
+    });
+
+    const validInputs = (): boolean => {
+      if (!name.value.trim()) {
+        msg.textContent = '경품 안내를 위해 이름을 입력해 주세요';
+        name.focus();
+        return false;
+      }
+      if (!phone.value.trim()) {
+        msg.textContent = '경품 안내를 위해 핸드폰번호를 입력해 주세요';
+        phone.focus();
+        return false;
+      }
+      if (consentEl && !consentEl.checked && !consentGiven()) {
+        msg.textContent = '개인정보 수집·이용에 동의해 주세요';
+        consentEl.focus();
+        return false;
+      }
+      return true;
+    };
+
+    const doSubmit = async (): Promise<void> => {
+      msg.textContent = '점수 등록 중…';
+      try {
+        const result = await submitScore({
           locationId: terrain.meta.id,
-          courseName: terrain.meta.name,
-          nickname: maskName(name.value.trim()), // 공개 랭킹 표시명 = 마스킹 이름(홍**)
+          nickname: maskName(name.value.trim()), // 공개 랭킹 표시명 = 마스킹 이름(홍*동)
           name: name.value.trim(),
           phone: phone.value.trim(),
           card,
           log: run.runLog(),
+          clientVersion: 'web',
         });
+        msg.textContent = result.improved ? '🎉 등록 완료! 최고 기록 갱신' : '등록 완료 (기존 최고점 유지)';
+        void new LeaderboardScreen().show(terrain.meta.id, terrain.meta.name);
+      } catch (e) {
+        msg.textContent = e instanceof Error ? e.message : '등록 실패';
+      }
+    };
+
+    if (rankBtn) {
+      rankBtn.addEventListener('click', async () => {
+        if (!validInputs()) return;
+        // 이미 인증된 세션이면 코드 없이 바로 등록
+        if (isLoggedIn()) {
+          await doSubmit();
+          return;
+        }
+        const emailVal = email.value.trim();
+        if (!emailVal.includes('@')) {
+          msg.textContent = '올바른 이메일을 입력해 주세요';
+          email.focus();
+          return;
+        }
+        rankBtn.disabled = true;
+        msg.textContent = '인증코드 전송 중…';
+        try {
+          await sendOtp(emailVal);
+          if (codeWrap) codeWrap.style.display = 'flex';
+          rankBtn.style.display = 'none';
+          msg.textContent = '이메일로 받은 인증코드를 입력하세요';
+          codeEl?.focus();
+        } catch (e) {
+          rankBtn.disabled = false;
+          msg.textContent = e instanceof Error ? e.message : '코드 전송 실패';
+        }
       });
     }
+
+    verifyBtn?.addEventListener('click', async () => {
+      const code = (codeEl?.value ?? '').trim();
+      if (!code) {
+        msg.textContent = '인증코드를 입력해 주세요';
+        return;
+      }
+      verifyBtn.disabled = true;
+      msg.textContent = '인증 중…';
+      try {
+        await verifyOtp(email.value.trim(), code);
+        await doSubmit();
+      } catch (e) {
+        verifyBtn.disabled = false;
+        msg.textContent = e instanceof Error ? e.message : '인증 실패';
+      }
+    });
   }
 
   /** 탑다운 힐셰이드 + 궤적 */
