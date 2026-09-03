@@ -58,6 +58,9 @@ async function main(): Promise<void> {
   renderer.toneMappingExposure = 1.05;
   document.body.appendChild(renderer.domElement);
 
+  // 모바일에서 결과 화면(등록/입력) 진입 시 WebGL을 완전히 해제해 메모리를 비운다(iOS 튕김 방지).
+  let torn = false;
+
   // ── 씬 / 조명 셸 ────────────────────────────────────────
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x9ec3e6);
@@ -198,6 +201,7 @@ async function main(): Promise<void> {
   // ── 런 / 채점 / 결과 화면 ───────────────────────────────
   let run = new Run(finishPos, startAlt, finishAlt);
   const startRun = (): void => {
+    if (torn) return void window.location.reload(); // 모바일 WebGL 해제 후엔 새로고침으로 재시작
     if (competition && !competition.canAttempt()) return; // 대회 시도 소진 → 재시작 불가
     rider.spawnAt(startPos.x, startPos.z, startHeading, terrain);
     cameraSystem.snapTo(rider, terrain);
@@ -565,6 +569,7 @@ async function main(): Promise<void> {
     return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
   };
   const applyRenderSize = (): void => {
+    if (torn) return; // WebGL 해제된 뒤엔 리사이즈 금지
     cameraSystem.camera.aspect = window.innerWidth / window.innerHeight;
     cameraSystem.camera.updateProjectionMatrix();
     if (isTyping()) {
@@ -595,6 +600,7 @@ async function main(): Promise<void> {
   let elapsed = 0;
   let finishedRendered = false; // 피니시 후 마무리 프레임 1회 렌더 여부
   startLoop((dt) => {
+    if (torn) return; // 모바일 결과화면 진입 후 WebGL 해제 → 루프 정지
     elapsed += dt;
     flags.update(elapsed);
     sky.follow(cameraSystem.camera.position);
@@ -693,6 +699,14 @@ async function main(): Promise<void> {
     } else if (!finishedRendered) {
       draw();
       finishedRendered = true;
+      // 모바일 대회 모드: 결과 화면(등록/입력) 진입 → WebGL 완전 해제로 메모리 최대 확보
+      // (이메일·연락처 입력 중 iOS 튕김 방지). 재시작은 startRun에서 새로고침 처리.
+      // 자유 연습은 입력칸이 없어 해제하지 않음(즉시 다시 하기 유지).
+      if (isMobile && competition) {
+        renderer.domElement.style.display = 'none';
+        renderer.forceContextLoss();
+        torn = true;
+      }
     }
     input.endFrame();
   });
