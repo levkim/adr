@@ -36,6 +36,7 @@ export function consentBlockHtml(checkboxId: string): string {
           · 보유·이용 기간: ${p.retention}<br>
           · 처리자: ${p.controller}<br>
           · 동의를 거부할 수 있으나, 거부 시 순위 등록·경품 응모가 제한됩니다.
+          ${p.policyUrl ? `<br>· <a href="${p.policyUrl}" target="_blank" rel="noopener" style="color:#7fc4ff">개인정보처리방침 전문 보기 ↗</a>` : ''}
         </div>
       </details>
       <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">

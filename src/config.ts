@@ -288,6 +288,7 @@ export const CONFIG = {
       purpose: '대회 참가자 확인 · 순위 산정 · 경품 안내 및 발송',
       retention: '대회 종료 및 경품 지급 완료 후 3개월 이내 파기',
       controller: '투어앤월드 (주)더투어샵',
+      policyUrl: 'https://www.tournski.com/privacy', // 개인정보처리방침 전문 URL (실제 주소로 교체)
     },
   },
   // ── 랭킹보드 (Supabase 백엔드) ──
