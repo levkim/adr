@@ -87,7 +87,16 @@ export async function sendOtp(email: string): Promise<void> {
     headers: authHeaders(),
     body: JSON.stringify({ email, create_user: true }),
   });
-  if (!res.ok) throw new Error(`인증코드 전송 실패 (${res.status})`);
+  if (!res.ok) {
+    const j = (await res.json().catch(() => ({}))) as {
+      msg?: string;
+      error_description?: string;
+      error?: string;
+      code?: string;
+    };
+    const reason = j.msg || j.error_description || j.error || j.code || `HTTP ${res.status}`;
+    throw new Error(`인증코드 전송 실패: ${reason}`);
+  }
 }
 
 export async function verifyOtp(email: string, token: string): Promise<void> {
