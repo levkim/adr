@@ -108,7 +108,7 @@ export class LeaderboardScreen {
         <div style="${panelCss}">
           <div style="font-size:20px;font-weight:800;margin-bottom:6px">🏆 대회 랭킹 등록</div>
           <div style="font-size:13px;opacity:0.75;margin-bottom:16px;line-height:1.5">경품 응모·순위 등록을 위해 이메일 인증이 필요합니다.</div>
-          <input id="lb-email" type="email" placeholder="이메일 / Email" value="${saved}" style="width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:15px;margin-bottom:10px" />
+          <input id="lb-email" type="text" inputmode="email" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="이메일 / Email" value="${saved}" style="width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1a1f27;color:#fff;font-size:15px;margin-bottom:10px" />
           ${consentBlockHtml('lb-consent')}
           <button id="lb-send" style="width:100%;margin-top:10px;padding:12px;border:0;border-radius:8px;background:#2f8fe0;color:#fff;font-size:15px;font-weight:700;cursor:pointer">인증코드 받기</button>
           <div id="lb-code-wrap" style="display:none;margin-top:12px">
